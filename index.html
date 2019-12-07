@@ -192,27 +192,28 @@ th, td {
 <ul>
 <li><div id="toc-code-publish-to-github-pages-code"><a href="#code-publish-to-github-pages-code">52. <code>Publish to GitHub Pages</code></a></div></li>
 </ul>
-<li><div id="toc-help-macros"><a href="#help-macros">53. <code>--help-macros</code></a></div></li>
+<li><div id="toc-publish-commit"><a href="#publish-commit">53. <code>--publish-commit &lt;commit-message&gt;</code></a></div></li>
+<li><div id="toc-help-macros"><a href="#help-macros">54. <code>--help-macros</code></a></div></li>
 </ul>
-<li><div id="toc-cirodown-json"><a href="#cirodown-json">54. <code>cirodown.json</code></a></div>
+<li><div id="toc-cirodown-json"><a href="#cirodown-json">55. <code>cirodown.json</code></a></div>
 <ul>
-<li><div id="toc-media-source-type"><a href="#media-source-type">55. <code>media_source_type</code></a></div></li>
-<li><div id="toc-media-base-url"><a href="#media-base-url">56. <code>media_base_url</code></a></div></li>
+<li><div id="toc-media-source-type"><a href="#media-source-type">56. <code>media_source_type</code></a></div></li>
+<li><div id="toc-media-base-url"><a href="#media-base-url">57. <code>media_base_url</code></a></div></li>
 </ul>
 </li>
 </ul>
-<li><div id="toc-editor-and-preview"><a href="#editor-and-preview">57. Editor and preview</a></div></li>
+<li><div id="toc-editor-and-preview"><a href="#editor-and-preview">58. Editor and preview</a></div></li>
 </ul>
-<li><div id="toc-developing-cirodown"><a href="#developing-cirodown">58. Developing Cirodown</a></div>
+<li><div id="toc-developing-cirodown"><a href="#developing-cirodown">59. Developing Cirodown</a></div>
 <ul>
-<li><div id="toc-test-system"><a href="#test-system">59. Test system</a></div></li>
-<li><div id="toc-overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository">60. Overview of files in this repository</a></div></li>
-<li><div id="toc-internals-api"><a href="#internals-api">61. Internals API</a></div></li>
-<li><div id="toc-toplevel"><a href="#toplevel">62. The <code>\toplevel</code> implicit macro</a></div></li>
-<li><div id="toc-formal-grammar"><a href="#formal-grammar">63. Formal grammar</a></div></li>
-<li><div id="toc-todo"><a href="#todo">64. TODO</a></div></li>
+<li><div id="toc-test-system"><a href="#test-system">60. Test system</a></div></li>
+<li><div id="toc-overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository">61. Overview of files in this repository</a></div></li>
+<li><div id="toc-internals-api"><a href="#internals-api">62. Internals API</a></div></li>
+<li><div id="toc-toplevel"><a href="#toplevel">63. The <code>\toplevel</code> implicit macro</a></div></li>
+<li><div id="toc-formal-grammar"><a href="#formal-grammar">64. Formal grammar</a></div></li>
+<li><div id="toc-todo"><a href="#todo">65. TODO</a></div></li>
 </ul>
-<li><div id="toc-related-projects"><a href="#related-projects">65. Related projects</a></div></li>
+<li><div id="toc-related-projects"><a href="#related-projects">66. Related projects</a></div></li>
 </ul>
 </li>
 </ul>
@@ -227,7 +228,7 @@ printf 'ab\ncd\n' | cirodown --body-only
 <pre><code>npm install cirodown
 ./api_hello.js
 </code></pre>
-<p>For a minimal but convenient project template, consdier:</p>
+<p>For a minimal but convenient project template with a <code>.gitignore</code> and <code>package.json</code>, consider:</p>
 <pre><code>git clone https://github.com/cirosantilli/cirodown-template
 cd cirodown-template
 cirodown .
@@ -421,139 +422,8 @@ Reference to an internal header of another file: \x[h2-in-not-the-readme]. By de
 <h6 data-level="12" id="my-h12"><a href="#my-h12" title="link to this element">22. My h12</a><span> <a href="#toc-my-h12">(toc ↑)</a></span></h6>
 <h6 data-level="13" id="my-h13"><a href="#my-h13" title="link to this element">23. My h13</a><span> <a href="#toc-my-h13">(toc ↑)</a></span></h6>
 <h3 id="table-of-contents"><a href="#table-of-contents" title="link to this element">24. Table of contents <code>\toc</code></a><span> <a href="#toc-table-of-contents">(toc ↑)</a></span></h3>
-<p>TODO implement: ToC only shows headers contained under the header it is put.</p>
-<p>For example, if we have a document with a single <code>\h[1]</code> and put the ToC just below it after a short introduction, which is the recommended document structure, then that ToC will now show the initial <code>\h[1]</code> as expected.</p>
-<p>Here is another ToC, which contains very few elements since it is here is a subtree in the middle of the document:</p>
-<div class="toc-container">
-<ul>
-<li><div id="toc-cirodown"><a href="#cirodown">1. Cirodown</a></div>
-<ul>
-<li><div id="toc-quick-start"><a href="#quick-start">2. Quick start</a></div></li>
-<li><div id="toc-design-goals"><a href="#design-goals">3. Design goals</a></div>
-<ul>
-<li><div id="toc-saner"><a href="#saner">4. Saner</a></div></li>
-<li><div id="toc-more-powerful"><a href="#more-powerful">5. More powerful</a></div></li>
-</ul>
-<li><div id="toc-paragraphs"><a href="#paragraphs">6. Paragraphs <code>\p</code></a></div></li>
-<li><div id="toc-links"><a href="#links">7. Links <code>\a</code></a></div></li>
-<li><div id="toc-internal-cross-references"><a href="#internal-cross-references">8. Internal cross references <code>\x</code></a></div>
-<ul>
-<li><div id="toc-cross-reference-style"><a href="#cross-reference-style">9. Cross reference style</a></div></li>
-<li><div id="toc-internal-cross-file-references"><a href="#internal-cross-file-references">10. Internal cross file references</a></div></li>
-<li><div id="toc-automatic-id-from-title"><a href="#automatic-id-from-title">11. Automatic ID from title</a></div></li>
-</ul>
-<li><div id="toc-headers"><a href="#headers">12. Headers <code>\h</code></a></div>
-<ul>
-<li><div id="toc-unlimited-header-levels"><a href="#unlimited-header-levels">13. Unlimited header levels</a></div>
-<ul>
-<li><div id="toc-my-h4"><a href="#my-h4">14. My h4</a></div>
-<ul>
-<li><div id="toc-my-h5"><a href="#my-h5">15. My h5</a></div>
-<ul>
-<li><div id="toc-my-h6"><a href="#my-h6">16. My h6</a></div>
-<ul>
-<li><div id="toc-my-h7"><a href="#my-h7">17. My h7</a></div>
-<ul>
-<li><div id="toc-my-h8"><a href="#my-h8">18. My h8</a></div>
-<ul>
-<li><div id="toc-my-h9"><a href="#my-h9">19. My h9</a></div>
-<ul>
-<li><div id="toc-my-h10"><a href="#my-h10">20. My h10</a></div>
-<ul>
-<li><div id="toc-my-h11"><a href="#my-h11">21. My h11</a></div>
-<ul>
-<li><div id="toc-my-h12"><a href="#my-h12">22. My h12</a></div>
-<ul>
-<li><div id="toc-my-h13"><a href="#my-h13">23. My h13</a></div></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<li><div id="toc-table-of-contents"><a href="#table-of-contents">24. Table of contents <code>\toc</code></a></div>
-<ul>
-<li><div id="toc-id-scope"><a href="#id-scope">25. id_scope</a></div></li>
-</ul>
-<li><div id="toc-header-explicit-levels-vs-nesting-design-choice"><a href="#header-explicit-levels-vs-nesting-design-choice">26. Header explicit levels vs nesting design choice</a></div></li>
-<li><div id="toc-includes"><a href="#includes">27. Includes <code>\include</code></a></div></li>
-</ul>
-<li><div id="toc-lists"><a href="#lists">28. Lists <code>\l</code></a></div></li>
-<li><div id="toc-images"><a href="#images">29. Images <code>\image</code></a></div>
-<ul>
-<li><div id="toc-where-to-store-images"><a href="#where-to-store-images">30. Where to store images</a></div></li>
-<li><div id="toc-image-generators"><a href="#image-generators">31. Image generators</a></div></li>
-</ul>
-<li><div id="toc-code"><a href="#code">32. Code <code>\c</code> and <code>\C</code></a></div></li>
-<li><div id="toc-math"><a href="#math">33. Mathematics <code>\M</code> and <code>\m</code></a></div>
-<ul>
-<li><div id="toc-math-defines-across-blocks"><a href="#math-defines-across-blocks">34. Math defines across blocks</a></div></li>
-</ul>
-<li><div id="toc-tables"><a href="#tables">35. Tables <code>\table</code>, <code>\tr</code>, <code>\th</code> and <code>\td</code></a></div></li>
-<li><div id="toc-comments"><a href="#comments">36. Comments</a></div></li>
-<li><div id="toc-cirodown-syntax"><a href="#cirodown-syntax">37. Cirodown syntax</a></div>
-<ul>
-<li><div id="toc-macro-argument-syntax"><a href="#macro-argument-syntax">38. Macro argument syntax</a></div>
-<ul>
-<li><div id="toc-positional-vs-named-arguments"><a href="#positional-vs-named-arguments">39. Positional vs named arguments</a></div></li>
-<li><div id="toc-javascript-interface-for-arguments"><a href="#javascript-interface-for-arguments">40. JavaScript interface for arguments</a></div></li>
-<li><div id="toc-newlines-between-arguments"><a href="#newlines-between-arguments">41. Newlines between arguments</a></div></li>
-<li><div id="toc-escape-characters"><a href="#escape-characters">42. Escape characters</a></div></li>
-<li><div id="toc-literal-arguments"><a href="#literal-arguments">43. Literal arguments</a></div></li>
-<li><div id="toc-argument-leading-newline-removal"><a href="#argument-leading-newline-removal">44. Argument leading newline removal</a></div></li>
-<li><div id="toc-argument-automatic-indentation-removal"><a href="#argument-automatic-indentation-removal">45. Argument automatic indentation removal</a></div></li>
-</ul>
-<li><div id="toc-macro-capitalization-for-block-vs-inline"><a href="#macro-capitalization-for-block-vs-inline">46. Macro capitalization for block vs inline</a></div></li>
-</ul>
-<li><div id="toc-tooling"><a href="#tooling">47. Tooling</a></div>
-<ul>
-<li><div id="toc-cirodown-executable"><a href="#cirodown-executable">48. <code>cirodown</code> executable</a></div>
-<ul>
-<li><div id="toc-cirodown-executable-most-important-options"><a href="#cirodown-executable-most-important-options">49. <code>cirodown</code> executable most important options</a></div>
-<ul>
-<li><div id="toc-watch"><a href="#watch">50. <code>--watch</code></a></div></li>
-<li><div id="toc-publish"><a href="#publish">51. <code>--publish</code></a></div>
-<ul>
-<li><div id="toc-code-publish-to-github-pages-code"><a href="#code-publish-to-github-pages-code">52. <code>Publish to GitHub Pages</code></a></div></li>
-</ul>
-<li><div id="toc-help-macros"><a href="#help-macros">53. <code>--help-macros</code></a></div></li>
-</ul>
-<li><div id="toc-cirodown-json"><a href="#cirodown-json">54. <code>cirodown.json</code></a></div>
-<ul>
-<li><div id="toc-media-source-type"><a href="#media-source-type">55. <code>media_source_type</code></a></div></li>
-<li><div id="toc-media-base-url"><a href="#media-base-url">56. <code>media_base_url</code></a></div></li>
-</ul>
-</li>
-</ul>
-<li><div id="toc-editor-and-preview"><a href="#editor-and-preview">57. Editor and preview</a></div></li>
-</ul>
-<li><div id="toc-developing-cirodown"><a href="#developing-cirodown">58. Developing Cirodown</a></div>
-<ul>
-<li><div id="toc-test-system"><a href="#test-system">59. Test system</a></div></li>
-<li><div id="toc-overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository">60. Overview of files in this repository</a></div></li>
-<li><div id="toc-internals-api"><a href="#internals-api">61. Internals API</a></div></li>
-<li><div id="toc-toplevel"><a href="#toplevel">62. The <code>\toplevel</code> implicit macro</a></div></li>
-<li><div id="toc-formal-grammar"><a href="#formal-grammar">63. Formal grammar</a></div></li>
-<li><div id="toc-todo"><a href="#todo">64. TODO</a></div></li>
-</ul>
-<li><div id="toc-related-projects"><a href="#related-projects">65. Related projects</a></div></li>
-</ul>
-</li>
-</ul>
-</div>
+<p>Only one ToC shows per document. Any ToC besides the first one is ignored.</p>
+<p>The ToC ignores <code>\h[1]</code> by default, as we encourage that header level to appear only once and represent the main title under which the entire document goes.</p>
 <h4 id="id-scope"><a href="#id-scope" title="link to this element">25. id_scope</a><span> <a href="#toc-id-scope">(toc ↑)</a></span></h4>
 <p>TODO implement.</p>
 <p>If this header attribute is <code>true</code>, then the ID of all children are prefixed with the ID of this header + a slash <code>/</code>.</p>
@@ -1142,12 +1012,21 @@ git commit --message 'some commit message'
 cirodown --publish .
 </code></pre>
 <p>The publishing only happens if the build has no errors.</p>
-<h5 id="help-macros"><a href="#help-macros" title="link to this element">53. <code>--help-macros</code></a><span> <a href="#toc-help-macros">(toc ↑)</a></span></h5>
+<h5 id="publish-commit"><a href="#publish-commit" title="link to this element">53. <code>--publish-commit &lt;commit-message&gt;</code></a><span> <a href="#toc-publish-commit">(toc ↑)</a></span></h5>
+<p>Like <a href="#publish"><code>--publish</code></a>, but also automatically:</p>
+<ul>
+<li><code>git add -u</code> to automatically add change to any files that have been previously git tracked</li>
+<li><p><code>git commit -m &lt;commit-message&gt;</code> to create a new commit with those changes</p>
+<p>This allows you to publish your changes live in a single command such as:</p>
+<pre><code>cirodown --publish-commit 'my amazing change' .
+</code></pre>
+<p>With great power comes great responsibility of course, but who cares!</p>
+<h5 id="help-macros"><a href="#help-macros" title="link to this element">54. <code>--help-macros</code></a><span> <a href="#toc-help-macros">(toc ↑)</a></span></h5>
 <p>You can get an overview of all macros in JSON format with:</p>
 <pre><code>cirodown --help-macros
 </code></pre>
-<h4 id="cirodown-json"><a href="#cirodown-json" title="link to this element">54. <code>cirodown.json</code></a><span> <a href="#toc-cirodown-json">(toc ↑)</a></span></h4>
-<h5 id="media-source-type"><a href="#media-source-type" title="link to this element">55. <code>media_source_type</code></a><span> <a href="#toc-media-source-type">(toc ↑)</a></span></h5>
+<h4 id="cirodown-json"><a href="#cirodown-json" title="link to this element">55. <code>cirodown.json</code></a><span> <a href="#toc-cirodown-json">(toc ↑)</a></span></h4>
+<h5 id="media-source-type"><a href="#media-source-type" title="link to this element">56. <code>media_source_type</code></a><span> <a href="#toc-media-source-type">(toc ↑)</a></span></h5>
 <ul>
 <li><code>local</code>: tracked in the current Git repository, no further magic is done</li>
 <li><p>  <code>media_repo</code>: tracked in a separate media repository, defaults to <code>../&lt;project-name&gt;-media/</code></p>
@@ -1155,16 +1034,16 @@ cirodown --publish .
 </p>
 </li>
 </ul>
-<h5 id="media-base-url"><a href="#media-base-url" title="link to this element">56. <code>media_base_url</code></a><span> <a href="#toc-media-base-url">(toc ↑)</a></span></h5>
+<h5 id="media-base-url"><a href="#media-base-url" title="link to this element">57. <code>media_base_url</code></a><span> <a href="#toc-media-base-url">(toc ↑)</a></span></h5>
 <p>TODO implement set the base URL where media will be served from.</p>
 <p>Default: for a GitHub repository called `my-tutorial`, append the `-media` suffix and use `my-tutorial-media`.</p>
 <p>Further rationale at: <a href="#where-to-store-images">Where to store images</a>.</p>
-<h3 id="editor-and-preview"><a href="#editor-and-preview" title="link to this element">57. Editor and preview</a><span> <a href="#toc-editor-and-preview">(toc ↑)</a></span></h3>
+<h3 id="editor-and-preview"><a href="#editor-and-preview" title="link to this element">58. Editor and preview</a><span> <a href="#toc-editor-and-preview">(toc ↑)</a></span></h3>
 <p>TODO</p>
 <p>We must achieve an editor setup with synchronized live side-by-side preview.</p>
 <p>It would be amazing to have a WebKit interface that works both on browser for the and locally.</p>
-<h2 id="developing-cirodown"><a href="#developing-cirodown" title="link to this element">58. Developing Cirodown</a><span> <a href="#toc-developing-cirodown">(toc ↑)</a></span></h2>
-<h3 id="test-system"><a href="#test-system" title="link to this element">59. Test system</a><span> <a href="#toc-test-system">(toc ↑)</a></span></h3>
+<h2 id="developing-cirodown"><a href="#developing-cirodown" title="link to this element">59. Developing Cirodown</a><span> <a href="#toc-developing-cirodown">(toc ↑)</a></span></h2>
+<h3 id="test-system"><a href="#test-system" title="link to this element">60. Test system</a><span> <a href="#toc-test-system">(toc ↑)</a></span></h3>
 <p>Run all tests:</p>
 <pre><code>npm test
 </code></pre>
@@ -1182,19 +1061,19 @@ cirodown --publish .
 <p>to where you want to break in the code, and then:</p>
 <pre><code>node inspect ./node_modules/.bin/mocha test --ignore-leaks "-g" "p with id before"
 </code></pre>
-<h3 id="overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository" title="link to this element">60. Overview of files in this repository</a><span> <a href="#toc-overview-of-files-in-this-repository">(toc ↑)</a></span></h3>
+<h3 id="overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository" title="link to this element">61. Overview of files in this repository</a><span> <a href="#toc-overview-of-files-in-this-repository">(toc ↑)</a></span></h3>
 <ul>
 <li><a href="index.js">index.js</a>: main code. Must be able to run in the browser, so no Node.js specifics. Exposes the central <code>convert</code> function</li>
 <li><a href="cirodown">cirodown</a>: CLI executable. Is basically just a CLI interface frontend to <code>convert</code></li>
 <li><a href="test.js">test.js</a>: contains all the Mocha tests, see also: <a href="#test-system">Test system</a></li>
 <li><a href="README.md">README.md</a>: minimal Markdown README until GitHub / NPM support Cirodown :-)</li>
 </ul>
-<h3 id="internals-api"><a href="#internals-api" title="link to this element">61. Internals API</a><span> <a href="#toc-internals-api">(toc ↑)</a></span></h3>
+<h3 id="internals-api"><a href="#internals-api" title="link to this element">62. Internals API</a><span> <a href="#toc-internals-api">(toc ↑)</a></span></h3>
 <p>Tokenized token stream and AST can be obtained as JSON from the API.</p>
 <p>Errors can be obtained as JSON from the API.</p>
 <p>Everything that you need to write Cirodown tooling, is present in the main API.</p>
 <p>All tooling will be merged into one single repo.</p>
-<h3 id="toplevel"><a href="#toplevel" title="link to this element">62. The <code>\toplevel</code> implicit macro</a><span> <a href="#toc-toplevel">(toc ↑)</a></span></h3>
+<h3 id="toplevel"><a href="#toplevel" title="link to this element">63. The <code>\toplevel</code> implicit macro</a><span> <a href="#toc-toplevel">(toc ↑)</a></span></h3>
 <p>Every Cirodown document is implicitly put inside a <code>\toplevel</code> document and:</p>
 <ul>
 <li>any optionally given arguments at the very beginning of the document will be treated as arguments of the <code>\toplevel</code> macro</li>
@@ -1213,10 +1092,11 @@ And now, some content!
 ]
 </code></pre>
 <p>In terms of HTML, the <code>\toplevel</code> element corresponds to the <code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;header&gt;</code> and <code>&lt;footer&gt;</code> elements of a document.</p>
-<h3 id="formal-grammar"><a href="#formal-grammar" title="link to this element">63. Formal grammar</a><span> <a href="#toc-formal-grammar">(toc ↑)</a></span></h3>
+<h3 id="formal-grammar"><a href="#formal-grammar" title="link to this element">64. Formal grammar</a><span> <a href="#toc-formal-grammar">(toc ↑)</a></span></h3>
 <p>TODO. Describe Cirodown's formal grammar, and classify it in the grammar hierarchy and parsing complexity.</p>
-<h3 id="todo"><a href="#todo" title="link to this element">64. TODO</a><span> <a href="#toc-todo">(toc ↑)</a></span></h3>
+<h3 id="todo"><a href="#todo" title="link to this element">65. TODO</a><span> <a href="#toc-todo">(toc ↑)</a></span></h3>
 <ul>
+<li>actually, do number every equation, figure etc. and add dummy IDs to them, why not have references? Use side equation numbers like in real books</li>
 <li>publish webpage on cirosantilli.com</li>
 <li>custom header, footer and HEAD based on files like header.html, footer.html</li>
 <li>make h1 special: don't take up number count, don't show on toc, don't show number, use as default title</li>
@@ -1232,7 +1112,7 @@ And now, some content!
 <li>handle ID calculation from title if title has HTML elements, e.g. headers with code</li>
 <li>LaTeX output</li>
 </ul>
-<h2 id="related-projects"><a href="#related-projects" title="link to this element">65. Related projects</a><span> <a href="#toc-related-projects">(toc ↑)</a></span></h2>
+<h2 id="related-projects"><a href="#related-projects" title="link to this element">66. Related projects</a><span> <a href="#toc-related-projects">(toc ↑)</a></span></h2>
 <ul>
 <li><a href="https://github.com/rstudio/bookdown">https://github.com/rstudio/bookdown</a>, <a href="https://bookdown.org/">https://bookdown.org/</a>. Very similar feature set to what we want!!! Transpiles to markdown, and then goes through Pandoc: <a href="https://bookdown.org/yihui/bookdown/pandoc.html">https://bookdown.org/yihui/bookdown/pandoc.html</a>, thus will never run on browser without huge translation layers. But does have an obscene ammount of output formats however.</li>
 <li><a href="https://gohugo.io/">Hugo</a>. Pretty good, similar feature set to ours. But Go based, so hard on browser, and adds adhoc features on top of markdown once again</li>
@@ -1241,6 +1121,8 @@ And now, some content!
 <ul>
 <li><a href="http://www.uprtcl.io/">http://www.uprtcl.io/</a></li>
 <li><a href="https://libretexts.org">https://libretexts.org</a></li>
+</ul>
+</li>
 </ul>
 </body>
 </html>
