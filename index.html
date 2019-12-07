@@ -219,13 +219,18 @@ th, td {
 </div>
 <h2 id="quick-start"><a href="#quick-start" title="link to this element">2. Quick start</a><span> <a href="#toc-quick-start">(toc ↑)</a></span></h2>
 <p>TODO: browser live test.</p>
-<p>Install NPM package and use it from the command line:</p>
+<p>Install NPM package and use it from the command line for a quick conversion:</p>
 <pre><code>npm install cirodown
 printf 'ab\ncd\n' | cirodown --body-only
 </code></pre>
 <p>Same with an API call in <a href="api_hello.js">api_hello.js</a>:</p>
 <pre><code>npm install cirodown
 ./api_hello.js
+</code></pre>
+<p>For a minimal but convenient project template, consdier:</p>
+<pre><code>git clone https://github.com/cirosantilli/cirodown-template
+cd cirodown-template
+cirodown .
 </code></pre>
 <p>Run the latest master on README.ciro and view it:</p>
 <pre><code>git clone https://github.com/cirosantilli/cirodown
