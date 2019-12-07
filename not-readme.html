@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang=en>
+<head>
+<meta charset=utf-8>
+<title>dummy title because title is mandatory in HTML</title>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css"
+  crossorigin="anonymous"
+>
+<link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet"/>
+<style>
+:target {
+  background-color: #FFFFCC;
+}
+body {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.caption-prefix {
+  font-weight: bold;
+}
+/* Headers are links to self, but we want them always black. */
+h1 a:link, h2 a:link, h3 a:link, h4 a:link, h5 a:link, h6 a:link,
+h1 a:visited, h2 a:visited, h3 a:visited, h4 a:visited, h5 a:visited, h6 a:visited {
+  color: black;
+}
+h1, h2, h3, h4, h5, h6 {
+  font-size: 24px;
+  margin-top: 20px;
+}
+h1 a + span, h2 a + span, h3 a + span, h4 a + span, h5 a + span, h6 a  + span {
+  display: none;
+}
+h1:hover a + span, h2:hover a + span, h3:hover a + span, h4:hover a + span, h5:hover a + span, h6:hover a  + span {
+  display: inline;
+}
+h1:hover span a:link, h2:hover span a:link, h3:hover span a:link, h4:hover span a:link, h5:hover span a:link, h6:hover span a:link,
+h1:hover span a:visited, h2:hover span a:visited, h3:hover span a:visited, h4:hover span a:visited, h5:hover span a:visited, h6:hover span a:visited {
+  color: blue;
+}
+figure {
+  margin-bottom: 10px;
+}
+/* Math. */
+.katex { font-size: 1.5em; }
+.math-caption-container > :last-child {
+  display: none;
+}
+.math-caption-container:hover > :last-child {
+  display: inline;
+}
+.math-container {
+  margin-bottom: 10px;
+}
+/* Tables */
+/* Add borders! */
+table {
+  border-collapse: collapse;
+}
+table, th, td {
+  border: 1px solid black;
+}
+th, td {
+  padding-left: 2px;
+  padding-right: 2px;
+}
+.table-caption-container > :last-child {
+  display: none;
+}
+.table-caption-container:hover > :last-child {
+  display: inline;
+}
+.table-container {
+  margin-bottom: 10px;
+}
+/* Table of contents. */
+.toc-container ul {
+  border-left: 1px solid black;
+  list-style-type: none;
+}
+.toc-container > ul {
+  border-left: 0px solid black;
+  padding-left: 0px;
+}
+</style>
+<body>
+<h1 id="not-the-readme"><a href="#not-the-readme" title="link to this element">1. Not the README</a><span> <a href="#toc-not-the-readme">(toc ↑)</a></span></h1>
+<h2 id="h2-in-not-the-readme"><a href="#h2-in-not-the-readme" title="link to this element">2. h2 in not the README</a><span> <a href="#toc-h2-in-not-the-readme">(toc ↑)</a></span></h2>
+</body>
+</html>
