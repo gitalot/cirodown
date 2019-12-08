@@ -209,11 +209,14 @@ th, td {
 <li><div id="toc-test-system"><a href="#test-system">60. Test system</a></div></li>
 <li><div id="toc-overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository">61. Overview of files in this repository</a></div></li>
 <li><div id="toc-internals-api"><a href="#internals-api">62. Internals API</a></div></li>
-<li><div id="toc-toplevel"><a href="#toplevel">63. The <code>\toplevel</code> implicit macro</a></div></li>
-<li><div id="toc-formal-grammar"><a href="#formal-grammar">64. Formal grammar</a></div></li>
-<li><div id="toc-todo"><a href="#todo">65. TODO</a></div></li>
+<li><div id="toc-toplevel"><a href="#toplevel">63. The <code>\toplevel</code> implicit macro</a></div>
+<ul>
+<li><div id="toc-html-document-title"><a href="#html-document-title">64. HTML document title</a></div></li>
 </ul>
-<li><div id="toc-related-projects"><a href="#related-projects">66. Related projects</a></div></li>
+<li><div id="toc-formal-grammar"><a href="#formal-grammar">65. Formal grammar</a></div></li>
+<li><div id="toc-todo"><a href="#todo">66. TODO</a></div></li>
+</ul>
+<li><div id="toc-related-projects"><a href="#related-projects">67. Related projects</a></div></li>
 </ul>
 </li>
 </ul>
@@ -1092,14 +1095,20 @@ And now, some content!
 ]
 </code></pre>
 <p>In terms of HTML, the <code>\toplevel</code> element corresponds to the <code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;header&gt;</code> and <code>&lt;footer&gt;</code> elements of a document.</p>
-<h3 id="formal-grammar"><a href="#formal-grammar" title="link to this element">64. Formal grammar</a><span> <a href="#toc-formal-grammar">(toc ↑)</a></span></h3>
+<h4 id="html-document-title"><a href="#html-document-title" title="link to this element">64. HTML document title</a><span> <a href="#toc-html-document-title">(toc ↑)</a></span></h4>
+<ul>
+<li>if the <code>title</code> argument of <code>toplevel</code> is given, use that</li>
+<li>otherwise, if the document has a <code>\h[1]</code>, use the title of the first such header</li>
+<li>otherwise use a dummy value</li>
+</ul>
+<h3 id="formal-grammar"><a href="#formal-grammar" title="link to this element">65. Formal grammar</a><span> <a href="#toc-formal-grammar">(toc ↑)</a></span></h3>
 <p>TODO. Describe Cirodown's formal grammar, and classify it in the grammar hierarchy and parsing complexity.</p>
-<h3 id="todo"><a href="#todo" title="link to this element">65. TODO</a><span> <a href="#toc-todo">(toc ↑)</a></span></h3>
+<h3 id="todo"><a href="#todo" title="link to this element">66. TODO</a><span> <a href="#toc-todo">(toc ↑)</a></span></h3>
 <ul>
 <li>actually, do number every equation, figure etc. and add dummy IDs to them, why not have references? Use side equation numbers like in real books</li>
 <li>publish webpage on cirosantilli.com</li>
 <li>custom header, footer and HEAD based on files like header.html, footer.html</li>
-<li>make h1 special: don't take up number count, don't show on toc, don't show number, use as default title</li>
+<li>make h1 special: don't take up number count, don't show on toc</li>
 <li><a href="#id-scope">id_scope</a></li>
 <li>header nested numbers</li>
 <li>browser live quick test</li>
@@ -1109,10 +1118,11 @@ And now, some content!
 <li>correct ID generation algorithm to be Unicode robust</li>
 <li>local downloads and single HTML page with image / script embeds</li>
 <li>image management: upload to separate media directory</li>
-<li>handle ID calculation from title if title has HTML elements, e.g. headers with code</li>
+<li>handle ID calculation from title if title has HTML elements, e.g. headers with code. Use that for the title as well.</li>
+<li>multiple newlines blow up (5 or six), create test and decide best behaviour</li>
 <li>LaTeX output</li>
 </ul>
-<h2 id="related-projects"><a href="#related-projects" title="link to this element">66. Related projects</a><span> <a href="#toc-related-projects">(toc ↑)</a></span></h2>
+<h2 id="related-projects"><a href="#related-projects" title="link to this element">67. Related projects</a><span> <a href="#toc-related-projects">(toc ↑)</a></span></h2>
 <ul>
 <li><a href="https://github.com/rstudio/bookdown">https://github.com/rstudio/bookdown</a>, <a href="https://bookdown.org/">https://bookdown.org/</a>. Very similar feature set to what we want!!! Transpiles to markdown, and then goes through Pandoc: <a href="https://bookdown.org/yihui/bookdown/pandoc.html">https://bookdown.org/yihui/bookdown/pandoc.html</a>, thus will never run on browser without huge translation layers. But does have an obscene ammount of output formats however.</li>
 <li><a href="https://gohugo.io/">Hugo</a>. Pretty good, similar feature set to ours. But Go based, so hard on browser, and adds adhoc features on top of markdown once again</li>
