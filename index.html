@@ -89,45 +89,43 @@ th, td {
 <p>A Markup language to write multipage or single page HTML / PDF books, blogs, etc. that is saner and more powerful than Markdown and Asciidoctor, but still nicer to write than XML and JSON, with reference implementation in JavaScript.</p>
 <div class="toc-container">
 <ul>
-<li><div id="toc-quick-start"><a href="#quick-start">2. Quick start</a></div></li>
-<li><div id="toc-design-goals"><a href="#design-goals">3. Design goals</a></div>
+<li><div id="toc-quick-start"><a href="#quick-start">1. Quick start</a></div></li>
+<li><div id="toc-design-goals"><a href="#design-goals">2. Design goals</a></div>
 <ul>
-<li><div id="toc-saner"><a href="#saner">4. Saner</a></div></li>
-<li><div id="toc-more-powerful"><a href="#more-powerful">5. More powerful</a></div></li>
+<li><div id="toc-saner"><a href="#saner">2.1. Saner</a></div></li>
+<li><div id="toc-more-powerful"><a href="#more-powerful">2.2. More powerful</a></div></li>
 </ul>
-<li><div id="toc-paragraphs"><a href="#paragraphs">6. Paragraphs <code>\p</code></a></div></li>
-<li><div id="toc-links"><a href="#links">7. Links <code>\a</code></a></div></li>
-<li><div id="toc-internal-cross-references"><a href="#internal-cross-references">8. Internal cross references <code>\x</code></a></div>
+<li><div id="toc-paragraphs"><a href="#paragraphs">3. Paragraphs <code>\p</code></a></div></li>
+<li><div id="toc-links"><a href="#links">4. Links <code>\a</code></a></div></li>
+<li><div id="toc-internal-cross-references"><a href="#internal-cross-references">5. Internal cross references <code>\x</code></a></div>
 <ul>
-<li><div id="toc-cross-reference-style"><a href="#cross-reference-style">9. Cross reference style</a></div></li>
-<li><div id="toc-internal-cross-file-references"><a href="#internal-cross-file-references">10. Internal cross file references</a></div></li>
-<li><div id="toc-automatic-id-from-title"><a href="#automatic-id-from-title">11. Automatic ID from title</a></div></li>
+<li><div id="toc-cross-reference-style"><a href="#cross-reference-style">5.1. Cross reference style</a></div></li>
+<li><div id="toc-internal-cross-file-references"><a href="#internal-cross-file-references">5.2. Internal cross file references</a></div></li>
+<li><div id="toc-automatic-id-from-title"><a href="#automatic-id-from-title">5.3. Automatic ID from title</a></div></li>
 </ul>
-<li><div id="toc-headers"><a href="#headers">12. Headers <code>\h</code></a></div>
+<li><div id="toc-headers"><a href="#headers">6. Headers <code>\h</code></a></div>
 <ul>
-<li><div id="toc-unlimited-header-levels"><a href="#unlimited-header-levels">13. Unlimited header levels</a></div>
+<li><div id="toc-unlimited-header-levels"><a href="#unlimited-header-levels">6.1. Unlimited header levels</a></div>
 <ul>
-<li><div id="toc-my-h4"><a href="#my-h4">14. My h4</a></div>
+<li><div id="toc-my-h4"><a href="#my-h4">6.1.1. My h4</a></div>
 <ul>
-<li><div id="toc-my-h5"><a href="#my-h5">15. My h5</a></div>
+<li><div id="toc-my-h5"><a href="#my-h5">6.1.1.1. My h5</a></div>
 <ul>
-<li><div id="toc-my-h6"><a href="#my-h6">16. My h6</a></div>
+<li><div id="toc-my-h6"><a href="#my-h6">6.1.1.1.1. My h6</a></div>
 <ul>
-<li><div id="toc-my-h7"><a href="#my-h7">17. My h7</a></div>
+<li><div id="toc-my-h7"><a href="#my-h7">6.1.1.1.1.1. My h7</a></div>
 <ul>
-<li><div id="toc-my-h8"><a href="#my-h8">18. My h8</a></div>
+<li><div id="toc-my-h8"><a href="#my-h8">6.1.1.1.1.1.1. My h8</a></div>
 <ul>
-<li><div id="toc-my-h9"><a href="#my-h9">19. My h9</a></div>
+<li><div id="toc-my-h9"><a href="#my-h9">6.1.1.1.1.1.1.1. My h9</a></div>
 <ul>
-<li><div id="toc-my-h10"><a href="#my-h10">20. My h10</a></div>
+<li><div id="toc-my-h10"><a href="#my-h10">6.1.1.1.1.1.1.1.1. My h10</a></div>
 <ul>
-<li><div id="toc-my-h11"><a href="#my-h11">21. My h11</a></div>
+<li><div id="toc-my-h11"><a href="#my-h11">6.1.1.1.1.1.1.1.1.1. My h11</a></div>
 <ul>
-<li><div id="toc-my-h12"><a href="#my-h12">22. My h12</a></div>
+<li><div id="toc-my-h12"><a href="#my-h12">6.1.1.1.1.1.1.1.1.1.1. My h12</a></div>
 <ul>
-<li><div id="toc-my-h13"><a href="#my-h13">23. My h13</a></div></li>
-</ul>
-</li>
+<li><div id="toc-my-h13"><a href="#my-h13">6.1.1.1.1.1.1.1.1.1.1.1. My h13</a></div></li>
 </ul>
 </li>
 </ul>
@@ -145,80 +143,82 @@ th, td {
 </ul>
 </li>
 </ul>
-<li><div id="toc-table-of-contents"><a href="#table-of-contents">24. Table of contents <code>\toc</code></a></div>
-<ul>
-<li><div id="toc-id-scope"><a href="#id-scope">25. id_scope</a></div></li>
+</li>
 </ul>
-<li><div id="toc-header-explicit-levels-vs-nesting-design-choice"><a href="#header-explicit-levels-vs-nesting-design-choice">26. Header explicit levels vs nesting design choice</a></div></li>
-<li><div id="toc-includes"><a href="#includes">27. Includes <code>\include</code></a></div></li>
-<li><div id="toc-skipping-header-levels"><a href="#skipping-header-levels">28. Skipping header levels</a></div></li>
+<li><div id="toc-table-of-contents"><a href="#table-of-contents">6.2. Table of contents <code>\toc</code></a></div>
+<ul>
+<li><div id="toc-id-scope"><a href="#id-scope">6.2.1. id_scope</a></div></li>
 </ul>
-<li><div id="toc-lists"><a href="#lists">29. Lists <code>\l</code></a></div></li>
-<li><div id="toc-images"><a href="#images">30. Images <code>\image</code></a></div>
-<ul>
-<li><div id="toc-where-to-store-images"><a href="#where-to-store-images">31. Where to store images</a></div></li>
-<li><div id="toc-image-generators"><a href="#image-generators">32. Image generators</a></div></li>
+<li><div id="toc-header-explicit-levels-vs-nesting-design-choice"><a href="#header-explicit-levels-vs-nesting-design-choice">6.3. Header explicit levels vs nesting design choice</a></div></li>
+<li><div id="toc-includes"><a href="#includes">6.4. Includes <code>\include</code></a></div></li>
+<li><div id="toc-skipping-header-levels"><a href="#skipping-header-levels">6.5. Skipping header levels</a></div></li>
 </ul>
-<li><div id="toc-code"><a href="#code">33. Code <code>\c</code> and <code>\C</code></a></div></li>
-<li><div id="toc-math"><a href="#math">34. Mathematics <code>\M</code> and <code>\m</code></a></div>
+<li><div id="toc-lists"><a href="#lists">7. Lists <code>\l</code></a></div></li>
+<li><div id="toc-images"><a href="#images">8. Images <code>\image</code></a></div>
 <ul>
-<li><div id="toc-math-defines-across-blocks"><a href="#math-defines-across-blocks">35. Math defines across blocks</a></div></li>
+<li><div id="toc-where-to-store-images"><a href="#where-to-store-images">8.1. Where to store images</a></div></li>
+<li><div id="toc-image-generators"><a href="#image-generators">8.2. Image generators</a></div></li>
 </ul>
-<li><div id="toc-tables"><a href="#tables">36. Tables <code>\table</code>, <code>\tr</code>, <code>\th</code> and <code>\td</code></a></div></li>
-<li><div id="toc-comments"><a href="#comments">37. Comments</a></div></li>
-<li><div id="toc-cirodown-syntax"><a href="#cirodown-syntax">38. Cirodown syntax</a></div>
+<li><div id="toc-code"><a href="#code">9. Code <code>\c</code> and <code>\C</code></a></div></li>
+<li><div id="toc-math"><a href="#math">10. Mathematics <code>\M</code> and <code>\m</code></a></div>
 <ul>
-<li><div id="toc-macro-argument-syntax"><a href="#macro-argument-syntax">39. Macro argument syntax</a></div>
-<ul>
-<li><div id="toc-positional-vs-named-arguments"><a href="#positional-vs-named-arguments">40. Positional vs named arguments</a></div></li>
-<li><div id="toc-javascript-interface-for-arguments"><a href="#javascript-interface-for-arguments">41. JavaScript interface for arguments</a></div></li>
-<li><div id="toc-newlines-between-arguments"><a href="#newlines-between-arguments">42. Newlines between arguments</a></div></li>
-<li><div id="toc-escape-characters"><a href="#escape-characters">43. Escape characters</a></div></li>
-<li><div id="toc-literal-arguments"><a href="#literal-arguments">44. Literal arguments</a></div></li>
-<li><div id="toc-argument-leading-newline-removal"><a href="#argument-leading-newline-removal">45. Argument leading newline removal</a></div></li>
-<li><div id="toc-argument-automatic-indentation-removal"><a href="#argument-automatic-indentation-removal">46. Argument automatic indentation removal</a></div></li>
+<li><div id="toc-math-defines-across-blocks"><a href="#math-defines-across-blocks">10.1. Math defines across blocks</a></div></li>
 </ul>
-<li><div id="toc-macro-capitalization-for-block-vs-inline"><a href="#macro-capitalization-for-block-vs-inline">47. Macro capitalization for block vs inline</a></div></li>
+<li><div id="toc-tables"><a href="#tables">11. Tables <code>\table</code>, <code>\tr</code>, <code>\th</code> and <code>\td</code></a></div></li>
+<li><div id="toc-comments"><a href="#comments">12. Comments</a></div></li>
+<li><div id="toc-cirodown-syntax"><a href="#cirodown-syntax">13. Cirodown syntax</a></div>
+<ul>
+<li><div id="toc-macro-argument-syntax"><a href="#macro-argument-syntax">13.1. Macro argument syntax</a></div>
+<ul>
+<li><div id="toc-positional-vs-named-arguments"><a href="#positional-vs-named-arguments">13.1.1. Positional vs named arguments</a></div></li>
+<li><div id="toc-javascript-interface-for-arguments"><a href="#javascript-interface-for-arguments">13.1.2. JavaScript interface for arguments</a></div></li>
+<li><div id="toc-newlines-between-arguments"><a href="#newlines-between-arguments">13.1.3. Newlines between arguments</a></div></li>
+<li><div id="toc-escape-characters"><a href="#escape-characters">13.1.4. Escape characters</a></div></li>
+<li><div id="toc-literal-arguments"><a href="#literal-arguments">13.1.5. Literal arguments</a></div></li>
+<li><div id="toc-argument-leading-newline-removal"><a href="#argument-leading-newline-removal">13.1.6. Argument leading newline removal</a></div></li>
+<li><div id="toc-argument-automatic-indentation-removal"><a href="#argument-automatic-indentation-removal">13.1.7. Argument automatic indentation removal</a></div></li>
 </ul>
-<li><div id="toc-tooling"><a href="#tooling">48. Tooling</a></div>
-<ul>
-<li><div id="toc-cirodown-executable"><a href="#cirodown-executable">49. <code>cirodown</code> executable</a></div>
-<ul>
-<li><div id="toc-cirodown-executable-most-important-options"><a href="#cirodown-executable-most-important-options">50. <code>cirodown</code> executable most important options</a></div>
-<ul>
-<li><div id="toc-watch"><a href="#watch">51. <code>--watch</code></a></div></li>
-<li><div id="toc-publish"><a href="#publish">52. <code>--publish</code></a></div>
-<ul>
-<li><div id="toc-code-publish-to-github-pages-code"><a href="#code-publish-to-github-pages-code">53. <code>Publish to GitHub Pages</code></a></div></li>
+<li><div id="toc-macro-capitalization-for-block-vs-inline"><a href="#macro-capitalization-for-block-vs-inline">13.2. Macro capitalization for block vs inline</a></div></li>
 </ul>
-<li><div id="toc-publish-commit"><a href="#publish-commit">54. <code>--publish-commit &lt;commit-message&gt;</code></a></div></li>
-<li><div id="toc-help-macros"><a href="#help-macros">55. <code>--help-macros</code></a></div></li>
-</ul>
-<li><div id="toc-cirodown-json"><a href="#cirodown-json">56. <code>cirodown.json</code></a></div>
+<li><div id="toc-tooling"><a href="#tooling">14. Tooling</a></div>
 <ul>
-<li><div id="toc-media-source-type"><a href="#media-source-type">57. <code>media_source_type</code></a></div></li>
-<li><div id="toc-media-base-url"><a href="#media-base-url">58. <code>media_base_url</code></a></div></li>
+<li><div id="toc-cirodown-executable"><a href="#cirodown-executable">14.1. <code>cirodown</code> executable</a></div>
+<ul>
+<li><div id="toc-cirodown-executable-most-important-options"><a href="#cirodown-executable-most-important-options">14.1.1. <code>cirodown</code> executable most important options</a></div>
+<ul>
+<li><div id="toc-watch"><a href="#watch">14.1.1.1. <code>--watch</code></a></div></li>
+<li><div id="toc-publish"><a href="#publish">14.1.1.2. <code>--publish</code></a></div>
+<ul>
+<li><div id="toc-code-publish-to-github-pages-code"><a href="#code-publish-to-github-pages-code">14.1.1.2.1. <code>Publish to GitHub Pages</code></a></div></li>
+</ul>
+<li><div id="toc-publish-commit"><a href="#publish-commit">14.1.1.3. <code>--publish-commit &lt;commit-message&gt;</code></a></div></li>
+<li><div id="toc-help-macros"><a href="#help-macros">14.1.1.4. <code>--help-macros</code></a></div></li>
+</ul>
+<li><div id="toc-cirodown-json"><a href="#cirodown-json">14.1.2. <code>cirodown.json</code></a></div>
+<ul>
+<li><div id="toc-media-source-type"><a href="#media-source-type">14.1.2.1. <code>media_source_type</code></a></div></li>
+<li><div id="toc-media-base-url"><a href="#media-base-url">14.1.2.2. <code>media_base_url</code></a></div></li>
 </ul>
 </li>
 </ul>
-<li><div id="toc-editor-and-preview"><a href="#editor-and-preview">59. Editor and preview</a></div></li>
+<li><div id="toc-editor-and-preview"><a href="#editor-and-preview">14.2. Editor and preview</a></div></li>
 </ul>
-<li><div id="toc-developing-cirodown"><a href="#developing-cirodown">60. Developing Cirodown</a></div>
+<li><div id="toc-developing-cirodown"><a href="#developing-cirodown">15. Developing Cirodown</a></div>
 <ul>
-<li><div id="toc-test-system"><a href="#test-system">61. Test system</a></div></li>
-<li><div id="toc-overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository">62. Overview of files in this repository</a></div></li>
-<li><div id="toc-internals-api"><a href="#internals-api">63. Internals API</a></div></li>
-<li><div id="toc-toplevel"><a href="#toplevel">64. The <code>\toplevel</code> implicit macro</a></div>
+<li><div id="toc-test-system"><a href="#test-system">15.1. Test system</a></div></li>
+<li><div id="toc-overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository">15.2. Overview of files in this repository</a></div></li>
+<li><div id="toc-internals-api"><a href="#internals-api">15.3. Internals API</a></div></li>
+<li><div id="toc-toplevel"><a href="#toplevel">15.4. The <code>\toplevel</code> implicit macro</a></div>
 <ul>
-<li><div id="toc-html-document-title"><a href="#html-document-title">65. HTML document title</a></div></li>
+<li><div id="toc-html-document-title"><a href="#html-document-title">15.4.1. HTML document title</a></div></li>
 </ul>
-<li><div id="toc-formal-grammar"><a href="#formal-grammar">66. Formal grammar</a></div></li>
-<li><div id="toc-todo"><a href="#todo">67. TODO</a></div></li>
+<li><div id="toc-formal-grammar"><a href="#formal-grammar">15.5. Formal grammar</a></div></li>
+<li><div id="toc-todo"><a href="#todo">15.6. TODO</a></div></li>
 </ul>
-<li><div id="toc-related-projects"><a href="#related-projects">68. Related projects</a></div></li>
+<li><div id="toc-related-projects"><a href="#related-projects">16. Related projects</a></div></li>
 </ul>
 </div>
-<h2 id="quick-start"><a href="#quick-start" title="link to this element">2. Quick start</a><span> <a href="#toc-quick-start">(toc ↑)</a></span></h2>
+<h2 id="quick-start"><a href="#quick-start" title="link to this element">1. Quick start</a><span> <a href="#toc-quick-start">(toc ↑)</a></span></h2>
 <p>TODO: browser live test</p>
 <p>Install NPM package and use it from the command line for a quick conversion:</p>
 <pre><code>npm install cirodown
@@ -250,7 +250,7 @@ npm link
 rm node_modules/cirodown
 </code></pre>
 <p>TODO: create a multifile blog example folder and link from here.</p>
-<h2 id="design-goals"><a href="#design-goals" title="link to this element">3. Design goals</a><span> <a href="#toc-design-goals">(toc ↑)</a></span></h2>
+<h2 id="design-goals"><a href="#design-goals" title="link to this element">2. Design goals</a><span> <a href="#toc-design-goals">(toc ↑)</a></span></h2>
 <p>Cirodown is designed entirely to allow writing complex professional HTML and PDF scientific books, blogs, articles and encyclopedias.</p>
 <p>Cirodown aims to be the ultimate LaTeX "killer", allowing books to be finally published as either HTML or PDF painlessly (LaTeX being only a backend to PDF generation), supporting out of the box feature such as:</p>
 <ul>
@@ -281,7 +281,7 @@ rm node_modules/cirodown
 <li>in text editors locally, where users have more features than in random browser textareas</li>
 <li>in a dedicated website that will revolutionize education, and therefore have a good JavaScript editing interface: <a href="https://github.com/cirosantilli/write-free-science-books-to-get-famous-website">https://github.com/cirosantilli/write-free-science-books-to-get-famous-website</a></li>
 </ul>
-<h3 id="saner"><a href="#saner" title="link to this element">4. Saner</a><span> <a href="#toc-saner">(toc ↑)</a></span></h3>
+<h3 id="saner"><a href="#saner" title="link to this element">2.1. Saner</a><span> <a href="#toc-saner">(toc ↑)</a></span></h3>
 <p>To be saner than both Markdown and Asciidoctor, Cirodown has exactly five magic characters, with similar functions as in LaTeX:</p>
 <ul>
 <li><code>\</code> backslash to start a macro, like LaTeX</li>
@@ -317,14 +317,14 @@ rm node_modules/cirodown
 <p>  maps to the internal content of <code>&lt;a&gt;Link text&lt;&gt;</code></p>
 </li>
 </ul>
-<h3 id="more-powerful"><a href="#more-powerful" title="link to this element">5. More powerful</a><span> <a href="#toc-more-powerful">(toc ↑)</a></span></h3>
+<h3 id="more-powerful"><a href="#more-powerful" title="link to this element">2.2. More powerful</a><span> <a href="#toc-more-powerful">(toc ↑)</a></span></h3>
 <p>The <a href="#saner">high sanity of Cirodown</a>, also makes creating new macro extensions extremely easy and intuitive.</p>
 <p>All built-in language features use the exact same API as new extensions, which ensures that the extension API is sane forever.</p>
 <p>Markdown is clearly missing many key features such as block attributes and <a href="#internal-cross-references">Internal cross references <code>\x</code></a>, and has no standardized extension mechanism.</p>
 <p>The "more powerful than Asciidoctor" part is only partially true, since Asciidoctor is very featureful can do basically anything through extensions.</p>
 <p>The difference is mostly that Cirodown is completely and entirely focused on making amazing scientific books, and so will have key features for that application out-of-the box.</p>
 <p>Another advantage over Asciidoctor is that the reference implementation of Cirodown is in JavaScript, and can therefore be used on browser live preview out of the box. Asciidoctor does Transpile to JS with <a href="https://github.com/opal/opal">Opal</a>, but who wants to deal with that layer of complexity?</p>
-<h2 id="paragraphs"><a href="#paragraphs" title="link to this element">6. Paragraphs <code>\p</code></a><span> <a href="#toc-paragraphs">(toc ↑)</a></span></h2>
+<h2 id="paragraphs"><a href="#paragraphs" title="link to this element">3. Paragraphs <code>\p</code></a><span> <a href="#toc-paragraphs">(toc ↑)</a></span></h2>
 <p>OK, this is too common, so we opted for some insanity here: double newline is a paragraph!</p>
 <p>Paragraph 1.</p>
 <p>Paragraph 2.</p>
@@ -333,13 +333,13 @@ rm node_modules/cirodown
 <p id="paragraph-2">Paragraph 2</p>
 <p>Paragraphs are created automatically inside <a href="#macro-argument-syntax">macro argument</a> whenever a double newline appears.</p>
 <p>Due to their insane syntax, paragraphs have to do some magic to determine where they start and end. TODO: mention the rule that paragraphs wrap only phrasing content, link to: <a href="#help-macros"><code>--help-macros</code></a>.</p>
-<h2 id="links"><a href="#links" title="link to this element">7. Links <code>\a</code></a><span> <a href="#toc-links">(toc ↑)</a></span></h2>
+<h2 id="links"><a href="#links" title="link to this element">4. Links <code>\a</code></a><span> <a href="#toc-links">(toc ↑)</a></span></h2>
 <p>Autolink (link text is the same as the link): <a href="http://example.com">http://example.com</a>.</p>
 <p>Link with custom text: <a href="http://example.com">my custom link text</a>.</p>
 <p><a href="http://example.com"><p>Multiple</p>
 <p>paragraphs</p>
 </a></p>
-<h2 id="internal-cross-references"><a href="#internal-cross-references" title="link to this element">8. Internal cross references <code>\x</code></a><span> <a href="#toc-internal-cross-references">(toc ↑)</a></span></h2>
+<h2 id="internal-cross-references"><a href="#internal-cross-references" title="link to this element">5. Internal cross references <code>\x</code></a><span> <a href="#toc-internal-cross-references">(toc ↑)</a></span></h2>
 <p>Every macro in Cirodown can have an optional <code>id</code> and a <code>title</code> property.</p>
 <p>Those that have a <code>title</code> but no <code>id</code>, get an auto-generated ID from the title: <a href="#automatic-id-from-title">Automatic ID from title</a>.</p>
 <p>For macros that do have an ID, you can write a cross reference to it:</p>
@@ -357,19 +357,19 @@ Read this \x[my-id].
 
 Read this \x[my-id][My title].
 </code></pre>
-<h3 id="cross-reference-style"><a href="#cross-reference-style" title="link to this element">9. Cross reference style</a><span> <a href="#toc-cross-reference-style">(toc ↑)</a></span></h3>
+<h3 id="cross-reference-style"><a href="#cross-reference-style" title="link to this element">5.1. Cross reference style</a><span> <a href="#toc-cross-reference-style">(toc ↑)</a></span></h3>
 <p>To also show the section auto-generated number as in "Section X.Y My title" we add the optional <code>{style=full}</code> <a href="#positional-vs-named-arguments">named parameter</a> to the cross reference, for example:</p>
 <pre><code>\h[2][My title]{id=my-id}
 
 Read this \x[my-id]{style=full}.
 </code></pre>
-<h3 id="internal-cross-file-references"><a href="#internal-cross-file-references" title="link to this element">10. Internal cross file references</a><span> <a href="#toc-internal-cross-file-references">(toc ↑)</a></span></h3>
+<h3 id="internal-cross-file-references"><a href="#internal-cross-file-references" title="link to this element">5.2. Internal cross file references</a><span> <a href="#toc-internal-cross-file-references">(toc ↑)</a></span></h3>
 <p>TODO</p>
 <pre><code>Reference to the first header of another file: \x[not-readme]. That header gets its ID from the file name by default.
 
 Reference to an internal header of another file: \x[h2-in-not-the-readme]. By default, That header ID gets prefixed by the ID of the top header.
 </code></pre>
-<h3 id="automatic-id-from-title"><a href="#automatic-id-from-title" title="link to this element">11. Automatic ID from title</a><span> <a href="#toc-automatic-id-from-title">(toc ↑)</a></span></h3>
+<h3 id="automatic-id-from-title"><a href="#automatic-id-from-title" title="link to this element">5.3. Automatic ID from title</a><span> <a href="#toc-automatic-id-from-title">(toc ↑)</a></span></h3>
 <p>If a macro has the <code>title</code> property is present but no explicit <code>id</code>, an ID is created automatically from the <code>title</code>, by applying the following transformations:</p>
 <ul>
 <li>convert all of <code>A-Z</code> characters to lowercase</li>
@@ -405,31 +405,31 @@ Reference to an internal header of another file: \x[h2-in-not-the-readme]. By de
 </tr>
 </table>
 </div>
-<h2 id="headers"><a href="#headers" title="link to this element">12. Headers <code>\h</code></a><span> <a href="#toc-headers">(toc ↑)</a></span></h2>
-<h3 id="unlimited-header-levels"><a href="#unlimited-header-levels" title="link to this element">13. Unlimited header levels</a><span> <a href="#toc-unlimited-header-levels">(toc ↑)</a></span></h3>
+<h2 id="headers"><a href="#headers" title="link to this element">6. Headers <code>\h</code></a><span> <a href="#toc-headers">(toc ↑)</a></span></h2>
+<h3 id="unlimited-header-levels"><a href="#unlimited-header-levels" title="link to this element">6.1. Unlimited header levels</a><span> <a href="#toc-unlimited-header-levels">(toc ↑)</a></span></h3>
 <p>There is no limit to how many levels we can have!</p>
 <p>HTML is randomly limited to <code>h6</code>, so Cirodown just renders higher levels as an <code>h6</code> with a <code>data-level</code> attribute to indicate the actual level for possible CSS styling:</p>
 <pre><code>&lt;h6 data-level="7"&gt;My title&lt;/h6&gt;
 </code></pre>
-<h4 id="my-h4"><a href="#my-h4" title="link to this element">14. My h4</a><span> <a href="#toc-my-h4">(toc ↑)</a></span></h4>
-<h5 id="my-h5"><a href="#my-h5" title="link to this element">15. My h5</a><span> <a href="#toc-my-h5">(toc ↑)</a></span></h5>
-<h6 id="my-h6"><a href="#my-h6" title="link to this element">16. My h6</a><span> <a href="#toc-my-h6">(toc ↑)</a></span></h6>
-<h6 data-level="7" id="my-h7"><a href="#my-h7" title="link to this element">17. My h7</a><span> <a href="#toc-my-h7">(toc ↑)</a></span></h6>
-<h6 data-level="8" id="my-h8"><a href="#my-h8" title="link to this element">18. My h8</a><span> <a href="#toc-my-h8">(toc ↑)</a></span></h6>
-<h6 data-level="9" id="my-h9"><a href="#my-h9" title="link to this element">19. My h9</a><span> <a href="#toc-my-h9">(toc ↑)</a></span></h6>
-<h6 data-level="10" id="my-h10"><a href="#my-h10" title="link to this element">20. My h10</a><span> <a href="#toc-my-h10">(toc ↑)</a></span></h6>
-<h6 data-level="11" id="my-h11"><a href="#my-h11" title="link to this element">21. My h11</a><span> <a href="#toc-my-h11">(toc ↑)</a></span></h6>
-<h6 data-level="12" id="my-h12"><a href="#my-h12" title="link to this element">22. My h12</a><span> <a href="#toc-my-h12">(toc ↑)</a></span></h6>
-<h6 data-level="13" id="my-h13"><a href="#my-h13" title="link to this element">23. My h13</a><span> <a href="#toc-my-h13">(toc ↑)</a></span></h6>
-<h3 id="table-of-contents"><a href="#table-of-contents" title="link to this element">24. Table of contents <code>\toc</code></a><span> <a href="#toc-table-of-contents">(toc ↑)</a></span></h3>
+<h4 id="my-h4"><a href="#my-h4" title="link to this element">6.1.1. My h4</a><span> <a href="#toc-my-h4">(toc ↑)</a></span></h4>
+<h5 id="my-h5"><a href="#my-h5" title="link to this element">6.1.1.1. My h5</a><span> <a href="#toc-my-h5">(toc ↑)</a></span></h5>
+<h6 id="my-h6"><a href="#my-h6" title="link to this element">6.1.1.1.1. My h6</a><span> <a href="#toc-my-h6">(toc ↑)</a></span></h6>
+<h6 data-level="7" id="my-h7"><a href="#my-h7" title="link to this element">6.1.1.1.1.1. My h7</a><span> <a href="#toc-my-h7">(toc ↑)</a></span></h6>
+<h6 data-level="8" id="my-h8"><a href="#my-h8" title="link to this element">6.1.1.1.1.1.1. My h8</a><span> <a href="#toc-my-h8">(toc ↑)</a></span></h6>
+<h6 data-level="9" id="my-h9"><a href="#my-h9" title="link to this element">6.1.1.1.1.1.1.1. My h9</a><span> <a href="#toc-my-h9">(toc ↑)</a></span></h6>
+<h6 data-level="10" id="my-h10"><a href="#my-h10" title="link to this element">6.1.1.1.1.1.1.1.1. My h10</a><span> <a href="#toc-my-h10">(toc ↑)</a></span></h6>
+<h6 data-level="11" id="my-h11"><a href="#my-h11" title="link to this element">6.1.1.1.1.1.1.1.1.1. My h11</a><span> <a href="#toc-my-h11">(toc ↑)</a></span></h6>
+<h6 data-level="12" id="my-h12"><a href="#my-h12" title="link to this element">6.1.1.1.1.1.1.1.1.1.1. My h12</a><span> <a href="#toc-my-h12">(toc ↑)</a></span></h6>
+<h6 data-level="13" id="my-h13"><a href="#my-h13" title="link to this element">6.1.1.1.1.1.1.1.1.1.1.1. My h13</a><span> <a href="#toc-my-h13">(toc ↑)</a></span></h6>
+<h3 id="table-of-contents"><a href="#table-of-contents" title="link to this element">6.2. Table of contents <code>\toc</code></a><span> <a href="#toc-table-of-contents">(toc ↑)</a></span></h3>
 <p>Only one ToC shows per document. Any ToC besides the first one is ignored.</p>
 <p>The ToC ignores <code>\h[1]</code> by default, as we encourage that header level to appear only once and represent the main title under which the entire document goes.</p>
-<h4 id="id-scope"><a href="#id-scope" title="link to this element">25. id_scope</a><span> <a href="#toc-id-scope">(toc ↑)</a></span></h4>
+<h4 id="id-scope"><a href="#id-scope" title="link to this element">6.2.1. id_scope</a><span> <a href="#toc-id-scope">(toc ↑)</a></span></h4>
 <p>TODO implement.</p>
 <p>If this header attribute is <code>true</code>, then the ID of all children are prefixed with the ID of this header + a slash <code>/</code>.</p>
 <p>This property is true by default for cross file references, although it can be turned off explicitly with <code>id-scope=false</code>.</p>
 <p>References withing a single scope do not need the parent scope prefix.</p>
-<h3 id="header-explicit-levels-vs-nesting-design-choice"><a href="#header-explicit-levels-vs-nesting-design-choice" title="link to this element">26. Header explicit levels vs nesting design choice</a><span> <a href="#toc-header-explicit-levels-vs-nesting-design-choice">(toc ↑)</a></span></h3>
+<h3 id="header-explicit-levels-vs-nesting-design-choice"><a href="#header-explicit-levels-vs-nesting-design-choice" title="link to this element">6.3. Header explicit levels vs nesting design choice</a><span> <a href="#toc-header-explicit-levels-vs-nesting-design-choice">(toc ↑)</a></span></h3>
 <p>Arguably, the language would be even saner if we did:</p>
 <pre><code>\h[My h1][
 
@@ -440,7 +440,7 @@ Paragraph.
 </code></pre>
 <p>rather than having explicit levels.</p>
 <p>But we chose not to do it like most markups available because it leads to too many nestiing levels, and hard to determine where you are without tooling.</p>
-<h3 id="includes"><a href="#includes" title="link to this element">27. Includes <code>\include</code></a><span> <a href="#toc-includes">(toc ↑)</a></span></h3>
+<h3 id="includes"><a href="#includes" title="link to this element">6.4. Includes <code>\include</code></a><span> <a href="#toc-includes">(toc ↑)</a></span></h3>
 <p>The <code>\include</code> macro achieves the following goals:</p>
 <ul>
 <li><p>  show a single header at multiple locations in the table of contents. This makes the TOC into a full blown graph rather than a tree.</p>
@@ -462,7 +462,7 @@ Paragraph.
 <p>Therefore, in this case you are forced to specify which include will actually expand to the <code>canonical</code> attribute:</p>
 <pre><code>\include[not-the-readme]{canonical=true}
 </code></pre>
-<h3 id="skipping-header-levels"><a href="#skipping-header-levels" title="link to this element">28. Skipping header levels</a><span> <a href="#toc-skipping-header-levels">(toc ↑)</a></span></h3>
+<h3 id="skipping-header-levels"><a href="#skipping-header-levels" title="link to this element">6.5. Skipping header levels</a><span> <a href="#toc-skipping-header-levels">(toc ↑)</a></span></h3>
 <p>The very first header of a document can be of any level, although we highly recommend your document to start with a <code>\h[1]</code>, and to contain exactly just one <code>\h[1]</code>, as this has implications such as:</p>
 <ul>
 <li><code>\h[1]</code> is used for the document title: <a href="#html-document-title">HTML document title</a></li>
@@ -475,7 +475,7 @@ Paragraph.
 
 \h[4][my 4]
 </code></pre>
-<h2 id="lists"><a href="#lists" title="link to this element">29. Lists <code>\l</code></a><span> <a href="#toc-lists">(toc ↑)</a></span></h2>
+<h2 id="lists"><a href="#lists" title="link to this element">7. Lists <code>\l</code></a><span> <a href="#toc-lists">(toc ↑)</a></span></h2>
 <p>With implicit container:</p>
 <ul>
 <li>a</li>
@@ -538,7 +538,7 @@ Paragraph.
 </li>
 <li>c</li>
 </ul>
-<h2 id="images"><a href="#images" title="link to this element">30. Images <code>\image</code></a><span> <a href="#toc-images">(toc ↑)</a></span></h2>
+<h2 id="images"><a href="#images" title="link to this element">8. Images <code>\image</code></a><span> <a href="#toc-images">(toc ↑)</a></span></h2>
 <p>A block image with <a href="#macro-capitalization-for-block-vs-inline">capital</a> 'i' <code>Image</code> can be seen at <a href="#image-my-xi-chrysanthemum">Image 1. "Xi Chrysanthemum is a very nice image"</a>:</p>
 <figure id="image-my-xi-chrysanthemum">
 <a href="#image-my-xi-chrysanthemum"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_liusi_added_by_Ciro_Santilli.jpeg"></a>
@@ -556,7 +556,7 @@ Paragraph.
 </figure>
 <p>This kind of image is discouraged, because in paged output formats like PDF, it could float away from the text that refers to the image.</p>
 <p>And here is an <img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_liusi_added_by_Ciro_Santilli.jpeg" alt="Xi Chrysanthemum"> inline one with lower case 'i'. Inline images can't have captions.</p>
-<h3 id="where-to-store-images"><a href="#where-to-store-images" title="link to this element">31. Where to store images</a><span> <a href="#toc-where-to-store-images">(toc ↑)</a></span></h3>
+<h3 id="where-to-store-images"><a href="#where-to-store-images" title="link to this element">8.1. Where to store images</a><span> <a href="#toc-where-to-store-images">(toc ↑)</a></span></h3>
 <p>If you are making a limited repository that will not have a ton of images, then you can get away with simply git tracking your images in the main repository.</p>
 <p>With this setup, no further action is needed. For example, with a file structure of:</p>
 <pre><code>./README.ciro
@@ -595,9 +595,9 @@ Paragraph.
 <p>The reason why images should be kept in a separate repository is that images are hundreds or thousands of times larger than hand written text.</p>
 <p>Therefore, images could easily fill up the maximum repository size you are allowed: https://webapps.stackexchange.com/questions/45254/file-size-and-storage-limits-on-github#84746 and then what will you do when GitHub comes asking you to reduce the repository size?</p>
 <p><a href="https://git-lfs.github.com/">Git LFS</a> is one approach to deal with this, but we feel that it adds too much development overhead.</p>
-<h3 id="image-generators"><a href="#image-generators" title="link to this element">32. Image generators</a><span> <a href="#toc-image-generators">(toc ↑)</a></span></h3>
+<h3 id="image-generators"><a href="#image-generators" title="link to this element">8.2. Image generators</a><span> <a href="#toc-image-generators">(toc ↑)</a></span></h3>
 <p>TODO implement: mechanism where you enter a textual description of the image inside the code body, and it then converts to an image, adds to the <code>-media</code> repo and pushes all automatically. Start with dot.</p>
-<h2 id="code"><a href="#code" title="link to this element">33. Code <code>\c</code> and <code>\C</code></a><span> <a href="#toc-code">(toc ↑)</a></span></h2>
+<h2 id="code"><a href="#code" title="link to this element">9. Code <code>\c</code> and <code>\C</code></a><span> <a href="#toc-code">(toc ↑)</a></span></h2>
 <p>Inline code blocks (code blocks that should appear in the middle of a paragraph) are done with lower case <code>c</code>:</p>
 <pre><code>My \c[inline] code.
 </code></pre>
@@ -635,7 +635,7 @@ A paragraph.
 <p>The capital vs lower case theme is also used in other elements, for example <a href="#math">Mathematics <code>\M</code> and <code>\m</code></a>.</p>
 <p>The distinction between inline <code>c</code> and block <code>C</code> code blocks is needed because in HTML, <a href="https://stackoverflow.com/questions/5371787/can-i-have-a-pre-tag-inside-a-p-tag-in-tumblr/58603596#58603596"><code>pre</code> cannot go inside <code>p</code></a>.</p>
 <p>We could have chosen to do some magic to differentiate between them, e.g. checking if the block is the only element in a paragraph, but we decided not to do that to keep the language saner.</p>
-<h2 id="math"><a href="#math" title="link to this element">34. Mathematics <code>\M</code> and <code>\m</code></a><span> <a href="#toc-math">(toc ↑)</a></span></h2>
+<h2 id="math"><a href="#math" title="link to this element">10. Mathematics <code>\M</code> and <code>\m</code></a><span> <a href="#toc-math">(toc ↑)</a></span></h2>
 <p>Via KaTeX server side, oh yes!</p>
 <p>My inline <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt></mrow><annotation encoding="application/x-tex">\sqrt{1 + 1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.17444499999999996em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8655550000000001em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord">1</span></span></span><span style="top:-2.825555em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702
 c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
@@ -689,7 +689,7 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 <div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1 + 1 = 2
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span></span></span></span></div>
 </div>
-<h3 id="math-defines-across-blocks"><a href="#math-defines-across-blocks" title="link to this element">35. Math defines across blocks</a><span> <a href="#toc-math-defines-across-blocks">(toc ↑)</a></span></h3>
+<h3 id="math-defines-across-blocks"><a href="#math-defines-across-blocks" title="link to this element">10.1. Math defines across blocks</a><span> <a href="#toc-math-defines-across-blocks">(toc ↑)</a></span></h3>
 <p>TODO pending upstream tag bump: <a href="https://github.com/KaTeX/KaTeX/pull/2091">https://github.com/KaTeX/KaTeX/pull/2091</a> First block defining with <code>\newcommand</code>:</p>
 <div class="math-container"><div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow></mrow><annotation encoding="application/x-tex">\newcommand{\foo}[0]{bar}
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"></span></span></div>
@@ -707,7 +707,7 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 <div class="math-container"><div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mi>a</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">\foogdef
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">b</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span></span></span></span></div>
 </div>
-<h2 id="tables"><a href="#tables" title="link to this element">36. Tables <code>\table</code>, <code>\tr</code>, <code>\th</code> and <code>\td</code></a><span> <a href="#toc-tables">(toc ↑)</a></span></h2>
+<h2 id="tables"><a href="#tables" title="link to this element">11. Tables <code>\table</code>, <code>\tr</code>, <code>\th</code> and <code>\td</code></a><span> <a href="#toc-tables">(toc ↑)</a></span></h2>
 <p>Similar to lists. Implicit container with optional indentation to improve readability:</p>
 <div class="table-container">
 <table>
@@ -745,14 +745,14 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 </tr>
 </table>
 </div>
-<h2 id="comments"><a href="#comments" title="link to this element">37. Comments</a><span> <a href="#toc-comments">(toc ↑)</a></span></h2>
+<h2 id="comments"><a href="#comments" title="link to this element">12. Comments</a><span> <a href="#toc-comments">(toc ↑)</a></span></h2>
 <p>The <code>Comment</code> and <code>comment</code> macros are regular macros that does not produce any output. Capitalization is explained at: <a href="#macro-capitalization-for-block-vs-inline">Macro capitalization for block vs inline</a>.</p>
 <p>You will therefore mostly want to use it with a <a href="#literal-arguments">literal argument</a>, which will, as for any other macro, ignore any macros inside of it.</p>
 <p>And here is:  an inline one.</p>
 <p> inline at the start.</p>
-<h2 id="cirodown-syntax"><a href="#cirodown-syntax" title="link to this element">38. Cirodown syntax</a><span> <a href="#toc-cirodown-syntax">(toc ↑)</a></span></h2>
-<h3 id="macro-argument-syntax"><a href="#macro-argument-syntax" title="link to this element">39. Macro argument syntax</a><span> <a href="#toc-macro-argument-syntax">(toc ↑)</a></span></h3>
-<h4 id="positional-vs-named-arguments"><a href="#positional-vs-named-arguments" title="link to this element">40. Positional vs named arguments</a><span> <a href="#toc-positional-vs-named-arguments">(toc ↑)</a></span></h4>
+<h2 id="cirodown-syntax"><a href="#cirodown-syntax" title="link to this element">13. Cirodown syntax</a><span> <a href="#toc-cirodown-syntax">(toc ↑)</a></span></h2>
+<h3 id="macro-argument-syntax"><a href="#macro-argument-syntax" title="link to this element">13.1. Macro argument syntax</a><span> <a href="#toc-macro-argument-syntax">(toc ↑)</a></span></h3>
+<h4 id="positional-vs-named-arguments"><a href="#positional-vs-named-arguments" title="link to this element">13.1.1. Positional vs named arguments</a><span> <a href="#toc-positional-vs-named-arguments">(toc ↑)</a></span></h4>
 <p>Every argument in Cirodown is either positional or named.</p>
 <p>For example, in a <a href="#headers">header</a> definition with an ID:</p>
 <pre><code>\h[1][My asdf]{id=asdf qwer}{id_scope=myscope}
@@ -804,7 +804,7 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 <pre><code>\a[http://example.com][http://example.com]
 </code></pre>
 <p>See also: <a href="#links">Links <code>\a</code></a>.</p>
-<h4 id="javascript-interface-for-arguments"><a href="#javascript-interface-for-arguments" title="link to this element">41. JavaScript interface for arguments</a><span> <a href="#toc-javascript-interface-for-arguments">(toc ↑)</a></span></h4>
+<h4 id="javascript-interface-for-arguments"><a href="#javascript-interface-for-arguments" title="link to this element">13.1.2. JavaScript interface for arguments</a><span> <a href="#toc-javascript-interface-for-arguments">(toc ↑)</a></span></h4>
 <p>The JavaScript interface sees arguments as follows:</p>
 <pre><code>function macro_name(args)
 </code></pre>
@@ -816,7 +816,7 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 </p>
 </li>
 </ul>
-<h4 id="newlines-between-arguments"><a href="#newlines-between-arguments" title="link to this element">42. Newlines between arguments</a><span> <a href="#toc-newlines-between-arguments">(toc ↑)</a></span></h4>
+<h4 id="newlines-between-arguments"><a href="#newlines-between-arguments" title="link to this element">13.1.3. Newlines between arguments</a><span> <a href="#toc-newlines-between-arguments">(toc ↑)</a></span></h4>
 <p>The macro name and the first argument, and two consecutive arguments, can be optionally separated by exactly one newline character, e.g.:</p>
 <pre><code>\h[2]
 {id-scope=true}
@@ -830,7 +830,7 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 [Design goals]
 </code></pre>
 <p>This allows to greatly improve the readability of long argument lists by having them one per line.</p>
-<h4 id="escape-characters"><a href="#escape-characters" title="link to this element">43. Escape characters</a><span> <a href="#toc-escape-characters">(toc ↑)</a></span></h4>
+<h4 id="escape-characters"><a href="#escape-characters" title="link to this element">13.1.4. Escape characters</a><span> <a href="#toc-escape-characters">(toc ↑)</a></span></h4>
 <p>For non-literal macro arguments, the rule is simple, you must escape all of:</p>
 <ul>
 <li><code>\</code></li>
@@ -838,7 +838,7 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 <li><code>{</code> and <code>}</code></li>
 </ul>
 <p>This is good for short arguments of regular text, but for longer blocks of <a href="#code">Code <code>\c</code> and <code>\C</code></a> or <a href="#math">Mathematics <code>\M</code> and <code>\m</code></a>, you may want to use <a href="#literal-arguments">Literal arguments</a></p>
-<h4 id="literal-arguments"><a href="#literal-arguments" title="link to this element">44. Literal arguments</a><span> <a href="#toc-literal-arguments">(toc ↑)</a></span></h4>
+<h4 id="literal-arguments"><a href="#literal-arguments" title="link to this element">13.1.5. Literal arguments</a><span> <a href="#toc-literal-arguments">(toc ↑)</a></span></h4>
 <p>Arguments that are opened with more than one square brackets <code>[</code> or curly braces <code>{</code> are literal arguments.</p>
 <p>In literal arguments, Cirodown is not parsed, and the entire argument is considered as text until a corresponding close with the same number of characters.</p>
 <p>Therefore, you cannot have nested content, but it makes it extremely convenient to write <a href="#code">Code <code>\c</code> and <code>\C</code></a> or <a href="#math">Mathematics <code>\M</code> and <code>\m</code></a>.</p>
@@ -890,7 +890,7 @@ And another paragraph.
 \c[[a \\]]]
 &lt;code&gt;a \]&lt;/code&gt;
 </code></pre>
-<h4 id="argument-leading-newline-removal"><a href="#argument-leading-newline-removal" title="link to this element">45. Argument leading newline removal</a><span> <a href="#toc-argument-leading-newline-removal">(toc ↑)</a></span></h4>
+<h4 id="argument-leading-newline-removal"><a href="#argument-leading-newline-removal" title="link to this element">13.1.6. Argument leading newline removal</a><span> <a href="#toc-argument-leading-newline-removal">(toc ↑)</a></span></h4>
 <p>If the very first character of an argument is a newline, then that character is ignored.</p>
 <p>For example:</p>
 <pre><code>\C[[
@@ -922,7 +922,7 @@ b
 
 ]]
 </code></pre>
-<h4 id="argument-automatic-indentation-removal"><a href="#argument-automatic-indentation-removal" title="link to this element">46. Argument automatic indentation removal</a><span> <a href="#toc-argument-automatic-indentation-removal">(toc ↑)</a></span></h4>
+<h4 id="argument-automatic-indentation-removal"><a href="#argument-automatic-indentation-removal" title="link to this element">13.1.7. Argument automatic indentation removal</a><span> <a href="#toc-argument-automatic-indentation-removal">(toc ↑)</a></span></h4>
 <p>Inside of a non-literal block, the very first non-whitespace character determines the indentation level of the content.</p>
 <p>This allows seamlessly indenting complex nested content to make it more readable.</p>
 <p>For example, a list with complex content could be written without indentation as:</p>
@@ -962,7 +962,7 @@ I'm bad because I have negative indentation.
 ]
 \l[c]
 </code></pre>
-<h3 id="macro-capitalization-for-block-vs-inline"><a href="#macro-capitalization-for-block-vs-inline" title="link to this element">47. Macro capitalization for block vs inline</a><span> <a href="#toc-macro-capitalization-for-block-vs-inline">(toc ↑)</a></span></h3>
+<h3 id="macro-capitalization-for-block-vs-inline"><a href="#macro-capitalization-for-block-vs-inline" title="link to this element">13.2. Macro capitalization for block vs inline</a><span> <a href="#toc-macro-capitalization-for-block-vs-inline">(toc ↑)</a></span></h3>
 <p>This is just a naming convention without any magic attached to it. It is currently used for macros such as:</p>
 <ul>
 <li><a href="#math">Mathematics <code>\M</code> and <code>\m</code></a></li>
@@ -971,9 +971,9 @@ I'm bad because I have negative indentation.
 </ul>
 <p>We haven't found a sane way of getting rid of that for now, so just for now just force users to explicitly select between them.</p>
 <p>The distinction is required because there are lots of things you cannot put inside paragraphs in HTML.</p>
-<h2 id="tooling"><a href="#tooling" title="link to this element">48. Tooling</a><span> <a href="#toc-tooling">(toc ↑)</a></span></h2>
+<h2 id="tooling"><a href="#tooling" title="link to this element">14. Tooling</a><span> <a href="#toc-tooling">(toc ↑)</a></span></h2>
 <p>Unlike all languages which rely on ad-hoc tooling, we will support every single tool that is required and feasible to be in this repository in this repository, in a centralized manner.</p>
-<h3 id="cirodown-executable"><a href="#cirodown-executable" title="link to this element">49. <code>cirodown</code> executable</a><span> <a href="#toc-cirodown-executable">(toc ↑)</a></span></h3>
+<h3 id="cirodown-executable"><a href="#cirodown-executable" title="link to this element">14.1. <code>cirodown</code> executable</a><span> <a href="#toc-cirodown-executable">(toc ↑)</a></span></h3>
 <p>Convert a <code>.ciro</code> file to HTML and output the HTML to stdout:</p>
 <pre><code>cirodown README.ciro
 </code></pre>
@@ -984,8 +984,8 @@ I'm bad because I have negative indentation.
 <p>Convert a <code>.ciro</code> file from stdin to HTML and output the contents of <code>&lt;body&gt;</code> to stdout:</p>
 <pre><code>printf 'ab\ncd\n' | cirodown --body-only
 </code></pre>
-<h4 id="cirodown-executable-most-important-options"><a href="#cirodown-executable-most-important-options" title="link to this element">50. <code>cirodown</code> executable most important options</a><span> <a href="#toc-cirodown-executable-most-important-options">(toc ↑)</a></span></h4>
-<h5 id="watch"><a href="#watch" title="link to this element">51. <code>--watch</code></a><span> <a href="#toc-watch">(toc ↑)</a></span></h5>
+<h4 id="cirodown-executable-most-important-options"><a href="#cirodown-executable-most-important-options" title="link to this element">14.1.1. <code>cirodown</code> executable most important options</a><span> <a href="#toc-cirodown-executable-most-important-options">(toc ↑)</a></span></h4>
+<h5 id="watch"><a href="#watch" title="link to this element">14.1.1.1. <code>--watch</code></a><span> <a href="#toc-watch">(toc ↑)</a></span></h5>
 <p>Don't quit <code>cirodown</code> immediately.</p>
 <p>Instead, watch the selected file or directory for changes, and rebuild individual files when changes are detected.</p>
 <p>Watch a single file:</p>
@@ -998,9 +998,9 @@ I'm bad because I have negative indentation.
 </code></pre>
 <p>Save the output to <code>.html</code> files automatically instead of outputting it to stdout as done without <code>--watch</code>.</p>
 <p>Exit by entering Ctrl + C on the terminal.</p>
-<h5 id="publish"><a href="#publish" title="link to this element">52. <code>--publish</code></a><span> <a href="#toc-publish">(toc ↑)</a></span></h5>
+<h5 id="publish"><a href="#publish" title="link to this element">14.1.1.2. <code>--publish</code></a><span> <a href="#toc-publish">(toc ↑)</a></span></h5>
 <p>Cirodown tooling is so amazing that we also take care of the HTML publishing for you.</p>
-<h6 id="code-publish-to-github-pages-code"><a href="#code-publish-to-github-pages-code" title="link to this element">53. <code>Publish to GitHub Pages</code></a><span> <a href="#toc-code-publish-to-github-pages-code">(toc ↑)</a></span></h6>
+<h6 id="code-publish-to-github-pages-code"><a href="#code-publish-to-github-pages-code" title="link to this element">14.1.1.2.1. <code>Publish to GitHub Pages</code></a><span> <a href="#toc-code-publish-to-github-pages-code">(toc ↑)</a></span></h6>
 <p>If you want to publish your root user page, which appears at `/` (e.g. <a href="https://github.com/cirosantilli/cirosantilli.github.io">https://github.com/cirosantilli/cirosantilli.github.io</a> for the user <code>cirosantilli</code>), GitHub annoyingly forces you to use the <code>master</code> branch for the HTML output:</p>
 <ul>
 <li>https://github.com/isaacs/github/issues/212</li>
@@ -1025,7 +1025,7 @@ git commit --message 'some commit message'
 cirodown --publish .
 </code></pre>
 <p>The publishing only happens if the build has no errors.</p>
-<h5 id="publish-commit"><a href="#publish-commit" title="link to this element">54. <code>--publish-commit &lt;commit-message&gt;</code></a><span> <a href="#toc-publish-commit">(toc ↑)</a></span></h5>
+<h5 id="publish-commit"><a href="#publish-commit" title="link to this element">14.1.1.3. <code>--publish-commit &lt;commit-message&gt;</code></a><span> <a href="#toc-publish-commit">(toc ↑)</a></span></h5>
 <p>Like <a href="#publish"><code>--publish</code></a>, but also automatically:</p>
 <ul>
 <li><code>git add -u</code> to automatically add change to any files that have been previously git tracked</li>
@@ -1034,12 +1034,12 @@ cirodown --publish .
 <pre><code>cirodown --publish-commit 'my amazing change' .
 </code></pre>
 <p>With great power comes great responsibility of course, but who cares!</p>
-<h5 id="help-macros"><a href="#help-macros" title="link to this element">55. <code>--help-macros</code></a><span> <a href="#toc-help-macros">(toc ↑)</a></span></h5>
+<h5 id="help-macros"><a href="#help-macros" title="link to this element">14.1.1.4. <code>--help-macros</code></a><span> <a href="#toc-help-macros">(toc ↑)</a></span></h5>
 <p>You can get an overview of all macros in JSON format with:</p>
 <pre><code>cirodown --help-macros
 </code></pre>
-<h4 id="cirodown-json"><a href="#cirodown-json" title="link to this element">56. <code>cirodown.json</code></a><span> <a href="#toc-cirodown-json">(toc ↑)</a></span></h4>
-<h5 id="media-source-type"><a href="#media-source-type" title="link to this element">57. <code>media_source_type</code></a><span> <a href="#toc-media-source-type">(toc ↑)</a></span></h5>
+<h4 id="cirodown-json"><a href="#cirodown-json" title="link to this element">14.1.2. <code>cirodown.json</code></a><span> <a href="#toc-cirodown-json">(toc ↑)</a></span></h4>
+<h5 id="media-source-type"><a href="#media-source-type" title="link to this element">14.1.2.1. <code>media_source_type</code></a><span> <a href="#toc-media-source-type">(toc ↑)</a></span></h5>
 <ul>
 <li><code>local</code>: tracked in the current Git repository, no further magic is done</li>
 <li><p>  <code>media_repo</code>: tracked in a separate media repository, defaults to <code>../&lt;project-name&gt;-media/</code></p>
@@ -1047,16 +1047,16 @@ cirodown --publish .
 </p>
 </li>
 </ul>
-<h5 id="media-base-url"><a href="#media-base-url" title="link to this element">58. <code>media_base_url</code></a><span> <a href="#toc-media-base-url">(toc ↑)</a></span></h5>
+<h5 id="media-base-url"><a href="#media-base-url" title="link to this element">14.1.2.2. <code>media_base_url</code></a><span> <a href="#toc-media-base-url">(toc ↑)</a></span></h5>
 <p>TODO implement set the base URL where media will be served from.</p>
 <p>Default: for a GitHub repository called `my-tutorial`, append the `-media` suffix and use `my-tutorial-media`.</p>
 <p>Further rationale at: <a href="#where-to-store-images">Where to store images</a>.</p>
-<h3 id="editor-and-preview"><a href="#editor-and-preview" title="link to this element">59. Editor and preview</a><span> <a href="#toc-editor-and-preview">(toc ↑)</a></span></h3>
+<h3 id="editor-and-preview"><a href="#editor-and-preview" title="link to this element">14.2. Editor and preview</a><span> <a href="#toc-editor-and-preview">(toc ↑)</a></span></h3>
 <p>TODO</p>
 <p>We must achieve an editor setup with synchronized live side-by-side preview.</p>
 <p>It would be amazing to have a WebKit interface that works both on browser for the and locally.</p>
-<h2 id="developing-cirodown"><a href="#developing-cirodown" title="link to this element">60. Developing Cirodown</a><span> <a href="#toc-developing-cirodown">(toc ↑)</a></span></h2>
-<h3 id="test-system"><a href="#test-system" title="link to this element">61. Test system</a><span> <a href="#toc-test-system">(toc ↑)</a></span></h3>
+<h2 id="developing-cirodown"><a href="#developing-cirodown" title="link to this element">15. Developing Cirodown</a><span> <a href="#toc-developing-cirodown">(toc ↑)</a></span></h2>
+<h3 id="test-system"><a href="#test-system" title="link to this element">15.1. Test system</a><span> <a href="#toc-test-system">(toc ↑)</a></span></h3>
 <p>Run all tests:</p>
 <pre><code>npm test
 </code></pre>
@@ -1074,19 +1074,19 @@ cirodown --publish .
 <p>to where you want to break in the code, and then:</p>
 <pre><code>node inspect ./node_modules/.bin/mocha test --ignore-leaks "-g" "p with id before"
 </code></pre>
-<h3 id="overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository" title="link to this element">62. Overview of files in this repository</a><span> <a href="#toc-overview-of-files-in-this-repository">(toc ↑)</a></span></h3>
+<h3 id="overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository" title="link to this element">15.2. Overview of files in this repository</a><span> <a href="#toc-overview-of-files-in-this-repository">(toc ↑)</a></span></h3>
 <ul>
 <li><a href="index.js">index.js</a>: main code. Must be able to run in the browser, so no Node.js specifics. Exposes the central <code>convert</code> function</li>
 <li><a href="cirodown">cirodown</a>: CLI executable. Is basically just a CLI interface frontend to <code>convert</code></li>
 <li><a href="test.js">test.js</a>: contains all the Mocha tests, see also: <a href="#test-system">Test system</a></li>
 <li><a href="README.md">README.md</a>: minimal Markdown README until GitHub / NPM support Cirodown :-)</li>
 </ul>
-<h3 id="internals-api"><a href="#internals-api" title="link to this element">63. Internals API</a><span> <a href="#toc-internals-api">(toc ↑)</a></span></h3>
+<h3 id="internals-api"><a href="#internals-api" title="link to this element">15.3. Internals API</a><span> <a href="#toc-internals-api">(toc ↑)</a></span></h3>
 <p>Tokenized token stream and AST can be obtained as JSON from the API.</p>
 <p>Errors can be obtained as JSON from the API.</p>
 <p>Everything that you need to write Cirodown tooling, is present in the main API.</p>
 <p>All tooling will be merged into one single repo.</p>
-<h3 id="toplevel"><a href="#toplevel" title="link to this element">64. The <code>\toplevel</code> implicit macro</a><span> <a href="#toc-toplevel">(toc ↑)</a></span></h3>
+<h3 id="toplevel"><a href="#toplevel" title="link to this element">15.4. The <code>\toplevel</code> implicit macro</a><span> <a href="#toc-toplevel">(toc ↑)</a></span></h3>
 <p>Every Cirodown document is implicitly put inside a <code>\toplevel</code> document and:</p>
 <ul>
 <li>any optionally given arguments at the very beginning of the document will be treated as arguments of the <code>\toplevel</code> macro</li>
@@ -1105,22 +1105,20 @@ And now, some content!
 ]
 </code></pre>
 <p>In terms of HTML, the <code>\toplevel</code> element corresponds to the <code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;header&gt;</code> and <code>&lt;footer&gt;</code> elements of a document.</p>
-<h4 id="html-document-title"><a href="#html-document-title" title="link to this element">65. HTML document title</a><span> <a href="#toc-html-document-title">(toc ↑)</a></span></h4>
+<h4 id="html-document-title"><a href="#html-document-title" title="link to this element">15.4.1. HTML document title</a><span> <a href="#toc-html-document-title">(toc ↑)</a></span></h4>
 <ul>
 <li>if the <code>title</code> argument of <code>toplevel</code> is given, use that</li>
 <li>otherwise, if the document has a <code>\h[1]</code>, use the title of the first such header</li>
 <li>otherwise use a dummy value</li>
 </ul>
-<h3 id="formal-grammar"><a href="#formal-grammar" title="link to this element">66. Formal grammar</a><span> <a href="#toc-formal-grammar">(toc ↑)</a></span></h3>
+<h3 id="formal-grammar"><a href="#formal-grammar" title="link to this element">15.5. Formal grammar</a><span> <a href="#toc-formal-grammar">(toc ↑)</a></span></h3>
 <p>TODO. Describe Cirodown's formal grammar, and classify it in the grammar hierarchy and parsing complexity.</p>
-<h3 id="todo"><a href="#todo" title="link to this element">67. TODO</a><span> <a href="#toc-todo">(toc ↑)</a></span></h3>
+<h3 id="todo"><a href="#todo" title="link to this element">15.6. TODO</a><span> <a href="#toc-todo">(toc ↑)</a></span></h3>
 <ul>
 <li>actually, do number every equation, figure etc. and add dummy IDs to them, why not have references? Use side equation numbers like in real books</li>
 <li>publish webpage on cirosantilli.com</li>
 <li>custom header, footer and HEAD based on files like header.html, footer.html</li>
-<li>make h1 special: don't take up number count</li>
 <li><a href="#id-scope">id_scope</a></li>
-<li>header nested numbers</li>
 <li>browser live quick test</li>
 <li>list and code caption</li>
 <li>image description and source</li>
@@ -1132,7 +1130,7 @@ And now, some content!
 <li>multiple newlines blow up (5 or six), create test and decide best behaviour</li>
 <li>LaTeX output</li>
 </ul>
-<h2 id="related-projects"><a href="#related-projects" title="link to this element">68. Related projects</a><span> <a href="#toc-related-projects">(toc ↑)</a></span></h2>
+<h2 id="related-projects"><a href="#related-projects" title="link to this element">16. Related projects</a><span> <a href="#toc-related-projects">(toc ↑)</a></span></h2>
 <ul>
 <li><a href="https://github.com/rstudio/bookdown">https://github.com/rstudio/bookdown</a>, <a href="https://bookdown.org/">https://bookdown.org/</a>. Very similar feature set to what we want!!! Transpiles to markdown, and then goes through Pandoc: <a href="https://bookdown.org/yihui/bookdown/pandoc.html">https://bookdown.org/yihui/bookdown/pandoc.html</a>, thus will never run on browser without huge translation layers. But does have an obscene ammount of output formats however.</li>
 <li><a href="https://gohugo.io/">Hugo</a>. Pretty good, similar feature set to ours. But Go based, so hard on browser, and adds adhoc features on top of markdown once again</li>
