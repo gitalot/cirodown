@@ -87,6 +87,7 @@ th, td {
 <body>
 <h1 id="cirodown"><a href="#cirodown" title="link to this element">Cirodown</a></h1>
 <p>A Markup language to write multipage or single page HTML / PDF books, blogs, etc. that is saner and more powerful than Markdown and Asciidoctor, but still nicer to write than XML and JSON, with reference implementation in JavaScript.</p>
+<p>The source for this document is at: <a href="https://github.com/cirosantilli/cirodown/blob/master/README.ciro">https://github.com/cirosantilli/cirodown/blob/master/README.ciro</a> and a rendered version can be seen at: <a href="https://cirosantilli.com/cirodown">https://cirosantilli.com/cirodown</a>.</p>
 <div class="toc-container">
 <ul>
 <li><div id="toc-quick-start"><a href="#quick-start">1. Quick start</a></div></li>
@@ -152,6 +153,7 @@ th, td {
 <li><div id="toc-header-explicit-levels-vs-nesting-design-choice"><a href="#header-explicit-levels-vs-nesting-design-choice">6.3. Header explicit levels vs nesting design choice</a></div></li>
 <li><div id="toc-includes"><a href="#includes">6.4. Includes <code>\include</code></a></div></li>
 <li><div id="toc-skipping-header-levels"><a href="#skipping-header-levels">6.5. Skipping header levels</a></div></li>
+<li><div id="toc-the-toplevel-header"><a href="#the-toplevel-header">6.6. The toplevel header</a></div></li>
 </ul>
 <li><div id="toc-lists"><a href="#lists">7. Lists <code>\l</code></a></div></li>
 <li><div id="toc-images"><a href="#images">8. Images <code>\image</code></a></div>
@@ -475,6 +477,29 @@ Paragraph.
 
 \h[4][my 4]
 </code></pre>
+<h3 id="the-toplevel-header"><a href="#the-toplevel-header" title="link to this element">6.6. The toplevel header</a><span> <a href="#toc-the-toplevel-header">(toc ↑)</a></span></h3>
+<p>If the document has only a single header of the highest level, e.g. like the following has only a single <code>h2</code>;</p>
+<pre><code>\h[2][My 2]
+
+\h[3][My 3 1]
+
+\h[3][My 3 2]
+</code></pre>
+<p>then this has some magical effects, notably that header IDs won't show that level. For example, the headers would render like:</p>
+<pre><code>My 2
+
+1. My 3 1
+
+2. My 3 2
+</code></pre>
+<p>rather than:</p>
+<pre><code>1. My 2
+
+1.2. My 3 1
+
+1.2. My 3 2
+</code></pre>
+<p>This is because in this case, we guess that the <code>h2</code> is the toplevel</p>
 <h2 id="lists"><a href="#lists" title="link to this element">7. Lists <code>\l</code></a><span> <a href="#toc-lists">(toc ↑)</a></span></h2>
 <p>With implicit container:</p>
 <ul>
