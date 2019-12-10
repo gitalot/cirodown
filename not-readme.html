@@ -10,6 +10,9 @@
 >
 <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet"/>
 <style>
+/* Hide by default, show if last child of hovered element. */
+.hide-hover:last-child { display: none; }
+:hover > .hide-hover:last-child { display: inline; }
 :target {
   background-color: #FFFFCC;
 }

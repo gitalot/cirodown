@@ -10,6 +10,9 @@
 >
 <link href="https://netdna.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet"/>
 <style>
+/* Hide by default, show if last child of hovered element. */
+.hide-hover:last-child { display: none; }
+:hover > .hide-hover:last-child { display: inline; }
 :target {
   background-color: #FFFFCC;
 }
@@ -86,8 +89,10 @@ th, td {
 </style>
 <body>
 <h1 id="cirodown"><a href="#cirodown" title="link to this element">Cirodown</a></h1>
-<p id="p-1">A Markup language to write multipage or single page HTML / PDF books, blogs, etc. that is saner and more powerful than Markdown and Asciidoctor, but still nicer to write than XML and JSON, with reference implementation in JavaScript.</p>
-<p id="p-2">The source for this document is at: <a id="a-1" href="https://github.com/cirosantilli/cirodown/blob/master/README.ciro">https://github.com/cirosantilli/cirodown/blob/master/README.ciro</a> and a rendered version can be seen at: <a id="a-2" href="https://cirosantilli.com/cirodown">https://cirosantilli.com/cirodown</a>.</p>
+<p id="p-1">A Markup language to write multipage or single page HTML / PDF books, blogs, etc. that is saner and more powerful than Markdown and Asciidoctor, but still nicer to write than XML and JSON, with reference implementation in JavaScript.<span class="hide-hover"> <a href="#p-1">(link 🔗)</a></span>
+</p>
+<p id="p-2">The source for this document is at: <a id="a-1" href="https://github.com/cirosantilli/cirodown/blob/master/README.ciro">https://github.com/cirosantilli/cirodown/blob/master/README.ciro</a> and a rendered version can be seen at: <a id="a-2" href="https://cirosantilli.com/cirodown">https://cirosantilli.com/cirodown</a>.<span class="hide-hover"> <a href="#p-2">(link 🔗)</a></span>
+</p>
 <div class="toc-container">
 <ul>
 <li><div id="toc-quick-start"><a href="#quick-start" id="toc-1">1. Quick start</a></div></li>
@@ -221,21 +226,26 @@ th, td {
 </ul>
 </div>
 <h2 id="quick-start"><a href="#quick-start" title="link to this element">1. Quick start</a><span> <a href="#toc-quick-start">(toc ↑)</a></span></h2>
-<p id="p-3">TODO: browser live test</p>
-<p id="p-4">Install NPM package and use it from the command line for a quick conversion:</p>
+<p id="p-3">TODO: browser live test<span class="hide-hover"> <a href="#p-3">(link 🔗)</a></span>
+</p>
+<p id="p-4">Install NPM package and use it from the command line for a quick conversion:<span class="hide-hover"> <a href="#p-4">(link 🔗)</a></span>
+</p>
 <pre id="c-1"><code>npm install cirodown
 printf 'ab\ncd\n' | cirodown --body-only
 </code></pre>
-<p id="p-5">Same with an API call in <a id="a-3" href="api_hello.js">api_hello.js</a>:</p>
+<p id="p-5">Same with an API call in <a id="a-3" href="api_hello.js">api_hello.js</a>:<span class="hide-hover"> <a href="#p-5">(link 🔗)</a></span>
+</p>
 <pre id="c-2"><code>npm install cirodown
 ./api_hello.js
 </code></pre>
-<p id="p-6">For a minimal but convenient project template with a <code id="c-1">.gitignore</code> and <code id="c-2">package.json</code>, consider:</p>
+<p id="p-6">For a minimal but convenient project template with a <code id="c-1">.gitignore</code> and <code id="c-2">package.json</code>, consider:<span class="hide-hover"> <a href="#p-6">(link 🔗)</a></span>
+</p>
 <pre id="c-3"><code>git clone https://github.com/cirosantilli/cirodown-template
 cd cirodown-template
 cirodown .
 </code></pre>
-<p id="p-7">Run the latest master on README.ciro and view it:</p>
+<p id="p-7">Run the latest master on README.ciro and view it:<span class="hide-hover"> <a href="#p-7">(link 🔗)</a></span>
+</p>
 <pre id="c-4"><code>git clone https://github.com/cirosantilli/cirodown
 cd cirodown
 npm link
@@ -243,143 +253,195 @@ npm link cirodown
 ./cirodown README.ciro &gt; index.html
 xdg-open index.html
 </code></pre>
-<p id="p-8">The <code id="c-3">npm link</code> commands allow you to make changes to the code without re-installing the package all the time for development! Try hacking <a id="a-4" href="cirodown">cirodown</a> to see it. Just remember that if you add a new dependency, you must redo it (TODO any better way?):</p>
+<p id="p-8">The <code id="c-3">npm link</code> commands allow you to make changes to the code without re-installing the package all the time for development! Try hacking <a id="a-4" href="cirodown">cirodown</a> to see it. Just remember that if you add a new dependency, you must redo it (TODO any better way?):<span class="hide-hover"> <a href="#p-8">(link 🔗)</a></span>
+</p>
 <pre id="c-5"><code>npm install &lt;dependency&gt;
 npm link
 </code></pre>
-<p id="p-9">The symlink business can be undone with:</p>
+<p id="p-9">The symlink business can be undone with:<span class="hide-hover"> <a href="#p-9">(link 🔗)</a></span>
+</p>
 <pre id="c-6"><code>npm unlink
 rm node_modules/cirodown
 </code></pre>
-<p id="p-10">TODO: create a multifile blog example folder and link from here.</p>
+<p id="p-10">TODO: create a multifile blog example folder and link from here.<span class="hide-hover"> <a href="#p-10">(link 🔗)</a></span>
+</p>
 <h2 id="design-goals"><a href="#design-goals" title="link to this element">2. Design goals</a><span> <a href="#toc-design-goals">(toc ↑)</a></span></h2>
-<p id="p-11">Cirodown is designed entirely to allow writing complex professional HTML and PDF scientific books, blogs, articles and encyclopedias.</p>
-<p id="p-12">Cirodown aims to be the ultimate LaTeX "killer", allowing books to be finally published as either HTML or PDF painlessly (LaTeX being only a backend to PDF generation), supporting out of the box feature such as:</p>
+<p id="p-11">Cirodown is designed entirely to allow writing complex professional HTML and PDF scientific books, blogs, articles and encyclopedias.<span class="hide-hover"> <a href="#p-11">(link 🔗)</a></span>
+</p>
+<p id="p-12">Cirodown aims to be the ultimate LaTeX "killer", allowing books to be finally published as either HTML or PDF painlessly (LaTeX being only a backend to PDF generation), supporting out of the box feature such as:<span class="hide-hover"> <a href="#p-12">(link 🔗)</a></span>
+</p>
 <ul id="ul-1">
 <li id="l-1"><a href="#internal-cross-references" id="x-37">references</a> to <a href="#headers" id="x-38">headers</a>, <a href="#images" id="x-39">images</a>, etc. with error checking: never break internal links gain</li>
 <li id="l-2">KaTeX server side <a href="#math" id="x-40">Mathematics</a></li>
 <li id="l-3">multi file features out of the box so you don't need a separate wrapper like Jekyll to make a multi-page website:
   <ul id="ul-31">
-<li id="l-89"><a href="#internal-cross-file-references" id="x-49">Internal cross file references</a></li>
+<li id="l-91"><a href="#internal-cross-file-references" id="x-49">Internal cross file references</a></li>
 </ul>
   <ul id="ul-32">
-<li id="l-90"><a href="#table-of-contents" id="x-50">table of contents</a> that crosses input files</li>
+<li id="l-92"><a href="#table-of-contents" id="x-50">table of contents</a> that crosses input files</li>
 </ul>
   <ul id="ul-33">
-<li id="l-91"><code id="c-176">inotifywait</code> watch rebuild server</li>
+<li id="l-93"><code id="c-176">inotifywait</code> watch rebuild server</li>
 </ul>
   <ul id="ul-34">
-<li id="l-92">cross file includes that work as links on multi output file mode, and true includes in single output file mode</li>
+<li id="l-94">cross file includes that work as links on multi output file mode, and true includes in single output file mode</li>
 </ul>
   <ul id="ul-35">
-<li id="l-93">cross file configuration files to factor out common page parts like headers and footers</li>
+<li id="l-95">cross file configuration files to factor out common page parts like headers and footers</li>
 </ul>
 </li>
 </ul>
-<p id="p-13">It is meant to be both saner and more powerful than Markdown and Asciidoctor.</p>
-<p id="p-14">The tradeoff for those features is that the language is slightly heavier to read and write.</p>
-<p id="p-15">It is intended that this will be an acceptable downside as Cirodown will be used primarily large complex content such as books rather than forum posts, and will therefore primarily written either:</p>
+<p id="p-13">It is meant to be both saner and more powerful than Markdown and Asciidoctor.<span class="hide-hover"> <a href="#p-13">(link 🔗)</a></span>
+</p>
+<p id="p-14">The tradeoff for those features is that the language is slightly heavier to read and write.<span class="hide-hover"> <a href="#p-14">(link 🔗)</a></span>
+</p>
+<p id="p-15">It is intended that this will be an acceptable downside as Cirodown will be used primarily large complex content such as books rather than forum posts, and will therefore primarily written either:<span class="hide-hover"> <a href="#p-15">(link 🔗)</a></span>
+</p>
 <ul id="ul-2">
 <li id="l-4">in text editors locally, where users have more features than in random browser textareas</li>
 <li id="l-5">in a dedicated website that will revolutionize education, and therefore have a good JavaScript editing interface: <a id="a-14" href="https://github.com/cirosantilli/write-free-science-books-to-get-famous-website">https://github.com/cirosantilli/write-free-science-books-to-get-famous-website</a></li>
 </ul>
 <h3 id="saner"><a href="#saner" title="link to this element">2.1. Saner</a><span> <a href="#toc-saner">(toc ↑)</a></span></h3>
-<p id="p-16">To be saner than both Markdown and Asciidoctor, Cirodown has exactly five magic characters, with similar functions as in LaTeX:</p>
+<p id="p-16">To be saner than both Markdown and Asciidoctor, Cirodown has exactly five magic characters, with similar functions as in LaTeX:<span class="hide-hover"> <a href="#p-16">(link 🔗)</a></span>
+</p>
 <ul id="ul-3">
 <li id="l-6"><code id="c-116">\</code> backslash to start a macro, like LaTeX</li>
 <li id="l-7"><code id="c-117">{</code> and <code id="c-118">}</code>: left and right square brackets to delimit optional macro arguments</li>
 <li id="l-8"><code id="c-119">[</code> and <code id="c-120">]</code>: left and right curly braces bracket to start an optional arguments</li>
 </ul>
-<p id="p-17">And double blank newlines for <a href="#paragraphs" id="x-1">paragraphs</a> if you are pedantic.</p>
-<p id="p-18">We would like to have only square brackets for both optional and mandatory to have even less magic characters, but that would make the language difficult to parse for computer and humans. LaTeX was right for once!</p>
-<p id="p-19">This produces a very regular syntax that is easy to learn, including doing:</p>
+<p id="p-17">And double blank newlines for <a href="#paragraphs" id="x-1">paragraphs</a> if you are pedantic.<span class="hide-hover"> <a href="#p-17">(link 🔗)</a></span>
+</p>
+<p id="p-18">We would like to have only square brackets for both optional and mandatory to have even less magic characters, but that would make the language difficult to parse for computer and humans. LaTeX was right for once!<span class="hide-hover"> <a href="#p-18">(link 🔗)</a></span>
+</p>
+<p id="p-19">This produces a very regular syntax that is easy to learn, including doing:<span class="hide-hover"> <a href="#p-19">(link 🔗)</a></span>
+</p>
 <ul id="ul-4">
 <li id="l-9">arbitrary nesting of elements</li>
 <li id="l-10">adding arbitrary properties to elements</li>
 </ul>
-<p id="p-20">This sanity also makes the end tail learning curve of the endless edge cases found in Markdown and Asciidoctor disappear.</p>
-<p id="p-21">The language is designed to be philosophically isomorphic to HTML to:</p>
+<p id="p-20">This sanity also makes the end tail learning curve of the endless edge cases found in Markdown and Asciidoctor disappear.<span class="hide-hover"> <a href="#p-20">(link 🔗)</a></span>
+</p>
+<p id="p-21">The language is designed to be philosophically isomorphic to HTML to:<span class="hide-hover"> <a href="#p-21">(link 🔗)</a></span>
+</p>
 <ul id="ul-5">
 <li id="l-11">further reduce the learning curve</li>
 <li id="l-12">ensure that most of HTML constructs can be reached, including arbitrary nesting</li>
 </ul>
-<p id="p-22">More precisely:</p>
+<p id="p-22">More precisely:<span class="hide-hover"> <a href="#p-22">(link 🔗)</a></span>
+</p>
 <ul id="ul-6">
 <li id="l-13">macro names map to tag names, e.g.: <code id="c-121">\a</code> to <code id="c-122">&lt;a</code></li>
-<li id="l-14"><p id="p-227">  one of the arguments of macros, maps to the content of the HTML element, and the others map to attributes.</p>
-<p id="p-228">  E.g., in a link:</p>
+<li id="l-14"><p id="p-227">  one of the arguments of macros, maps to the content of the HTML element, and the others map to attributes.<span class="hide-hover"> <a href="#p-227">(link 🔗)</a></span>
+</p>
+<p id="p-228">  E.g., in a link:<span class="hide-hover"> <a href="#p-228">(link 🔗)</a></span>
+</p>
 <p id="p-229">  <pre id="c-67"><code>\a[http://example.com][Link text]</code></pre>
+<span class="hide-hover"> <a href="#p-229">(link 🔗)</a></span>
 </p>
-<p id="p-230">  the first macro argument:</p>
+<p id="p-230">  the first macro argument:<span class="hide-hover"> <a href="#p-230">(link 🔗)</a></span>
+</p>
 <p id="p-231">  <pre id="c-68"><code>http://example.com</code></pre>
+<span class="hide-hover"> <a href="#p-231">(link 🔗)</a></span>
 </p>
-<p id="p-232">  maps to the <code id="c-158">href</code> of <code id="c-159">&lt;a</code>, and the second macro argument:</p>
+<p id="p-232">  maps to the <code id="c-158">href</code> of <code id="c-159">&lt;a</code>, and the second macro argument:<span class="hide-hover"> <a href="#p-232">(link 🔗)</a></span>
+</p>
 <p id="p-233">  <pre id="c-69"><code>Link text</code></pre>
+<span class="hide-hover"> <a href="#p-233">(link 🔗)</a></span>
 </p>
-<p id="p-234">  maps to the internal content of <code id="c-160">&lt;a&gt;Link text&lt;&gt;</code></p>
+<p id="p-234">  maps to the internal content of <code id="c-160">&lt;a&gt;Link text&lt;&gt;</code><span class="hide-hover"> <a href="#p-234">(link 🔗)</a></span>
+</p>
 </li>
 </ul>
 <h3 id="more-powerful"><a href="#more-powerful" title="link to this element">2.2. More powerful</a><span> <a href="#toc-more-powerful">(toc ↑)</a></span></h3>
-<p id="p-23">The <a href="#saner" id="x-2">high sanity of Cirodown</a>, also makes creating new macro extensions extremely easy and intuitive.</p>
-<p id="p-24">All built-in language features use the exact same API as new extensions, which ensures that the extension API is sane forever.</p>
-<p id="p-25">Markdown is clearly missing many key features such as block attributes and <a href="#internal-cross-references" id="x-3">Internal cross references <code id="c-7">\x</code></a>, and has no standardized extension mechanism.</p>
-<p id="p-26">The "more powerful than Asciidoctor" part is only partially true, since Asciidoctor is very featureful can do basically anything through extensions.</p>
-<p id="p-27">The difference is mostly that Cirodown is completely and entirely focused on making amazing scientific books, and so will have key features for that application out-of-the box.</p>
-<p id="p-28">Another advantage over Asciidoctor is that the reference implementation of Cirodown is in JavaScript, and can therefore be used on browser live preview out of the box. Asciidoctor does Transpile to JS with <a id="a-5" href="https://github.com/opal/opal">Opal</a>, but who wants to deal with that layer of complexity?</p>
+<p id="p-23">The <a href="#saner" id="x-2">high sanity of Cirodown</a>, also makes creating new macro extensions extremely easy and intuitive.<span class="hide-hover"> <a href="#p-23">(link 🔗)</a></span>
+</p>
+<p id="p-24">All built-in language features use the exact same API as new extensions, which ensures that the extension API is sane forever.<span class="hide-hover"> <a href="#p-24">(link 🔗)</a></span>
+</p>
+<p id="p-25">Markdown is clearly missing many key features such as block attributes and <a href="#internal-cross-references" id="x-3">Internal cross references <code id="c-7">\x</code></a>, and has no standardized extension mechanism.<span class="hide-hover"> <a href="#p-25">(link 🔗)</a></span>
+</p>
+<p id="p-26">The "more powerful than Asciidoctor" part is only partially true, since Asciidoctor is very featureful can do basically anything through extensions.<span class="hide-hover"> <a href="#p-26">(link 🔗)</a></span>
+</p>
+<p id="p-27">The difference is mostly that Cirodown is completely and entirely focused on making amazing scientific books, and so will have key features for that application out-of-the box.<span class="hide-hover"> <a href="#p-27">(link 🔗)</a></span>
+</p>
+<p id="p-28">Another advantage over Asciidoctor is that the reference implementation of Cirodown is in JavaScript, and can therefore be used on browser live preview out of the box. Asciidoctor does Transpile to JS with <a id="a-5" href="https://github.com/opal/opal">Opal</a>, but who wants to deal with that layer of complexity?<span class="hide-hover"> <a href="#p-28">(link 🔗)</a></span>
+</p>
 <h2 id="paragraphs"><a href="#paragraphs" title="link to this element">3. Paragraphs <code id="c-4">\p</code></a><span> <a href="#toc-paragraphs">(toc ↑)</a></span></h2>
-<p id="p-29">OK, this is too common, so we opted for some insanity here: double newline is a paragraph!</p>
-<p id="p-30">Paragraph 1.</p>
-<p id="p-31">Paragraph 2.</p>
-<p id="p-32">Equivalently however, you can use an explicit <code id="c-5">\p</code> macros as well, which is required for example to add properties to a paragraph, e.g.:</p>
-<p id="paragraph-1">Paragraph 1</p>
-<p id="paragraph-2">Paragraph 2</p>
-<p id="p-35">Paragraphs are created automatically inside <a href="#macro-argument-syntax" id="x-4">macro argument</a> whenever a double newline appears.</p>
-<p id="p-36">Due to their insane syntax, paragraphs have to do some magic to determine where they start and end. TODO: mention the rule that paragraphs wrap only phrasing content, link to: <a href="#help-macros" id="x-5"><code id="c-105">--help-macros</code></a>.</p>
+<p id="p-29">OK, this is too common, so we opted for some insanity here: double newline is a paragraph!<span class="hide-hover"> <a href="#p-29">(link 🔗)</a></span>
+</p>
+<p id="p-30">Paragraph 1.<span class="hide-hover"> <a href="#p-30">(link 🔗)</a></span>
+</p>
+<p id="p-31">Paragraph 2.<span class="hide-hover"> <a href="#p-31">(link 🔗)</a></span>
+</p>
+<p id="p-32">Equivalently however, you can use an explicit <code id="c-5">\p</code> macros as well, which is required for example to add properties to a paragraph, e.g.:<span class="hide-hover"> <a href="#p-32">(link 🔗)</a></span>
+</p>
+<p id="paragraph-1">Paragraph 1<span class="hide-hover"> <a href="#paragraph-1">(link 🔗)</a></span>
+</p>
+<p id="paragraph-2">Paragraph 2<span class="hide-hover"> <a href="#paragraph-2">(link 🔗)</a></span>
+</p>
+<p id="p-35">Paragraphs are created automatically inside <a href="#macro-argument-syntax" id="x-4">macro argument</a> whenever a double newline appears.<span class="hide-hover"> <a href="#p-35">(link 🔗)</a></span>
+</p>
+<p id="p-36">Due to their insane syntax, paragraphs have to do some magic to determine where they start and end. TODO: mention the rule that paragraphs wrap only phrasing content, link to: <a href="#help-macros" id="x-5"><code id="c-105">--help-macros</code></a>.<span class="hide-hover"> <a href="#p-36">(link 🔗)</a></span>
+</p>
 <h2 id="links"><a href="#links" title="link to this element">4. Links <code id="c-6">\a</code></a><span> <a href="#toc-links">(toc ↑)</a></span></h2>
-<p id="p-37">Autolink (link text is the same as the link): <a id="a-6" href="http://example.com">http://example.com</a>.</p>
-<p id="p-38">Link with custom text: <a id="a-7" href="http://example.com">my custom link text</a>.</p>
-<p id="p-39"><a id="a-8" href="http://example.com"><p id="p-235">Multiple</p>
-<p id="p-236">paragraphs</p>
-</a></p>
+<p id="p-37">Autolink (link text is the same as the link): <a id="a-6" href="http://example.com">http://example.com</a>.<span class="hide-hover"> <a href="#p-37">(link 🔗)</a></span>
+</p>
+<p id="p-38">Link with custom text: <a id="a-7" href="http://example.com">my custom link text</a>.<span class="hide-hover"> <a href="#p-38">(link 🔗)</a></span>
+</p>
+<p id="p-39"><a id="a-8" href="http://example.com"><p id="p-235">Multiple<span class="hide-hover"> <a href="#p-235">(link 🔗)</a></span>
+</p>
+<p id="p-236">paragraphs<span class="hide-hover"> <a href="#p-236">(link 🔗)</a></span>
+</p>
+</a><span class="hide-hover"> <a href="#p-39">(link 🔗)</a></span>
+</p>
 <h2 id="internal-cross-references"><a href="#internal-cross-references" title="link to this element">5. Internal cross references <code id="c-7">\x</code></a><span> <a href="#toc-internal-cross-references">(toc ↑)</a></span></h2>
-<p id="p-40">Every macro in Cirodown can have an optional <code id="c-8">id</code> and a <code id="c-9">title</code> property.</p>
-<p id="p-41">Those that have a <code id="c-10">title</code> but no <code id="c-11">id</code>, get an auto-generated ID from the title: <a href="#automatic-id-from-title" id="x-6">Automatic ID from title</a>.</p>
-<p id="p-42">For macros that do have an ID, you can write a cross reference to it:</p>
+<p id="p-40">Every macro in Cirodown can have an optional <code id="c-8">id</code> and a <code id="c-9">title</code> property.<span class="hide-hover"> <a href="#p-40">(link 🔗)</a></span>
+</p>
+<p id="p-41">Those that have a <code id="c-10">title</code> but no <code id="c-11">id</code>, get an auto-generated ID from the title: <a href="#automatic-id-from-title" id="x-6">Automatic ID from title</a>.<span class="hide-hover"> <a href="#p-41">(link 🔗)</a></span>
+</p>
+<p id="p-42">For macros that do have an ID, you can write a cross reference to it:<span class="hide-hover"> <a href="#p-42">(link 🔗)</a></span>
+</p>
 <pre id="c-7"><code>\h[2][My title]{id=my-id}
 
 Read this \x[my-id][amazing section].
 </code></pre>
-<p id="p-43">If the second argument, the <code id="c-12">content</code>, is not present, it expand to the header title, e.g.:</p>
+<p id="p-43">If the second argument, the <code id="c-12">content</code>, is not present, it expand to the header title, e.g.:<span class="hide-hover"> <a href="#p-43">(link 🔗)</a></span>
+</p>
 <pre id="c-8"><code>\h[2][My title]{id=my-id}
 
 Read this \x[my-id].
 </code></pre>
-<p id="p-44">is the same as:</p>
+<p id="p-44">is the same as:<span class="hide-hover"> <a href="#p-44">(link 🔗)</a></span>
+</p>
 <pre id="c-9"><code>\h[2][My title]{id=my-id}
 
 Read this \x[my-id][My title].
 </code></pre>
 <h3 id="cross-reference-style"><a href="#cross-reference-style" title="link to this element">5.1. Cross reference style</a><span> <a href="#toc-cross-reference-style">(toc ↑)</a></span></h3>
-<p id="p-45">To also show the section auto-generated number as in "Section X.Y My title" we add the optional <code id="c-13">{style=full}</code> <a href="#positional-vs-named-arguments" id="x-7">named parameter</a> to the cross reference, for example:</p>
+<p id="p-45">To also show the section auto-generated number as in "Section X.Y My title" we add the optional <code id="c-13">{style=full}</code> <a href="#positional-vs-named-arguments" id="x-7">named parameter</a> to the cross reference, for example:<span class="hide-hover"> <a href="#p-45">(link 🔗)</a></span>
+</p>
 <pre id="c-10"><code>\h[2][My title]{id=my-id}
 
 Read this \x[my-id]{style=full}.
 </code></pre>
 <h3 id="internal-cross-file-references"><a href="#internal-cross-file-references" title="link to this element">5.2. Internal cross file references</a><span> <a href="#toc-internal-cross-file-references">(toc ↑)</a></span></h3>
-<p id="p-46">TODO</p>
+<p id="p-46">TODO<span class="hide-hover"> <a href="#p-46">(link 🔗)</a></span>
+</p>
 <pre id="c-11"><code>Reference to the first header of another file: \x[not-readme]. That header gets its ID from the file name by default.
 
 Reference to an internal header of another file: \x[h2-in-not-the-readme]. By default, That header ID gets prefixed by the ID of the top header.
 </code></pre>
 <h3 id="automatic-id-from-title"><a href="#automatic-id-from-title" title="link to this element">5.3. Automatic ID from title</a><span> <a href="#toc-automatic-id-from-title">(toc ↑)</a></span></h3>
-<p id="p-47">If a macro has the <code id="c-14">title</code> property is present but no explicit <code id="c-15">id</code>, an ID is created automatically from the <code id="c-16">title</code>, by applying the following transformations:</p>
+<p id="p-47">If a macro has the <code id="c-14">title</code> property is present but no explicit <code id="c-15">id</code>, an ID is created automatically from the <code id="c-16">title</code>, by applying the following transformations:<span class="hide-hover"> <a href="#p-47">(link 🔗)</a></span>
+</p>
 <ul id="ul-7">
 <li id="l-15">convert all of <code id="c-123">A-Z</code> characters to lowercase</li>
 <li id="l-16">convert consecutive sequences of all non <code id="c-124">a-z0-9</code> ASCII characters to a single hyphen <code id="c-125">-</code>. Note that this leaves non-ASCII character untouched.</li>
 <li id="l-17">strip leading or trailing hyphens</li>
 </ul>
-<p id="p-48">Note how those rules leave non ASCII Unicode characters untouched, as capitalization and determining if something "is a letter or not" in those cases can be tricky.</p>
-<p id="p-49">So for example, the following automatic IDs would be generated: <a href="#table-examples-of-automatically-generated-ids" id="x-8">Table 1. "Examples of automatically generated IDs"</a>.</p>
+<p id="p-48">Note how those rules leave non ASCII Unicode characters untouched, as capitalization and determining if something "is a letter or not" in those cases can be tricky.<span class="hide-hover"> <a href="#p-48">(link 🔗)</a></span>
+</p>
+<p id="p-49">So for example, the following automatic IDs would be generated: <a href="#table-examples-of-automatically-generated-ids" id="x-8">Table 1. "Examples of automatically generated IDs"</a>.<span class="hide-hover"> <a href="#p-49">(link 🔗)</a></span>
+</p>
 <div class="table-container" id="table-examples-of-automatically-generated-ids">
 <div class="table-caption-container">
 <span class="table-caption"><span class="caption-prefix">Table 1</span>. Examples of automatically generated IDs</span><span> <a href="#table-examples-of-automatically-generated-ids">(link 🔗)</a></span>
@@ -409,8 +471,10 @@ Reference to an internal header of another file: \x[h2-in-not-the-readme]. By de
 </div>
 <h2 id="headers"><a href="#headers" title="link to this element">6. Headers <code id="c-17">\h</code></a><span> <a href="#toc-headers">(toc ↑)</a></span></h2>
 <h3 id="unlimited-header-levels"><a href="#unlimited-header-levels" title="link to this element">6.1. Unlimited header levels</a><span> <a href="#toc-unlimited-header-levels">(toc ↑)</a></span></h3>
-<p id="p-50">There is no limit to how many levels we can have!</p>
-<p id="p-51">HTML is randomly limited to <code id="c-18">h6</code>, so Cirodown just renders higher levels as an <code id="c-19">h6</code> with a <code id="c-20">data-level</code> attribute to indicate the actual level for possible CSS styling:</p>
+<p id="p-50">There is no limit to how many levels we can have!<span class="hide-hover"> <a href="#p-50">(link 🔗)</a></span>
+</p>
+<p id="p-51">HTML is randomly limited to <code id="c-18">h6</code>, so Cirodown just renders higher levels as an <code id="c-19">h6</code> with a <code id="c-20">data-level</code> attribute to indicate the actual level for possible CSS styling:<span class="hide-hover"> <a href="#p-51">(link 🔗)</a></span>
+</p>
 <pre id="c-12"><code>&lt;h6 data-level="7"&gt;My title&lt;/h6&gt;
 </code></pre>
 <h4 id="my-h4"><a href="#my-h4" title="link to this element">6.1.1. My h4</a><span> <a href="#toc-my-h4">(toc ↑)</a></span></h4>
@@ -424,15 +488,22 @@ Reference to an internal header of another file: \x[h2-in-not-the-readme]. By de
 <h6 data-level="12" id="my-h12"><a href="#my-h12" title="link to this element">6.1.1.1.1.1.1.1.1.1.1. My h12</a><span> <a href="#toc-my-h12">(toc ↑)</a></span></h6>
 <h6 data-level="13" id="my-h13"><a href="#my-h13" title="link to this element">6.1.1.1.1.1.1.1.1.1.1.1. My h13</a><span> <a href="#toc-my-h13">(toc ↑)</a></span></h6>
 <h3 id="table-of-contents"><a href="#table-of-contents" title="link to this element">6.2. Table of contents <code id="c-21">\toc</code></a><span> <a href="#toc-table-of-contents">(toc ↑)</a></span></h3>
-<p id="p-52">Only one ToC shows per document. Any ToC besides the first one is ignored.</p>
-<p id="p-53">The ToC ignores <code id="c-22">\h[1]</code> by default, as we encourage that header level to appear only once and represent the main title under which the entire document goes.</p>
+<p id="p-52">Only one ToC shows per document. Any ToC besides the first one is ignored.<span class="hide-hover"> <a href="#p-52">(link 🔗)</a></span>
+</p>
+<p id="p-53">The ToC ignores <code id="c-22">\h[1]</code> by default, as we encourage that header level to appear only once and represent the main title under which the entire document goes.<span class="hide-hover"> <a href="#p-53">(link 🔗)</a></span>
+</p>
 <h4 id="id-scope"><a href="#id-scope" title="link to this element">6.2.1. id_scope</a><span> <a href="#toc-id-scope">(toc ↑)</a></span></h4>
-<p id="p-54">TODO implement.</p>
-<p id="p-55">If this header attribute is <code id="c-23">true</code>, then the ID of all children are prefixed with the ID of this header + a slash <code id="c-24">/</code>.</p>
-<p id="p-56">This property is true by default for cross file references, although it can be turned off explicitly with <code id="c-25">id-scope=false</code>.</p>
-<p id="p-57">References withing a single scope do not need the parent scope prefix.</p>
+<p id="p-54">TODO implement.<span class="hide-hover"> <a href="#p-54">(link 🔗)</a></span>
+</p>
+<p id="p-55">If this header attribute is <code id="c-23">true</code>, then the ID of all children are prefixed with the ID of this header + a slash <code id="c-24">/</code>.<span class="hide-hover"> <a href="#p-55">(link 🔗)</a></span>
+</p>
+<p id="p-56">This property is true by default for cross file references, although it can be turned off explicitly with <code id="c-25">id-scope=false</code>.<span class="hide-hover"> <a href="#p-56">(link 🔗)</a></span>
+</p>
+<p id="p-57">References withing a single scope do not need the parent scope prefix.<span class="hide-hover"> <a href="#p-57">(link 🔗)</a></span>
+</p>
 <h3 id="header-explicit-levels-vs-nesting-design-choice"><a href="#header-explicit-levels-vs-nesting-design-choice" title="link to this element">6.3. Header explicit levels vs nesting design choice</a><span> <a href="#toc-header-explicit-levels-vs-nesting-design-choice">(toc ↑)</a></span></h3>
-<p id="p-58">Arguably, the language would be even saner if we did:</p>
+<p id="p-58">Arguably, the language would be even saner if we did:<span class="hide-hover"> <a href="#p-58">(link 🔗)</a></span>
+</p>
 <pre id="c-13"><code>\h[My h1][
 
 Paragraph.
@@ -440,37 +511,49 @@ Paragraph.
 \h[My h2][]
 ]
 </code></pre>
-<p id="p-59">rather than having explicit levels.</p>
-<p id="p-60">But we chose not to do it like most markups available because it leads to too many nestiing levels, and hard to determine where you are without tooling.</p>
+<p id="p-59">rather than having explicit levels.<span class="hide-hover"> <a href="#p-59">(link 🔗)</a></span>
+</p>
+<p id="p-60">But we chose not to do it like most markups available because it leads to too many nestiing levels, and hard to determine where you are without tooling.<span class="hide-hover"> <a href="#p-60">(link 🔗)</a></span>
+</p>
 <h3 id="includes"><a href="#includes" title="link to this element">6.4. Includes <code id="c-26">\include</code></a><span> <a href="#toc-includes">(toc ↑)</a></span></h3>
-<p id="p-61">The <code id="c-27">\include</code> macro achieves the following goals:</p>
+<p id="p-61">The <code id="c-27">\include</code> macro achieves the following goals:<span class="hide-hover"> <a href="#p-61">(link 🔗)</a></span>
+</p>
 <ul id="ul-8">
-<li id="l-18"><p id="p-237">  show a single header at multiple locations in the table of contents. This makes the TOC into a full blown graph rather than a tree.</p>
+<li id="l-18"><p id="p-237">  show a single header at multiple locations in the table of contents. This makes the TOC into a full blown graph rather than a tree.<span class="hide-hover"> <a href="#p-237">(link 🔗)</a></span>
+</p>
 <p id="p-238">  This can be used to implement a tag entirely within the ToC!
+<span class="hide-hover"> <a href="#p-238">(link 🔗)</a></span>
 </p>
 </li>
-<li id="l-19"><p id="p-239">  determine where external files will be placed in <code id="c-163">--single-page</code> mode.</p>
-<p id="p-240">  When compiling to HTML, we can choose to either:</p>
+<li id="l-19"><p id="p-239">  determine where external files will be placed in <code id="c-163">--single-page</code> mode.<span class="hide-hover"> <a href="#p-239">(link 🔗)</a></span>
+</p>
+<p id="p-240">  When compiling to HTML, we can choose to either:<span class="hide-hover"> <a href="#p-240">(link 🔗)</a></span>
+</p>
 <p id="p-241">  <ul id="ul-36">
-<li id="l-94">compile as multiple pages: default, includes show on ToC and render as <a href="#internal-cross-references" id="x-51">internal cross references to headers</a></li>
+<li id="l-96">compile as multiple pages: default, includes show on ToC and render as <a href="#internal-cross-references" id="x-51">internal cross references to headers</a></li>
 </ul>
   <ul id="ul-37">
-<li id="l-95">compile as a single page: selected with the <code id="c-177">cirodown --single-page</code> option</li>
+<li id="l-97">compile as a single page: selected with the <code id="c-177">cirodown --single-page</code> option</li>
 </ul>
+<span class="hide-hover"> <a href="#p-241">(link 🔗)</a></span>
 </p>
 </li>
 </ul>
-<p id="p-62">If an external header would be included multiple times in a single output page, the ToC contents are duplicated, but the content itself cannot be because that would lead to ID conflicts and large pages.</p>
-<p id="p-63">Therefore, in this case you are forced to specify which include will actually expand to the <code id="c-28">canonical</code> attribute:</p>
+<p id="p-62">If an external header would be included multiple times in a single output page, the ToC contents are duplicated, but the content itself cannot be because that would lead to ID conflicts and large pages.<span class="hide-hover"> <a href="#p-62">(link 🔗)</a></span>
+</p>
+<p id="p-63">Therefore, in this case you are forced to specify which include will actually expand to the <code id="c-28">canonical</code> attribute:<span class="hide-hover"> <a href="#p-63">(link 🔗)</a></span>
+</p>
 <pre id="c-14"><code>\include[not-the-readme]{canonical=true}
 </code></pre>
 <h3 id="skipping-header-levels"><a href="#skipping-header-levels" title="link to this element">6.5. Skipping header levels</a><span> <a href="#toc-skipping-header-levels">(toc ↑)</a></span></h3>
-<p id="p-64">The very first header of a document can be of any level, although we highly recommend your document to start with a <code id="c-29">\h[1]</code>, and to contain exactly just one <code id="c-30">\h[1]</code>, as this has implications such as:</p>
+<p id="p-64">The very first header of a document can be of any level, although we highly recommend your document to start with a <code id="c-29">\h[1]</code>, and to contain exactly just one <code id="c-30">\h[1]</code>, as this has implications such as:<span class="hide-hover"> <a href="#p-64">(link 🔗)</a></span>
+</p>
 <ul id="ul-9">
 <li id="l-20"><code id="c-126">\h[1]</code> is used for the document title: <a href="#html-document-title" id="x-41">HTML document title</a></li>
 <li id="l-21"><code id="c-127">\h[1]</code> does not show on the <a href="#table-of-contents" id="x-42">Table of contents <code id="c-21">\toc</code></a></li>
 </ul>
-<p id="p-65">Aftter the initial header however, you must not skip a header level, e.g. the following would give an error because it skips level 3:</p>
+<p id="p-65">Aftter the initial header however, you must not skip a header level, e.g. the following would give an error because it skips level 3:<span class="hide-hover"> <a href="#p-65">(link 🔗)</a></span>
+</p>
 <pre id="c-15"><code>\h[1][my 1]
 
 \h[2][my 1]
@@ -478,163 +561,206 @@ Paragraph.
 \h[4][my 4]
 </code></pre>
 <h3 id="the-toplevel-header"><a href="#the-toplevel-header" title="link to this element">6.6. The toplevel header</a><span> <a href="#toc-the-toplevel-header">(toc ↑)</a></span></h3>
-<p id="p-66">If the document has only a single header of the highest level, e.g. like the following has only a single <code id="c-31">h2</code>;</p>
+<p id="p-66">If the document has only a single header of the highest level, e.g. like the following has only a single <code id="c-31">h2</code>;<span class="hide-hover"> <a href="#p-66">(link 🔗)</a></span>
+</p>
 <pre id="c-16"><code>\h[2][My 2]
 
 \h[3][My 3 1]
 
 \h[3][My 3 2]
 </code></pre>
-<p id="p-67">then this has some magical effects, notably that header IDs won't show that level. For example, the headers would render like:</p>
+<p id="p-67">then this has some magical effects, notably that header IDs won't show that level. For example, the headers would render like:<span class="hide-hover"> <a href="#p-67">(link 🔗)</a></span>
+</p>
 <pre id="c-17"><code>My 2
 
 1. My 3 1
 
 2. My 3 2
 </code></pre>
-<p id="p-68">rather than:</p>
+<p id="p-68">rather than:<span class="hide-hover"> <a href="#p-68">(link 🔗)</a></span>
+</p>
 <pre id="c-18"><code>1. My 2
 
 1.2. My 3 1
 
 1.2. My 3 2
 </code></pre>
-<p id="p-69">This is because in this case, we guess that the <code id="c-32">h2</code> is the toplevel</p>
+<p id="p-69">This is because in this case, we guess that the <code id="c-32">h2</code> is the toplevel<span class="hide-hover"> <a href="#p-69">(link 🔗)</a></span>
+</p>
 <h2 id="lists"><a href="#lists" title="link to this element">7. Lists <code id="c-33">\l</code></a><span> <a href="#toc-lists">(toc ↑)</a></span></h2>
-<p id="p-70">With implicit container:</p>
+<p id="p-70">With implicit container:<span class="hide-hover"> <a href="#p-70">(link 🔗)</a></span>
+</p>
 <ul id="ul-10">
 <li id="l-22">a</li>
 <li id="l-23">b</li>
 <li id="l-24">c</li>
 </ul>
-<p id="p-71">Equivalent with explicit container:</p>
+<p id="p-71">Equivalent with explicit container:<span class="hide-hover"> <a href="#p-71">(link 🔗)</a></span>
+</p>
 <ul id="ul-11">
 <li id="l-25">a</li>
 <li id="l-26">b</li>
 <li id="l-27">c</li>
 </ul>
-<p id="p-72">The explicit container is required if you want to add properties to the list, e.g. a title and an ID: <a href="#list-my-id" id="x-9">Ul 12</a>:</p>
+<p id="p-72">The explicit container is required if you want to add properties to the list, e.g. a title and an ID: <a href="#list-my-id" id="x-9">Ul 12</a>:<span class="hide-hover"> <a href="#p-72">(link 🔗)</a></span>
+</p>
 <ul id="list-my-id">
 <li id="l-28">a</li>
 <li id="l-29">b</li>
 <li id="l-30">c</li>
 </ul>
-<p id="p-73">It is also required if you want ordered lists:</p>
+<p id="p-73">It is also required if you want ordered lists:<span class="hide-hover"> <a href="#p-73">(link 🔗)</a></span>
+</p>
 <ol id="ol-1">
 <li id="l-31">first</li>
 <li id="l-32">second</li>
 <li id="l-33">third</li>
 </ol>
-<p id="p-74">Nested lists with implicit containers:</p>
+<p id="p-74">Nested lists with implicit containers:<span class="hide-hover"> <a href="#p-74">(link 🔗)</a></span>
+</p>
 <ul id="ul-13">
-<li id="l-34"><p id="p-242">  a</p>
+<li id="l-34"><p id="p-242">  a<span class="hide-hover"> <a href="#p-242">(link 🔗)</a></span>
+</p>
 <p id="p-243">  <ul id="ul-38">
-<li id="l-96">a1</li>
+<li id="l-98">a1</li>
 </ul>
   <ul id="ul-39">
-<li id="l-97">a2</li>
+<li id="l-99">a2</li>
 </ul>
   <ul id="ul-40">
-<li id="l-98">a2</li>
+<li id="l-100">a2</li>
 </ul>
+<span class="hide-hover"> <a href="#p-243">(link 🔗)</a></span>
 </p>
 </li>
 <li id="l-35">b</li>
 <li id="l-36">c</li>
 </ul>
-<p id="p-75">List item with a paragraph inside of it:</p>
+<p id="p-75">List item with a paragraph inside of it:<span class="hide-hover"> <a href="#p-75">(link 🔗)</a></span>
+</p>
 <ul id="ul-14">
 <li id="l-37">a</li>
-<li id="l-38"><p id="p-244">  I have</p>
-<p id="p-245">  Multiple paragraphs.</p>
+<li id="l-38"><p id="p-244">  I have<span class="hide-hover"> <a href="#p-244">(link 🔗)</a></span>
+</p>
+<p id="p-245">  Multiple paragraphs.<span class="hide-hover"> <a href="#p-245">(link 🔗)</a></span>
+</p>
 <p id="p-246">  <ul id="ul-41">
-<li id="l-99">And</li>
+<li id="l-101">And</li>
 </ul>
   <ul id="ul-42">
-<li id="l-100">also</li>
+<li id="l-102">also</li>
 </ul>
   <ul id="ul-43">
-<li id="l-101">a</li>
+<li id="l-103">a</li>
 </ul>
   <ul id="ul-44">
-<li id="l-102">list</li>
+<li id="l-104">list</li>
 </ul>
+<span class="hide-hover"> <a href="#p-246">(link 🔗)</a></span>
 </p>
 </li>
 <li id="l-39">c</li>
 </ul>
 <h2 id="images"><a href="#images" title="link to this element">8. Images <code id="c-34">\image</code></a><span> <a href="#toc-images">(toc ↑)</a></span></h2>
-<p id="p-76">A block image with <a href="#macro-capitalization-for-block-vs-inline" id="x-10">capital</a> 'i' <code id="c-35">Image</code> can be seen at <a href="#fig-my-xi-chrysanthemum" id="x-11">Figure 1. "Xi Chrysanthemum is a very nice image"</a>:</p>
+<p id="p-76">A block image with <a href="#macro-capitalization-for-block-vs-inline" id="x-10">capital</a> 'i' <code id="c-35">Image</code> can be seen at <a href="#fig-my-xi-chrysanthemum" id="x-11">Figure 1. "Xi Chrysanthemum is a very nice image"</a>:<span class="hide-hover"> <a href="#p-76">(link 🔗)</a></span>
+</p>
 <figure id="fig-my-xi-chrysanthemum">
 <a href="#fig-my-xi-chrysanthemum"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_liusi_added_by_Ciro_Santilli.jpeg"></a>
 <figcaption><span class="caption-prefix">Figure 1</span>. Xi Chrysanthemum is a very nice image</figcaption>
 </figure>
-<p id="p-77">Here is one without a description but with an ID so we can link to it: <a href="#fig-my-xi-chrysanthemum-2" id="x-12">Figure 2</a>.</p>
+<p id="p-77">Here is one without a description but with an ID so we can link to it: <a href="#fig-my-xi-chrysanthemum-2" id="x-12">Figure 2</a>.<span class="hide-hover"> <a href="#p-77">(link 🔗)</a></span>
+</p>
 <figure id="fig-my-xi-chrysanthemum-2">
 <a href="#fig-my-xi-chrysanthemum-2"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_liusi_added_by_Ciro_Santilli.jpeg"></a>
 <figcaption><span class="caption-prefix">Figure 2</span></figcaption>
 </figure>
-<p id="p-78">We must use <a href="#cross-reference-style" id="x-13"><code id="c-128">style=full</code></a> here because otherwise the link text would be empty and not show at all.</p>
-<p id="p-79">If the image has neither ID nor title, then it just gets a generic caption, and it is not possible to link to it with an <a href="#internal-cross-references" id="x-14">internal cross reference</a>, e.g.:</p>
+<p id="p-78">We must use <a href="#cross-reference-style" id="x-13"><code id="c-128">style=full</code></a> here because otherwise the link text would be empty and not show at all.<span class="hide-hover"> <a href="#p-78">(link 🔗)</a></span>
+</p>
+<p id="p-79">If the image has neither ID nor title, then it just gets a generic caption, and it is not possible to link to it with an <a href="#internal-cross-references" id="x-14">internal cross reference</a>, e.g.:<span class="hide-hover"> <a href="#p-79">(link 🔗)</a></span>
+</p>
 <figure id="fig-3">
 <a href="#fig-3"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_liusi_added_by_Ciro_Santilli.jpeg"></a>
 <figcaption><span class="caption-prefix">Figure 3</span></figcaption>
 </figure>
-<p id="p-80">The image does however get an automatically generated ID based on its image number so that readers can link to it on the rendered version, e.g. as:</p>
+<p id="p-80">The image does however get an automatically generated ID based on its image number so that readers can link to it on the rendered version, e.g. as:<span class="hide-hover"> <a href="#p-80">(link 🔗)</a></span>
+</p>
 <pre id="c-19"><code>#fig-123
 </code></pre>
-<p id="p-81">This link is of course not stable across document revisions, since if an image is added before that one, the link will break.</p>
-<p id="p-82">This kind of image is discouraged, because in paged output formats like PDF, it could float away from the text that refers to the image.</p>
-<p id="p-83">And here is an <img id="image-1" src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_liusi_added_by_Ciro_Santilli.jpeg" alt="Xi Chrysanthemum"> inline one with lower case 'i'. Inline images can't have captions.</p>
+<p id="p-81">This link is of course not stable across document revisions, since if an image is added before that one, the link will break.<span class="hide-hover"> <a href="#p-81">(link 🔗)</a></span>
+</p>
+<p id="p-82">This kind of image is discouraged, because in paged output formats like PDF, it could float away from the text that refers to the image.<span class="hide-hover"> <a href="#p-82">(link 🔗)</a></span>
+</p>
+<p id="p-83">And here is an <img id="image-1" src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_liusi_added_by_Ciro_Santilli.jpeg" alt="Xi Chrysanthemum"> inline one with lower case 'i'. Inline images can't have captions.<span class="hide-hover"> <a href="#p-83">(link 🔗)</a></span>
+</p>
 <h3 id="where-to-store-images"><a href="#where-to-store-images" title="link to this element">8.1. Where to store images</a><span> <a href="#toc-where-to-store-images">(toc ↑)</a></span></h3>
-<p id="p-84">If you are making a limited repository that will not have a ton of images, then you can get away with simply git tracking your images in the main repository.</p>
-<p id="p-85">With this setup, no further action is needed. For example, with a file structure of:</p>
+<p id="p-84">If you are making a limited repository that will not have a ton of images, then you can get away with simply git tracking your images in the main repository.<span class="hide-hover"> <a href="#p-84">(link 🔗)</a></span>
+</p>
+<p id="p-85">With this setup, no further action is needed. For example, with a file structure of:<span class="hide-hover"> <a href="#p-85">(link 🔗)</a></span>
+</p>
 <pre id="c-20"><code>./README.ciro
 ./Image_with_a_descriptive_title.jpeg
 </code></pre>
 <p id="p-86">just use the image from <pre id="c-66"><code>README.ciro</code></pre>
- as:</p>
+ as:<span class="hide-hover"> <a href="#p-86">(link 🔗)</a></span>
+</p>
 <pre id="c-21"><code>Here is a nice image:
 
 \Image[Image_with_a_descriptive_title.jpeg]
 </code></pre>
-<p id="p-87">However, if you are making a huge tutorial, which can have a huge undefined number of images (i.e. any scientific book), then you likely don't want to git track your images in the git repository.</p>
-<p id="p-88">We recommend the following approach instead.</p>
-<p id="p-89">Create a separate GitHub repository in addition to the main one containing the text, for example:</p>
+<p id="p-87">However, if you are making a huge tutorial, which can have a huge undefined number of images (i.e. any scientific book), then you likely don't want to git track your images in the git repository.<span class="hide-hover"> <a href="#p-87">(link 🔗)</a></span>
+</p>
+<p id="p-88">We recommend the following approach instead.<span class="hide-hover"> <a href="#p-88">(link 🔗)</a></span>
+</p>
+<p id="p-89">Create a separate GitHub repository in addition to the main one containing the text, for example:<span class="hide-hover"> <a href="#p-89">(link 🔗)</a></span>
+</p>
 <ul id="ul-15">
 <li id="l-40"><code id="c-129">./my-tutorial/</code></li>
 <li id="l-41"><code id="c-130">./my-tutorial-media/</code></li>
 </ul>
-<p id="p-90">The name <code id="c-36">*-media</code> suffix is not mandatory, but if you use this default, <code id="c-37">cirodown</code> will handle it for you without any further configuration.</p>
-<p id="p-91">And then set the <a href="#media-source-type" id="x-15"><code id="c-107">media_source_type</code></a> option in your <a href="#cirodown-json" id="x-16"><code id="c-106">cirodown.json</code></a>:</p>
+<p id="p-90">The name <code id="c-36">*-media</code> suffix is not mandatory, but if you use this default, <code id="c-37">cirodown</code> will handle it for you without any further configuration.<span class="hide-hover"> <a href="#p-90">(link 🔗)</a></span>
+</p>
+<p id="p-91">And then set the <a href="#media-source-type" id="x-15"><code id="c-107">media_source_type</code></a> option in your <a href="#cirodown-json" id="x-16"><code id="c-106">cirodown.json</code></a>:<span class="hide-hover"> <a href="#p-91">(link 🔗)</a></span>
+</p>
 <pre id="c-22"><code>{
   media_source_type = "media_repo"
 }
 </code></pre>
-<p id="p-92">Now, simply drop your images into the <code id="c-38">my-tutorial-media</code> repository and use them just as before, and everything will just work!</p>
+<p id="p-92">Now, simply drop your images into the <code id="c-38">my-tutorial-media</code> repository and use them just as before, and everything will just work!<span class="hide-hover"> <a href="#p-92">(link 🔗)</a></span>
+</p>
 <pre id="c-23"><code>\Image[Image_with_a_descriptive_title.jpeg]
 </code></pre>
-<p id="p-93"><code id="c-39">cirodown</code> will even automatically add and push used images in the <code id="c-40">my-tutorial-media</code> repository for you during publishing!</p>
-<p id="p-94">You should then use the following rules inside <code id="c-41">my-tutorial-media</code>:</p>
+<p id="p-93"><code id="c-39">cirodown</code> will even automatically add and push used images in the <code id="c-40">my-tutorial-media</code> repository for you during publishing!<span class="hide-hover"> <a href="#p-93">(link 🔗)</a></span>
+</p>
+<p id="p-94">You should then use the following rules inside <code id="c-41">my-tutorial-media</code>:<span class="hide-hover"> <a href="#p-94">(link 🔗)</a></span>
+</p>
 <ul id="ul-16">
 <li id="l-42">give every file a very descriptive and unique name as a full English sentence</li>
 <li id="l-43">never ever delete any files, nor change their content, unless it is an improvement in format that does change the information contained of the image TODO link to nice Wikimedia Commons guideline page</li>
 </ul>
-<p id="p-95">This way, even though the repositories are not fully in sync, anyone who clones the latest version of the <code id="c-42">*-media</code> directory will be able to view any version of the main repository.</p>
-<p id="p-96">Then, if one day the media repository ever blows up GitHub's limit, you can just migrate the images to another image server that allows arbitrary basenames, e.g. AWS, and just configure your project to use that new media base URL with the <a href="#media-base-url" id="x-17"><code id="c-108">media_base_url</code></a> option.</p>
-<p id="p-97">The reason why images should be kept in a separate repository is that images are hundreds or thousands of times larger than hand written text.</p>
-<p id="p-98">Therefore, images could easily fill up the maximum repository size you are allowed: https://webapps.stackexchange.com/questions/45254/file-size-and-storage-limits-on-github#84746 and then what will you do when GitHub comes asking you to reduce the repository size?</p>
-<p id="p-99"><a id="a-9" href="https://git-lfs.github.com/">Git LFS</a> is one approach to deal with this, but we feel that it adds too much development overhead.</p>
+<p id="p-95">This way, even though the repositories are not fully in sync, anyone who clones the latest version of the <code id="c-42">*-media</code> directory will be able to view any version of the main repository.<span class="hide-hover"> <a href="#p-95">(link 🔗)</a></span>
+</p>
+<p id="p-96">Then, if one day the media repository ever blows up GitHub's limit, you can just migrate the images to another image server that allows arbitrary basenames, e.g. AWS, and just configure your project to use that new media base URL with the <a href="#media-base-url" id="x-17"><code id="c-108">media_base_url</code></a> option.<span class="hide-hover"> <a href="#p-96">(link 🔗)</a></span>
+</p>
+<p id="p-97">The reason why images should be kept in a separate repository is that images are hundreds or thousands of times larger than hand written text.<span class="hide-hover"> <a href="#p-97">(link 🔗)</a></span>
+</p>
+<p id="p-98">Therefore, images could easily fill up the maximum repository size you are allowed: https://webapps.stackexchange.com/questions/45254/file-size-and-storage-limits-on-github#84746 and then what will you do when GitHub comes asking you to reduce the repository size?<span class="hide-hover"> <a href="#p-98">(link 🔗)</a></span>
+</p>
+<p id="p-99"><a id="a-9" href="https://git-lfs.github.com/">Git LFS</a> is one approach to deal with this, but we feel that it adds too much development overhead.<span class="hide-hover"> <a href="#p-99">(link 🔗)</a></span>
+</p>
 <h3 id="image-generators"><a href="#image-generators" title="link to this element">8.2. Image generators</a><span> <a href="#toc-image-generators">(toc ↑)</a></span></h3>
-<p id="p-100">TODO implement: mechanism where you enter a textual description of the image inside the code body, and it then converts to an image, adds to the <code id="c-43">-media</code> repo and pushes all automatically. Start with dot.</p>
+<p id="p-100">TODO implement: mechanism where you enter a textual description of the image inside the code body, and it then converts to an image, adds to the <code id="c-43">-media</code> repo and pushes all automatically. Start with dot.<span class="hide-hover"> <a href="#p-100">(link 🔗)</a></span>
+</p>
 <h2 id="code"><a href="#code" title="link to this element">9. Code <code id="c-44">\c</code> and <code id="c-45">\C</code></a><span> <a href="#toc-code">(toc ↑)</a></span></h2>
-<p id="p-101">Inline code blocks (code blocks that should appear in the middle of a paragraph) are done with lower case <code id="c-46">c</code>:</p>
+<p id="p-101">Inline code blocks (code blocks that should appear in the middle of a paragraph) are done with lower case <code id="c-46">c</code>:<span class="hide-hover"> <a href="#p-101">(link 🔗)</a></span>
+</p>
 <pre id="c-24"><code>My \c[inline] code.
 </code></pre>
-<p id="p-102">renders to:</p>
+<p id="p-102">renders to:<span class="hide-hover"> <a href="#p-102">(link 🔗)</a></span>
+</p>
 <pre id="c-25"><code>&lt;p&gt;My &lt;code&gt;inline&lt;/code&gt; code.&lt;/p&gt;
 </code></pre>
-<p id="p-103">Code blocks (code blocks that should appear outside of paragraphs in their own lines) are done with capital <code id="c-47">C</code>:</p>
+<p id="p-103">Code blocks (code blocks that should appear outside of paragraphs in their own lines) are done with capital <code id="c-47">C</code>:<span class="hide-hover"> <a href="#p-103">(link 🔗)</a></span>
+</p>
 <pre id="c-26"><code>A paragraph.
 
 \C[
@@ -644,13 +770,15 @@ of code
 
 Another paragraph.
 </code></pre>
-<p id="p-104">renders to:</p>
+<p id="p-104">renders to:<span class="hide-hover"> <a href="#p-104">(link 🔗)</a></span>
+</p>
 <pre id="c-27"><code>&lt;p&gt;A paragraph.&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;A block
 of code&lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;Another paragraph.&lt;/p&gt;
 </code></pre>
-<p id="p-105">If the content of the code block has many characters that you would need to <a href="#escape-characters" id="x-18">escape</a>, you will often want to use <a href="#literal-arguments" id="x-19">Literal arguments</a>, which work just like the do for any other argument. For example:</p>
+<p id="p-105">If the content of the code block has many characters that you would need to <a href="#escape-characters" id="x-18">escape</a>, you will often want to use <a href="#literal-arguments" id="x-19">Literal arguments</a>, which work just like the do for any other argument. For example:<span class="hide-hover"> <a href="#p-105">(link 🔗)</a></span>
+</p>
 <pre id="c-28"><code>A paragraph.
 
 \C[[
@@ -661,12 +789,17 @@ of chars that you would need to escape:
 
 A paragraph.
 </code></pre>
-<p id="p-106">Note that the initial newline is skipped automatically in code blocks, just as for any other element, due to: <a href="#argument-leading-newline-removal" id="x-20">Argument leading newline removal</a>, so you don't have to worry about it.</p>
-<p id="p-107">The capital vs lower case theme is also used in other elements, for example <a href="#math" id="x-21">Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a>.</p>
-<p id="p-108">The distinction between inline <code id="c-48">c</code> and block <code id="c-49">C</code> code blocks is needed because in HTML, <a id="a-10" href="https://stackoverflow.com/questions/5371787/can-i-have-a-pre-tag-inside-a-p-tag-in-tumblr/58603596#58603596"><code id="c-131">pre</code> cannot go inside <code id="c-132">p</code></a>.</p>
-<p id="p-109">We could have chosen to do some magic to differentiate between them, e.g. checking if the block is the only element in a paragraph, but we decided not to do that to keep the language saner.</p>
+<p id="p-106">Note that the initial newline is skipped automatically in code blocks, just as for any other element, due to: <a href="#argument-leading-newline-removal" id="x-20">Argument leading newline removal</a>, so you don't have to worry about it.<span class="hide-hover"> <a href="#p-106">(link 🔗)</a></span>
+</p>
+<p id="p-107">The capital vs lower case theme is also used in other elements, for example <a href="#math" id="x-21">Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a>.<span class="hide-hover"> <a href="#p-107">(link 🔗)</a></span>
+</p>
+<p id="p-108">The distinction between inline <code id="c-48">c</code> and block <code id="c-49">C</code> code blocks is needed because in HTML, <a id="a-10" href="https://stackoverflow.com/questions/5371787/can-i-have-a-pre-tag-inside-a-p-tag-in-tumblr/58603596#58603596"><code id="c-131">pre</code> cannot go inside <code id="c-132">p</code></a>.<span class="hide-hover"> <a href="#p-108">(link 🔗)</a></span>
+</p>
+<p id="p-109">We could have chosen to do some magic to differentiate between them, e.g. checking if the block is the only element in a paragraph, but we decided not to do that to keep the language saner.<span class="hide-hover"> <a href="#p-109">(link 🔗)</a></span>
+</p>
 <h2 id="math"><a href="#math" title="link to this element">10. Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a><span> <a href="#toc-math">(toc ↑)</a></span></h2>
-<p id="p-110">Via KaTeX server side, oh yes!</p>
+<p id="p-110">Via KaTeX server side, oh yes!<span class="hide-hover"> <a href="#p-110">(link 🔗)</a></span>
+</p>
 <p id="p-111">My inline <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt></mrow><annotation encoding="application/x-tex">\sqrt{1 + 1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.17444499999999996em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8655550000000001em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord">1</span></span></span><span style="top:-2.825555em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702
 c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
 c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
@@ -678,11 +811,15 @@ c5.3,-9.3,12,-14,20,-14
 H400000v40H845.2724
 s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
 c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
-M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.17444499999999996em;"><span></span></span></span></span></span></span></span></span> is awesome.</p>
-<p id="p-112">Escape the closing bracket with backslash: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo stretchy="false">[</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo stretchy="false">]</mo><mo>=</mo><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1 - [1 + 1] = -1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">−</span><span class="mord">1</span></span></span></span>.</p>
-<p id="p-113">Escape the closing bracket with double open and close: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo stretchy="false">[</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo stretchy="false">]</mo><mo>=</mo><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1 - [1 + 1] = -1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">−</span><span class="mord">1</span></span></span></span> is awesome.</p>
-<p id="p-114">Display math is done with upper case <code id="c-52">M</code>:</p>
-<div class="math-container" id="eq-1"><div class="math-caption-container">
+M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.17444499999999996em;"><span></span></span></span></span></span></span></span></span> is awesome.<span class="hide-hover"> <a href="#p-111">(link 🔗)</a></span>
+</p>
+<p id="p-112">Escape the closing bracket with backslash: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo stretchy="false">[</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo stretchy="false">]</mo><mo>=</mo><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1 - [1 + 1] = -1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">−</span><span class="mord">1</span></span></span></span>.<span class="hide-hover"> <a href="#p-112">(link 🔗)</a></span>
+</p>
+<p id="p-113">Escape the closing bracket with double open and close: <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mo stretchy="false">[</mo><mn>1</mn><mo>+</mo><mn>1</mn><mo stretchy="false">]</mo><mo>=</mo><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1 - [1 + 1] = -1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">−</span><span class="mord">1</span></span></span></span> is awesome.<span class="hide-hover"> <a href="#p-113">(link 🔗)</a></span>
+</p>
+<p id="p-114">Display math is done with upper case <code id="c-52">M</code>:<span class="hide-hover"> <a href="#p-114">(link 🔗)</a></span>
+</p>
+<div class="math-container" id="eq-1"><div class="hide-hover">
 <span class="math-caption"><span class="caption-prefix">Equation 1</span></span><span> <a href="#eq-1">(link 🔗)</a></span>
 </div>
 <div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt><mspace linebreak="newline"></mspace><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt></mrow><annotation encoding="application/x-tex">\sqrt{1 + 1} \\
@@ -711,49 +848,56 @@ s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
 c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
 M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.17444499999999996em;"><span></span></span></span></span></span></span></span></span></div>
 </div>
-<p id="p-115">HTML escaping happens as you would expect, e.g. &lt; shows fine in:</p>
-<div class="math-container" id="eq-2"><div class="math-caption-container">
+<p id="p-115">HTML escaping happens as you would expect, e.g. &lt; shows fine in:<span class="hide-hover"> <a href="#p-115">(link 🔗)</a></span>
+</p>
+<div class="math-container" id="eq-2"><div class="hide-hover">
 <span class="math-caption"><span class="caption-prefix">Equation 2</span></span><span> <a href="#eq-2">(link 🔗)</a></span>
 </div>
 <div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>&lt;</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1 &lt; 2
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68354em;vertical-align:-0.0391em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">&lt;</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span></span></span></span></div>
 </div>
-<p id="p-116">Equation IDs and titles and linking to equations works identically to <a href="#images" id="x-22">images</a>, see that section for full details. Here is one equation reference example: <a href="#eq-my-first-equation" id="x-23">Equation 3. "My first equation"</a>.</p>
-<div class="math-container" id="eq-my-first-equation"><div class="math-caption-container">
+<p id="p-116">Equation IDs and titles and linking to equations works identically to <a href="#images" id="x-22">images</a>, see that section for full details. Here is one equation reference example: <a href="#eq-my-first-equation" id="x-23">Equation 3. "My first equation"</a>.<span class="hide-hover"> <a href="#p-116">(link 🔗)</a></span>
+</p>
+<div class="math-container" id="eq-my-first-equation"><div class="hide-hover">
 <span class="math-caption"><span class="caption-prefix">Equation 3</span>. My first equation</span><span> <a href="#eq-my-first-equation">(link 🔗)</a></span>
 </div>
 <div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1 + 1 = 2
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.72777em;vertical-align:-0.08333em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.64444em;vertical-align:0em;"></span><span class="mord">2</span></span></span></span></div>
 </div>
 <h3 id="math-defines-across-blocks"><a href="#math-defines-across-blocks" title="link to this element">10.1. Math defines across blocks</a><span> <a href="#toc-math-defines-across-blocks">(toc ↑)</a></span></h3>
-<p id="p-117">TODO pending upstream tag bump: <a id="a-11" href="https://github.com/KaTeX/KaTeX/pull/2091">https://github.com/KaTeX/KaTeX/pull/2091</a> First block defining with <code id="c-53">\newcommand</code>:</p>
-<div class="math-container" id="eq-4"><div class="math-caption-container">
+<p id="p-117">TODO pending upstream tag bump: <a id="a-11" href="https://github.com/KaTeX/KaTeX/pull/2091">https://github.com/KaTeX/KaTeX/pull/2091</a> First block defining with <code id="c-53">\newcommand</code>:<span class="hide-hover"> <a href="#p-117">(link 🔗)</a></span>
+</p>
+<div class="math-container" id="eq-4"><div class="hide-hover">
 <span class="math-caption"><span class="caption-prefix">Equation 4</span></span><span> <a href="#eq-4">(link 🔗)</a></span>
 </div>
 <div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow></mrow><annotation encoding="application/x-tex">\newcommand{\foo}[0]{bar}
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"></span></span></div>
 </div>
-<p id="p-118">Second block using:</p>
+<p id="p-118">Second block using:<span class="hide-hover"> <a href="#p-118">(link 🔗)</a></span>
+</p>
 <pre id="c-29"><code>\M[[
 \foo
 ]]
 </code></pre>
-<p id="p-119">First block defining with <code id="c-54">\def</code>:</p>
-<div class="math-container" id="eq-5"><div class="math-caption-container">
+<p id="p-119">First block defining with <code id="c-54">\def</code>:<span class="hide-hover"> <a href="#p-119">(link 🔗)</a></span>
+</p>
+<div class="math-container" id="eq-5"><div class="hide-hover">
 <span class="math-caption"><span class="caption-prefix">Equation 5</span></span><span> <a href="#eq-5">(link 🔗)</a></span>
 </div>
 <div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow></mrow><annotation encoding="application/x-tex">\gdef\foogdef{bar}
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"></span></span></div>
 </div>
-<p id="p-120">Second block using:</p>
-<div class="math-container" id="eq-6"><div class="math-caption-container">
+<p id="p-120">Second block using:<span class="hide-hover"> <a href="#p-120">(link 🔗)</a></span>
+</p>
+<div class="math-container" id="eq-6"><div class="hide-hover">
 <span class="math-caption"><span class="caption-prefix">Equation 6</span></span><span> <a href="#eq-6">(link 🔗)</a></span>
 </div>
 <div><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mi>a</mi><mi>r</mi></mrow><annotation encoding="application/x-tex">\foogdef
 </annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.69444em;vertical-align:0em;"></span><span class="mord mathdefault">b</span><span class="mord mathdefault">a</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span></span></span></span></div>
 </div>
 <h2 id="tables"><a href="#tables" title="link to this element">11. Tables <code id="c-55">\table</code>, <code id="c-56">\tr</code>, <code id="c-57">\th</code> and <code id="c-58">\td</code></a><span> <a href="#toc-tables">(toc ↑)</a></span></h2>
-<p id="p-121">Similar to lists. Implicit container with optional indentation to improve readability:</p>
+<p id="p-121">Similar to lists. Implicit container with optional indentation to improve readability:<span class="hide-hover"> <a href="#p-121">(link 🔗)</a></span>
+</p>
 <div class="table-container" id="table-2">
 <div class="table-caption-container">
 <span class="table-caption"><span class="caption-prefix">Table 2</span></span><span> <a href="#table-2">(link 🔗)</a></span>
@@ -773,7 +917,8 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 </tr>
 </table>
 </div>
-<p id="p-122">Explicit container to add further properties: <a href="#table-my-table" id="x-24">Table 3. "My table title"</a>.</p>
+<p id="p-122">Explicit container to add further properties: <a href="#table-my-table" id="x-24">Table 3. "My table title"</a>.<span class="hide-hover"> <a href="#p-122">(link 🔗)</a></span>
+</p>
 <div class="table-container" id="table-my-table">
 <div class="table-caption-container">
 <span class="table-caption"><span class="caption-prefix">Table 3</span>. My table title</span><span> <a href="#table-my-table">(link 🔗)</a></span>
@@ -794,26 +939,36 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
 </table>
 </div>
 <h2 id="comments"><a href="#comments" title="link to this element">12. Comments</a><span> <a href="#toc-comments">(toc ↑)</a></span></h2>
-<p id="p-123">The <code id="c-59">Comment</code> and <code id="c-60">comment</code> macros are regular macros that does not produce any output. Capitalization is explained at: <a href="#macro-capitalization-for-block-vs-inline" id="x-25">Macro capitalization for block vs inline</a>.</p>
-<p id="p-124">You will therefore mostly want to use it with a <a href="#literal-arguments" id="x-26">literal argument</a>, which will, as for any other macro, ignore any macros inside of it.</p>
-<p id="p-125">And here is:  an inline one.</p>
-<p id="p-126"> inline at the start.</p>
+<p id="p-123">The <code id="c-59">Comment</code> and <code id="c-60">comment</code> macros are regular macros that does not produce any output. Capitalization is explained at: <a href="#macro-capitalization-for-block-vs-inline" id="x-25">Macro capitalization for block vs inline</a>.<span class="hide-hover"> <a href="#p-123">(link 🔗)</a></span>
+</p>
+<p id="p-124">You will therefore mostly want to use it with a <a href="#literal-arguments" id="x-26">literal argument</a>, which will, as for any other macro, ignore any macros inside of it.<span class="hide-hover"> <a href="#p-124">(link 🔗)</a></span>
+</p>
+<p id="p-125">And here is:  an inline one.<span class="hide-hover"> <a href="#p-125">(link 🔗)</a></span>
+</p>
+<p id="p-126"> inline at the start.<span class="hide-hover"> <a href="#p-126">(link 🔗)</a></span>
+</p>
 <h2 id="cirodown-syntax"><a href="#cirodown-syntax" title="link to this element">13. Cirodown syntax</a><span> <a href="#toc-cirodown-syntax">(toc ↑)</a></span></h2>
 <h3 id="macro-argument-syntax"><a href="#macro-argument-syntax" title="link to this element">13.1. Macro argument syntax</a><span> <a href="#toc-macro-argument-syntax">(toc ↑)</a></span></h3>
 <h4 id="positional-vs-named-arguments"><a href="#positional-vs-named-arguments" title="link to this element">13.1.1. Positional vs named arguments</a><span> <a href="#toc-positional-vs-named-arguments">(toc ↑)</a></span></h4>
-<p id="p-127">Every argument in Cirodown is either positional or named.</p>
-<p id="p-128">For example, in a <a href="#headers" id="x-27">header</a> definition with an ID:</p>
+<p id="p-127">Every argument in Cirodown is either positional or named.<span class="hide-hover"> <a href="#p-127">(link 🔗)</a></span>
+</p>
+<p id="p-128">For example, in a <a href="#headers" id="x-27">header</a> definition with an ID:<span class="hide-hover"> <a href="#p-128">(link 🔗)</a></span>
+</p>
 <pre id="c-30"><code>\h[1][My asdf]{id=asdf qwer}{id_scope=myscope}
 </code></pre>
-<p id="p-129">we have:</p>
+<p id="p-129">we have:<span class="hide-hover"> <a href="#p-129">(link 🔗)</a></span>
+</p>
 <ul id="ul-17">
 <li id="l-44">two positional argument: <code id="c-133">1</code> and <code id="c-134">My asdf</code>. Those are surrounded by <code id="c-135"></code> and have no name</li>
-<li id="l-45"><p id="p-247">  two named arguments: <code id="c-164">{id=asdf qwer}</code> and <code id="c-165">{id_scope=myscope}</code>.</p>
+<li id="l-45"><p id="p-247">  two named arguments: <code id="c-164">{id=asdf qwer}</code> and <code id="c-165">{id_scope=myscope}</code>.<span class="hide-hover"> <a href="#p-247">(link 🔗)</a></span>
+</p>
 <p id="p-248">  The first one has name <code id="c-166">id</code> and the mandatory separator <code id="c-167">=</code>, followed by the value <code id="c-168">asdf qwer</code>.
+<span class="hide-hover"> <a href="#p-248">(link 🔗)</a></span>
 </p>
 </li>
 </ul>
-<p id="p-130">You can determine if a macro is positional or named by using <a href="#help-macros" id="x-28"><code id="c-105">--help-macros</code></a>. Its output contains something like:</p>
+<p id="p-130">You can determine if a macro is positional or named by using <a href="#help-macros" id="x-28"><code id="c-105">--help-macros</code></a>. Its output contains something like:<span class="hide-hover"> <a href="#p-130">(link 🔗)</a></span>
+</p>
 <pre id="c-31"><code>  "h": {
     "name": "h",
     "positional_args": [
@@ -833,64 +988,88 @@ M834 80h400000v40h-400000z'/></svg></span></span></span><span class="vlist-s">�
       }
     },
 </code></pre>
-<p id="p-131">and so we see that <code id="c-61">level</code> and <code id="c-62">content</code> are positional arguments, and <code id="c-63">id</code> and <code id="c-64">id_scope</code> are named arguments.</p>
-<p id="p-132">Generally, positional arguments are few (otherwise it would be hard to know which is which is which), and are almost always used for a given element so tha they save us from typing the name too many times.</p>
-<p id="p-133">The order of positional arguments must of course be fixed, but named arguments can go anywhere. We can even mix positional and named arguments however we want, although this is not advised for clarity.</p>
-<p id="p-134">The following are therefore all equivalent:</p>
+<p id="p-131">and so we see that <code id="c-61">level</code> and <code id="c-62">content</code> are positional arguments, and <code id="c-63">id</code> and <code id="c-64">id_scope</code> are named arguments.<span class="hide-hover"> <a href="#p-131">(link 🔗)</a></span>
+</p>
+<p id="p-132">Generally, positional arguments are few (otherwise it would be hard to know which is which is which), and are almost always used for a given element so tha they save us from typing the name too many times.<span class="hide-hover"> <a href="#p-132">(link 🔗)</a></span>
+</p>
+<p id="p-133">The order of positional arguments must of course be fixed, but named arguments can go anywhere. We can even mix positional and named arguments however we want, although this is not advised for clarity.<span class="hide-hover"> <a href="#p-133">(link 🔗)</a></span>
+</p>
+<p id="p-134">The following are therefore all equivalent:<span class="hide-hover"> <a href="#p-134">(link 🔗)</a></span>
+</p>
 <pre id="c-32"><code>\h[1][My asdf]{id=asdf qwer}{id_scope=myscope}
 \h[1][My asdf]{id_scope=myscope}{id=asdf qwer}
 \h{id=asdf qwer}{id_scope=myscope}[1][My asdf]
 \h{id_scope=myscope}[1]{id=asdf qwer}[My asdf]
 </code></pre>
-<p id="p-135">Just like named arguments, positional arguments are never mandatory.</p>
-<p id="p-136">If not given, most positional arguments will default to an empty string.</p>
-<p id="p-137">However, some positional arguments can have special effects if not given.</p>
-<p id="p-138">For example, an anchor with the first positional argument present (the URL), but not the second positional argument (the link text) as in:</p>
+<p id="p-135">Just like named arguments, positional arguments are never mandatory.<span class="hide-hover"> <a href="#p-135">(link 🔗)</a></span>
+</p>
+<p id="p-136">If not given, most positional arguments will default to an empty string.<span class="hide-hover"> <a href="#p-136">(link 🔗)</a></span>
+</p>
+<p id="p-137">However, some positional arguments can have special effects if not given.<span class="hide-hover"> <a href="#p-137">(link 🔗)</a></span>
+</p>
+<p id="p-138">For example, an anchor with the first positional argument present (the URL), but not the second positional argument (the link text) as in:<span class="hide-hover"> <a href="#p-138">(link 🔗)</a></span>
+</p>
 <pre id="c-33"><code>\a[http://example.com]
 </code></pre>
-<p id="p-139">has the special effect of generating automatic links as in:</p>
+<p id="p-139">has the special effect of generating automatic links as in:<span class="hide-hover"> <a href="#p-139">(link 🔗)</a></span>
+</p>
 <pre id="c-34"><code>\a[http://example.com][http://example.com]
 </code></pre>
-<p id="p-140">See also: <a href="#links" id="x-29">Links <code id="c-6">\a</code></a>.</p>
+<p id="p-140">See also: <a href="#links" id="x-29">Links <code id="c-6">\a</code></a>.<span class="hide-hover"> <a href="#p-140">(link 🔗)</a></span>
+</p>
 <h4 id="javascript-interface-for-arguments"><a href="#javascript-interface-for-arguments" title="link to this element">13.1.2. JavaScript interface for arguments</a><span> <a href="#toc-javascript-interface-for-arguments">(toc ↑)</a></span></h4>
-<p id="p-141">The JavaScript interface sees arguments as follows:</p>
+<p id="p-141">The JavaScript interface sees arguments as follows:<span class="hide-hover"> <a href="#p-141">(link 🔗)</a></span>
+</p>
 <pre id="c-35"><code>function macro_name(args)
 </code></pre>
-<p id="p-142">where args is a dict such that:</p>
+<p id="p-142">where args is a dict such that:<span class="hide-hover"> <a href="#p-142">(link 🔗)</a></span>
+</p>
 <ul id="ul-18">
 <li id="l-46">optional arguments have the key / value pairs explicitly given on the call</li>
-<li id="l-47"><p id="p-249">  mandatory arguments have a key documented by the API, and the value on the call.</p>
+<li id="l-47"><p id="p-249">  mandatory arguments have a key documented by the API, and the value on the call.<span class="hide-hover"> <a href="#p-249">(link 🔗)</a></span>
+</p>
 <p id="p-250">  For example, the link API names its arguments <code id="c-169">href</code> and <code id="c-170">text</code>.
+<span class="hide-hover"> <a href="#p-250">(link 🔗)</a></span>
 </p>
 </li>
 </ul>
 <h4 id="newlines-between-arguments"><a href="#newlines-between-arguments" title="link to this element">13.1.3. Newlines between arguments</a><span> <a href="#toc-newlines-between-arguments">(toc ↑)</a></span></h4>
-<p id="p-143">The macro name and the first argument, and two consecutive arguments, can be optionally separated by exactly one newline character, e.g.:</p>
+<p id="p-143">The macro name and the first argument, and two consecutive arguments, can be optionally separated by exactly one newline character, e.g.:<span class="hide-hover"> <a href="#p-143">(link 🔗)</a></span>
+</p>
 <pre id="c-36"><code>\h[2]
 {id-scope=true}
 [Design goals]
 </code></pre>
-<p id="p-144">is equivalent to:</p>
+<p id="p-144">is equivalent to:<span class="hide-hover"> <a href="#p-144">(link 🔗)</a></span>
+</p>
 <pre id="c-37"><code>\h[2]{id-scope=true}[Design goals]
 </code></pre>
-<p id="p-145">and this non-recommended mixed style:</p>
+<p id="p-145">and this non-recommended mixed style:<span class="hide-hover"> <a href="#p-145">(link 🔗)</a></span>
+</p>
 <pre id="c-38"><code>\h[2]{id-scope=true}
 [Design goals]
 </code></pre>
-<p id="p-146">This allows to greatly improve the readability of long argument lists by having them one per line.</p>
+<p id="p-146">This allows to greatly improve the readability of long argument lists by having them one per line.<span class="hide-hover"> <a href="#p-146">(link 🔗)</a></span>
+</p>
 <h4 id="escape-characters"><a href="#escape-characters" title="link to this element">13.1.4. Escape characters</a><span> <a href="#toc-escape-characters">(toc ↑)</a></span></h4>
-<p id="p-147">For non-literal macro arguments, the rule is simple, you must escape all of:</p>
+<p id="p-147">For non-literal macro arguments, the rule is simple, you must escape all of:<span class="hide-hover"> <a href="#p-147">(link 🔗)</a></span>
+</p>
 <ul id="ul-19">
 <li id="l-48"><code id="c-136">\</code></li>
 <li id="l-49"><code id="c-137">[</code> and <code id="c-138">]</code></li>
 <li id="l-50"><code id="c-139">{</code> and <code id="c-140">}</code></li>
 </ul>
-<p id="p-148">This is good for short arguments of regular text, but for longer blocks of <a href="#code" id="x-30">Code <code id="c-44">\c</code> and <code id="c-45">\C</code></a> or <a href="#math" id="x-31">Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a>, you may want to use <a href="#literal-arguments" id="x-32">Literal arguments</a></p>
+<p id="p-148">This is good for short arguments of regular text, but for longer blocks of <a href="#code" id="x-30">Code <code id="c-44">\c</code> and <code id="c-45">\C</code></a> or <a href="#math" id="x-31">Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a>, you may want to use <a href="#literal-arguments" id="x-32">Literal arguments</a><span class="hide-hover"> <a href="#p-148">(link 🔗)</a></span>
+</p>
 <h4 id="literal-arguments"><a href="#literal-arguments" title="link to this element">13.1.5. Literal arguments</a><span> <a href="#toc-literal-arguments">(toc ↑)</a></span></h4>
-<p id="p-149">Arguments that are opened with more than one square brackets <code id="c-65">[</code> or curly braces <code id="c-66">{</code> are literal arguments.</p>
-<p id="p-150">In literal arguments, Cirodown is not parsed, and the entire argument is considered as text until a corresponding close with the same number of characters.</p>
-<p id="p-151">Therefore, you cannot have nested content, but it makes it extremely convenient to write <a href="#code" id="x-33">Code <code id="c-44">\c</code> and <code id="c-45">\C</code></a> or <a href="#math" id="x-34">Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a>.</p>
-<p id="p-152">For example, a multiline code block with double open and double close square brackets inside can be enclosed in triple square brackets:</p>
+<p id="p-149">Arguments that are opened with more than one square brackets <code id="c-65">[</code> or curly braces <code id="c-66">{</code> are literal arguments.<span class="hide-hover"> <a href="#p-149">(link 🔗)</a></span>
+</p>
+<p id="p-150">In literal arguments, Cirodown is not parsed, and the entire argument is considered as text until a corresponding close with the same number of characters.<span class="hide-hover"> <a href="#p-150">(link 🔗)</a></span>
+</p>
+<p id="p-151">Therefore, you cannot have nested content, but it makes it extremely convenient to write <a href="#code" id="x-33">Code <code id="c-44">\c</code> and <code id="c-45">\C</code></a> or <a href="#math" id="x-34">Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a>.<span class="hide-hover"> <a href="#p-151">(link 🔗)</a></span>
+</p>
+<p id="p-152">For example, a multiline code block with double open and double close square brackets inside can be enclosed in triple square brackets:<span class="hide-hover"> <a href="#p-152">(link 🔗)</a></span>
+</p>
 <pre id="c-39"><code>A literal argument looks like this in Cirodown:
 
 \C[[
@@ -903,16 +1082,20 @@ cod block.
 
 And another paragraph.
 </code></pre>
-<p id="p-153">The same works for inline code:</p>
+<p id="p-153">The same works for inline code:<span class="hide-hover"> <a href="#p-153">(link 🔗)</a></span>
+</p>
 <pre id="c-40"><code>The program \c[[puts("]");]] is very complex.
 </code></pre>
-<p id="p-154">Within literal blocks, only one thing can be escaped with backslashes: leading <code id="c-67">[</code> or trailing <code id="c-68">]</code>.</p>
-<p id="p-155">The rule is that:</p>
+<p id="p-154">Within literal blocks, only one thing can be escaped with backslashes: leading <code id="c-67">[</code> or trailing <code id="c-68">]</code>.<span class="hide-hover"> <a href="#p-154">(link 🔗)</a></span>
+</p>
+<p id="p-155">The rule is that:<span class="hide-hover"> <a href="#p-155">(link 🔗)</a></span>
+</p>
 <ul id="ul-20">
 <li id="l-51">if the first character of a literal argument is a sequence of <code id="c-141">\</code>, and it is followed by another argument open character (e.g. <code id="c-142">[</code>), remove the first <code id="c-143">\</code> and treat the other characters as regular text</li>
 <li id="l-52">if the last character of a literal argument is a <code id="c-144">\</code>, ignore it and treat the following closing character (e.g. <code id="c-145">]</code>) as regular text</li>
 </ul>
-<p id="p-156">See the following open input / output:</p>
+<p id="p-156">See the following open input / output:<span class="hide-hover"> <a href="#p-156">(link 🔗)</a></span>
+</p>
 <pre id="c-41"><code>\c[[\ b]]
 &lt;code&gt;\ b&lt;/code&gt;
 
@@ -928,7 +1111,8 @@ And another paragraph.
 \c[[\\\[ b]]
 &lt;code&gt;\\[ b&lt;/code&gt;
 </code></pre>
-<p id="p-157">and close examples:</p>
+<p id="p-157">and close examples:<span class="hide-hover"> <a href="#p-157">(link 🔗)</a></span>
+</p>
 <pre id="c-42"><code>\c[[a \]]
 &lt;code&gt;a \&lt;/code&gt;
 
@@ -939,29 +1123,39 @@ And another paragraph.
 &lt;code&gt;a \]&lt;/code&gt;
 </code></pre>
 <h4 id="argument-leading-newline-removal"><a href="#argument-leading-newline-removal" title="link to this element">13.1.6. Argument leading newline removal</a><span> <a href="#toc-argument-leading-newline-removal">(toc ↑)</a></span></h4>
-<p id="p-158">If the very first character of an argument is a newline, then that character is ignored.</p>
-<p id="p-159">For example:</p>
+<p id="p-158">If the very first character of an argument is a newline, then that character is ignored.<span class="hide-hover"> <a href="#p-158">(link 🔗)</a></span>
+</p>
+<p id="p-159">For example:<span class="hide-hover"> <a href="#p-159">(link 🔗)</a></span>
+</p>
 <pre id="c-43"><code>\C[[
 a
 
 b
 ]]
 </code></pre>
-<p id="p-160">generates something like:</p>
-<pre id="c-44"><code><p id="p-223">&lt;pre&gt;&lt;code&gt;a</p>
+<p id="p-160">generates something like:<span class="hide-hover"> <a href="#p-160">(link 🔗)</a></span>
+</p>
+<pre id="c-44"><code><p id="p-223">&lt;pre&gt;&lt;code&gt;a<span class="hide-hover"> <a href="#p-223">(link 🔗)</a></span>
+</p>
 <p id="p-224">b
 &lt;/code&gt;&lt;/pre&gt;
+<span class="hide-hover"> <a href="#p-224">(link 🔗)</a></span>
 </p>
 </code></pre>
-<p id="p-161">instead of:</p>
+<p id="p-161">instead of:<span class="hide-hover"> <a href="#p-161">(link 🔗)</a></span>
+</p>
 <pre id="c-45"><code><p id="p-225">&lt;pre&gt;&lt;code&gt;
-a</p>
+a<span class="hide-hover"> <a href="#p-225">(link 🔗)</a></span>
+</p>
 <p id="p-226">b
 &lt;/code&gt;&lt;/pre&gt;
+<span class="hide-hover"> <a href="#p-226">(link 🔗)</a></span>
 </p>
 </code></pre>
-<p id="p-162">This is extremely convenient to improve the readability of code blocks and similar constructs.</p>
-<p id="p-163">If you absolutely need an opening newline, just add a second leading or trailing newline to the macro argument, e.g.:</p>
+<p id="p-162">This is extremely convenient to improve the readability of code blocks and similar constructs.<span class="hide-hover"> <a href="#p-162">(link 🔗)</a></span>
+</p>
+<p id="p-163">If you absolutely need an opening newline, just add a second leading or trailing newline to the macro argument, e.g.:<span class="hide-hover"> <a href="#p-163">(link 🔗)</a></span>
+</p>
 <pre id="c-46"><code>\C[[
 
 a
@@ -971,9 +1165,12 @@ b
 ]]
 </code></pre>
 <h4 id="argument-automatic-indentation-removal"><a href="#argument-automatic-indentation-removal" title="link to this element">13.1.7. Argument automatic indentation removal</a><span> <a href="#toc-argument-automatic-indentation-removal">(toc ↑)</a></span></h4>
-<p id="p-164">Inside of a non-literal block, the very first non-whitespace character determines the indentation level of the content.</p>
-<p id="p-165">This allows seamlessly indenting complex nested content to make it more readable.</p>
-<p id="p-166">For example, a list with complex content could be written without indentation as:</p>
+<p id="p-164">Inside of a non-literal block, the very first non-whitespace character determines the indentation level of the content.<span class="hide-hover"> <a href="#p-164">(link 🔗)</a></span>
+</p>
+<p id="p-165">This allows seamlessly indenting complex nested content to make it more readable.<span class="hide-hover"> <a href="#p-165">(link 🔗)</a></span>
+</p>
+<p id="p-166">For example, a list with complex content could be written without indentation as:<span class="hide-hover"> <a href="#p-166">(link 🔗)</a></span>
+</p>
 <pre id="c-47"><code>\l[a]
 \l[
 b
@@ -986,7 +1183,8 @@ And a paragraph.
 ]
 \l[c]
 </code></pre>
-<p id="p-167">but it would be more readable as the equivalent:</p>
+<p id="p-167">but it would be more readable as the equivalent:<span class="hide-hover"> <a href="#p-167">(link 🔗)</a></span>
+</p>
 <pre id="c-48"><code>\l[a]
 \l[
   b
@@ -999,7 +1197,8 @@ And a paragraph.
 ]
 \l[c]
 </code></pre>
-<p id="p-168">If a something tries to reduce the current indentation level, then that leads to an error:</p>
+<p id="p-168">If a something tries to reduce the current indentation level, then that leads to an error:<span class="hide-hover"> <a href="#p-168">(link 🔗)</a></span>
+</p>
 <pre id="c-49"><code>\l[a]
 \l[
   b
@@ -1011,50 +1210,69 @@ I'm bad because I have negative indentation.
 \l[c]
 </code></pre>
 <h3 id="macro-capitalization-for-block-vs-inline"><a href="#macro-capitalization-for-block-vs-inline" title="link to this element">13.2. Macro capitalization for block vs inline</a><span> <a href="#toc-macro-capitalization-for-block-vs-inline">(toc ↑)</a></span></h3>
-<p id="p-169">This is just a naming convention without any magic attached to it. It is currently used for macros such as:</p>
+<p id="p-169">This is just a naming convention without any magic attached to it. It is currently used for macros such as:<span class="hide-hover"> <a href="#p-169">(link 🔗)</a></span>
+</p>
 <ul id="ul-21">
 <li id="l-53"><a href="#math" id="x-43">Mathematics <code id="c-50">\M</code> and <code id="c-51">\m</code></a></li>
 <li id="l-54"><a href="#code" id="x-44">Code <code id="c-44">\c</code> and <code id="c-45">\C</code></a></li>
 <li id="l-55"><a href="#comments" id="x-45">Comments</a></li>
 </ul>
-<p id="p-170">We haven't found a sane way of getting rid of that for now, so just for now just force users to explicitly select between them.</p>
-<p id="p-171">The distinction is required because there are lots of things you cannot put inside paragraphs in HTML.</p>
+<p id="p-170">We haven't found a sane way of getting rid of that for now, so just for now just force users to explicitly select between them.<span class="hide-hover"> <a href="#p-170">(link 🔗)</a></span>
+</p>
+<p id="p-171">The distinction is required because there are lots of things you cannot put inside paragraphs in HTML.<span class="hide-hover"> <a href="#p-171">(link 🔗)</a></span>
+</p>
 <h2 id="tooling"><a href="#tooling" title="link to this element">14. Tooling</a><span> <a href="#toc-tooling">(toc ↑)</a></span></h2>
-<p id="p-172">Unlike all languages which rely on ad-hoc tooling, we will support every single tool that is required and feasible to be in this repository in this repository, in a centralized manner.</p>
+<p id="p-172">Unlike all languages which rely on ad-hoc tooling, we will support every single tool that is required and feasible to be in this repository in this repository, in a centralized manner.<span class="hide-hover"> <a href="#p-172">(link 🔗)</a></span>
+</p>
 <h3 id="cirodown-executable"><a href="#cirodown-executable" title="link to this element">14.1. <code id="c-69">cirodown</code> executable</a><span> <a href="#toc-cirodown-executable">(toc ↑)</a></span></h3>
-<p id="p-173">Convert a <code id="c-70">.ciro</code> file to HTML and output the HTML to stdout:</p>
+<p id="p-173">Convert a <code id="c-70">.ciro</code> file to HTML and output the HTML to stdout:<span class="hide-hover"> <a href="#p-173">(link 🔗)</a></span>
+</p>
 <pre id="c-50"><code>cirodown README.ciro
 </code></pre>
-<p id="p-174">Convert all <code id="c-71">.ciro</code> files in a directory to HTML files next to each corresponding <code id="c-72">.ciro</code> file, e.g. <code id="c-73">somefile.ciro</code> to <code id="c-74">somefile.html</code>:</p>
+<p id="p-174">Convert all <code id="c-71">.ciro</code> files in a directory to HTML files next to each corresponding <code id="c-72">.ciro</code> file, e.g. <code id="c-73">somefile.ciro</code> to <code id="c-74">somefile.html</code>:<span class="hide-hover"> <a href="#p-174">(link 🔗)</a></span>
+</p>
 <pre id="c-51"><code>cirodown .
 </code></pre>
-<p id="p-175"><code id="c-75">README.ciro</code> is treated magically and gets converted to <code id="c-76">index.html</code> instead of <code id="c-77">README.html</code>, so that it will appear on both the root of the HTML output and on the GitHub home page once GitHub adds Cirodown support.</p>
-<p id="p-176">Convert a <code id="c-78">.ciro</code> file from stdin to HTML and output the contents of <code id="c-79">&lt;body&gt;</code> to stdout:</p>
+<p id="p-175"><code id="c-75">README.ciro</code> is treated magically and gets converted to <code id="c-76">index.html</code> instead of <code id="c-77">README.html</code>, so that it will appear on both the root of the HTML output and on the GitHub home page once GitHub adds Cirodown support.<span class="hide-hover"> <a href="#p-175">(link 🔗)</a></span>
+</p>
+<p id="p-176">Convert a <code id="c-78">.ciro</code> file from stdin to HTML and output the contents of <code id="c-79">&lt;body&gt;</code> to stdout:<span class="hide-hover"> <a href="#p-176">(link 🔗)</a></span>
+</p>
 <pre id="c-52"><code>printf 'ab\ncd\n' | cirodown --body-only
 </code></pre>
 <h4 id="cirodown-executable-most-important-options"><a href="#cirodown-executable-most-important-options" title="link to this element">14.1.1. <code id="c-80">cirodown</code> executable most important options</a><span> <a href="#toc-cirodown-executable-most-important-options">(toc ↑)</a></span></h4>
 <h5 id="watch"><a href="#watch" title="link to this element">14.1.1.1. <code id="c-81">--watch</code></a><span> <a href="#toc-watch">(toc ↑)</a></span></h5>
-<p id="p-177">Don't quit <code id="c-82">cirodown</code> immediately.</p>
-<p id="p-178">Instead, watch the selected file or directory for changes, and rebuild individual files when changes are detected.</p>
-<p id="p-179">Watch a single file:</p>
+<p id="p-177">Don't quit <code id="c-82">cirodown</code> immediately.<span class="hide-hover"> <a href="#p-177">(link 🔗)</a></span>
+</p>
+<p id="p-178">Instead, watch the selected file or directory for changes, and rebuild individual files when changes are detected.<span class="hide-hover"> <a href="#p-178">(link 🔗)</a></span>
+</p>
+<p id="p-179">Watch a single file:<span class="hide-hover"> <a href="#p-179">(link 🔗)</a></span>
+</p>
 <pre id="c-53"><code>cirodown --watch README.ciro
 </code></pre>
-<p id="p-180">Now you can just edit <code id="c-83">README.ciro</code>, save the file in your editor, and refresh the webpage and your change should be visible, no need to run a <code id="c-84">cirodown</code> command excplicitly every time.</p>
-<p id="p-181">TODO: integrate Live Preview: https://asciidoctor.org/docs/editing-asciidoc-with-live-preview/ to also dispense the browser refresh.</p>
-<p id="p-182">Watch every <code id="c-85">.ciro</code> file in an entire directory:</p>
+<p id="p-180">Now you can just edit <code id="c-83">README.ciro</code>, save the file in your editor, and refresh the webpage and your change should be visible, no need to run a <code id="c-84">cirodown</code> command excplicitly every time.<span class="hide-hover"> <a href="#p-180">(link 🔗)</a></span>
+</p>
+<p id="p-181">TODO: integrate Live Preview: https://asciidoctor.org/docs/editing-asciidoc-with-live-preview/ to also dispense the browser refresh.<span class="hide-hover"> <a href="#p-181">(link 🔗)</a></span>
+</p>
+<p id="p-182">Watch every <code id="c-85">.ciro</code> file in an entire directory:<span class="hide-hover"> <a href="#p-182">(link 🔗)</a></span>
+</p>
 <pre id="c-54"><code>cirodown --watch .
 </code></pre>
-<p id="p-183">Save the output to <code id="c-86">.html</code> files automatically instead of outputting it to stdout as done without <code id="c-87">--watch</code>.</p>
-<p id="p-184">Exit by entering Ctrl + C on the terminal.</p>
+<p id="p-183">Save the output to <code id="c-86">.html</code> files automatically instead of outputting it to stdout as done without <code id="c-87">--watch</code>.<span class="hide-hover"> <a href="#p-183">(link 🔗)</a></span>
+</p>
+<p id="p-184">Exit by entering Ctrl + C on the terminal.<span class="hide-hover"> <a href="#p-184">(link 🔗)</a></span>
+</p>
 <h5 id="publish"><a href="#publish" title="link to this element">14.1.1.2. <code id="c-88">--publish</code></a><span> <a href="#toc-publish">(toc ↑)</a></span></h5>
-<p id="p-185">Cirodown tooling is so amazing that we also take care of the HTML publishing for you.</p>
+<p id="p-185">Cirodown tooling is so amazing that we also take care of the HTML publishing for you.<span class="hide-hover"> <a href="#p-185">(link 🔗)</a></span>
+</p>
 <h6 id="code-publish-to-github-pages-code"><a href="#code-publish-to-github-pages-code" title="link to this element">14.1.1.2.1. <code id="c-89">Publish to GitHub Pages</code></a><span> <a href="#toc-code-publish-to-github-pages-code">(toc ↑)</a></span></h6>
-<p id="p-186">If you want to publish your root user page, which appears at `/` (e.g. <a id="a-12" href="https://github.com/cirosantilli/cirosantilli.github.io">https://github.com/cirosantilli/cirosantilli.github.io</a> for the user <code id="c-90">cirosantilli</code>), GitHub annoyingly forces you to use the <code id="c-91">master</code> branch for the HTML output:</p>
+<p id="p-186">If you want to publish your root user page, which appears at `/` (e.g. <a id="a-12" href="https://github.com/cirosantilli/cirosantilli.github.io">https://github.com/cirosantilli/cirosantilli.github.io</a> for the user <code id="c-90">cirosantilli</code>), GitHub annoyingly forces you to use the <code id="c-91">master</code> branch for the HTML output:<span class="hide-hover"> <a href="#p-186">(link 🔗)</a></span>
+</p>
 <ul id="ul-22">
 <li id="l-56">https://github.com/isaacs/github/issues/212</li>
 <li id="l-57">https://stackoverflow.com/questions/31439951/how-can-i-use-a-branch-other-than-master-for-user-github-pages</li>
 </ul>
-<p id="p-187">Therefore, you must first place your <code id="c-92">.ciro</code> source in a different branch and clear up the <code id="c-93">master</code> branch for the HTML, and only then publish:</p>
+<p id="p-187">Therefore, you must first place your <code id="c-92">.ciro</code> source in a different branch and clear up the <code id="c-93">master</code> branch for the HTML, and only then publish:<span class="hide-hover"> <a href="#p-187">(link 🔗)</a></span>
+</p>
 <pre id="c-55"><code>git checkout -b dev
 git branch -D master
 git push --delete origin master
@@ -1063,64 +1281,89 @@ git add README.ciro
 git commit --message 'some commit message'
 cirodown --publish .
 </code></pre>
-<p id="p-188">This will automatically <code id="c-94">git push</code> both the <code id="c-95">dev</code> branch for you, and create/update the <code id="c-96">master</code> branch, which contains the desired HTML output.</p>
-<p id="p-189">Only changes committed to Git are pushed.</p>
-<p id="p-190">You then will also want to set your default repository branch to <code id="c-97">dev</code> in the settings for that repository: https://help.github.com/en/github/administering-a-repository/setting-the-default-branch</p>
-<p id="p-191"><code id="c-98">cirodown</code> automatically detects that we are not on the <code id="c-99">master</code> branch, and therefore guesses that you want to publish GitHub pages on the <code id="c-100">master</code> branch.</p>
-<p id="p-192">For any other non-root directory, <code id="c-101">cirodown</code> sees that you are on the <code id="c-102">master</code> branch, and automatically publishes on the <code id="c-103">gh-pages</code> branch, so all you need is:</p>
+<p id="p-188">This will automatically <code id="c-94">git push</code> both the <code id="c-95">dev</code> branch for you, and create/update the <code id="c-96">master</code> branch, which contains the desired HTML output.<span class="hide-hover"> <a href="#p-188">(link 🔗)</a></span>
+</p>
+<p id="p-189">Only changes committed to Git are pushed.<span class="hide-hover"> <a href="#p-189">(link 🔗)</a></span>
+</p>
+<p id="p-190">You then will also want to set your default repository branch to <code id="c-97">dev</code> in the settings for that repository: https://help.github.com/en/github/administering-a-repository/setting-the-default-branch<span class="hide-hover"> <a href="#p-190">(link 🔗)</a></span>
+</p>
+<p id="p-191"><code id="c-98">cirodown</code> automatically detects that we are not on the <code id="c-99">master</code> branch, and therefore guesses that you want to publish GitHub pages on the <code id="c-100">master</code> branch.<span class="hide-hover"> <a href="#p-191">(link 🔗)</a></span>
+</p>
+<p id="p-192">For any other non-root directory, <code id="c-101">cirodown</code> sees that you are on the <code id="c-102">master</code> branch, and automatically publishes on the <code id="c-103">gh-pages</code> branch, so all you need is:<span class="hide-hover"> <a href="#p-192">(link 🔗)</a></span>
+</p>
 <pre id="c-56"><code>git add README.ciro
 git commit --message 'some commit message'
 cirodown --publish .
 </code></pre>
-<p id="p-193">The publishing only happens if the build has no errors.</p>
+<p id="p-193">The publishing only happens if the build has no errors.<span class="hide-hover"> <a href="#p-193">(link 🔗)</a></span>
+</p>
 <h5 id="publish-commit"><a href="#publish-commit" title="link to this element">14.1.1.3. <code id="c-104">--publish-commit &lt;commit-message&gt;</code></a><span> <a href="#toc-publish-commit">(toc ↑)</a></span></h5>
-<p id="p-194">Like <a href="#publish" id="x-35"><code id="c-88">--publish</code></a>, but also automatically:</p>
+<p id="p-194">Like <a href="#publish" id="x-35"><code id="c-88">--publish</code></a>, but also automatically:<span class="hide-hover"> <a href="#p-194">(link 🔗)</a></span>
+</p>
 <ul id="ul-23">
 <li id="l-58"><code id="c-146">git add -u</code> to automatically add change to any files that have been previously git tracked</li>
 <li id="l-59"><code id="c-147">git commit -m &lt;commit-message&gt;</code> to create a new commit with those changes</li>
 </ul>
-<p id="p-195">This allows you to publish your changes live in a single command such as:</p>
+<p id="p-195">This allows you to publish your changes live in a single command such as:<span class="hide-hover"> <a href="#p-195">(link 🔗)</a></span>
+</p>
 <pre id="c-57"><code>cirodown --publish-commit 'my amazing change' .
 </code></pre>
-<p id="p-196">With great power comes great responsibility of course, but who cares!</p>
+<p id="p-196">With great power comes great responsibility of course, but who cares!<span class="hide-hover"> <a href="#p-196">(link 🔗)</a></span>
+</p>
 <h5 id="help-macros"><a href="#help-macros" title="link to this element">14.1.1.4. <code id="c-105">--help-macros</code></a><span> <a href="#toc-help-macros">(toc ↑)</a></span></h5>
-<p id="p-197">You can get an overview of all macros in JSON format with:</p>
+<p id="p-197">You can get an overview of all macros in JSON format with:<span class="hide-hover"> <a href="#p-197">(link 🔗)</a></span>
+</p>
 <pre id="c-58"><code>cirodown --help-macros
 </code></pre>
 <h4 id="cirodown-json"><a href="#cirodown-json" title="link to this element">14.1.2. <code id="c-106">cirodown.json</code></a><span> <a href="#toc-cirodown-json">(toc ↑)</a></span></h4>
 <h5 id="media-source-type"><a href="#media-source-type" title="link to this element">14.1.2.1. <code id="c-107">media_source_type</code></a><span> <a href="#toc-media-source-type">(toc ↑)</a></span></h5>
 <ul id="ul-24">
 <li id="l-60"><code id="c-148">local</code>: tracked in the current Git repository, no further magic is done</li>
-<li id="l-61"><p id="p-251">  <code id="c-171">media_repo</code>: tracked in a separate media repository, defaults to <code id="c-172">../&lt;project-name&gt;-media/</code></p>
+<li id="l-61"><p id="p-251">  <code id="c-171">media_repo</code>: tracked in a separate media repository, defaults to <code id="c-172">../&lt;project-name&gt;-media/</code><span class="hide-hover"> <a href="#p-251">(link 🔗)</a></span>
+</p>
 <p id="p-252">  When <a href="#publish" id="x-48">publishing</a>, Cirodown searches for files that were used in the build but not added to the media directory, and automatically does a <code id="c-173">git add</code>, <code id="c-174">commit</code> and <code id="c-175">push</code> for you!
+<span class="hide-hover"> <a href="#p-252">(link 🔗)</a></span>
 </p>
 </li>
 </ul>
 <h5 id="media-base-url"><a href="#media-base-url" title="link to this element">14.1.2.2. <code id="c-108">media_base_url</code></a><span> <a href="#toc-media-base-url">(toc ↑)</a></span></h5>
-<p id="p-198">TODO implement set the base URL where media will be served from.</p>
-<p id="p-199">Default: for a GitHub repository called `my-tutorial`, append the `-media` suffix and use `my-tutorial-media`.</p>
-<p id="p-200">Further rationale at: <a href="#where-to-store-images" id="x-36">Where to store images</a>.</p>
+<p id="p-198">TODO implement set the base URL where media will be served from.<span class="hide-hover"> <a href="#p-198">(link 🔗)</a></span>
+</p>
+<p id="p-199">Default: for a GitHub repository called `my-tutorial`, append the `-media` suffix and use `my-tutorial-media`.<span class="hide-hover"> <a href="#p-199">(link 🔗)</a></span>
+</p>
+<p id="p-200">Further rationale at: <a href="#where-to-store-images" id="x-36">Where to store images</a>.<span class="hide-hover"> <a href="#p-200">(link 🔗)</a></span>
+</p>
 <h3 id="editor-and-preview"><a href="#editor-and-preview" title="link to this element">14.2. Editor and preview</a><span> <a href="#toc-editor-and-preview">(toc ↑)</a></span></h3>
-<p id="p-201">TODO</p>
-<p id="p-202">We must achieve an editor setup with synchronized live side-by-side preview.</p>
-<p id="p-203">It would be amazing to have a WebKit interface that works both on browser for the and locally.</p>
+<p id="p-201">TODO<span class="hide-hover"> <a href="#p-201">(link 🔗)</a></span>
+</p>
+<p id="p-202">We must achieve an editor setup with synchronized live side-by-side preview.<span class="hide-hover"> <a href="#p-202">(link 🔗)</a></span>
+</p>
+<p id="p-203">It would be amazing to have a WebKit interface that works both on browser for the and locally.<span class="hide-hover"> <a href="#p-203">(link 🔗)</a></span>
+</p>
 <h2 id="developing-cirodown"><a href="#developing-cirodown" title="link to this element">15. Developing Cirodown</a><span> <a href="#toc-developing-cirodown">(toc ↑)</a></span></h2>
 <h3 id="test-system"><a href="#test-system" title="link to this element">15.1. Test system</a><span> <a href="#toc-test-system">(toc ↑)</a></span></h3>
-<p id="p-204">Run all tests:</p>
+<p id="p-204">Run all tests:<span class="hide-hover"> <a href="#p-204">(link 🔗)</a></span>
+</p>
 <pre id="c-59"><code>npm test
 </code></pre>
-<p id="p-205">List all tests:</p>
+<p id="p-205">List all tests:<span class="hide-hover"> <a href="#p-205">(link 🔗)</a></span>
+</p>
 <pre id="c-60"><code>node node_modules/mocha-list-tests/mocha-list-tests.js main.js
 </code></pre>
-<p id="p-206">As per: <a id="a-13" href="https://stackoverflow.com/questions/41380137/list-all-mocha-tests-without-executing-them/58573986#58573986">https://stackoverflow.com/questions/41380137/list-all-mocha-tests-without-executing-them/58573986#58573986</a>.</p>
-<p id="p-207">Run just one test by name:</p>
+<p id="p-206">As per: <a id="a-13" href="https://stackoverflow.com/questions/41380137/list-all-mocha-tests-without-executing-them/58573986#58573986">https://stackoverflow.com/questions/41380137/list-all-mocha-tests-without-executing-them/58573986#58573986</a>.<span class="hide-hover"> <a href="#p-206">(link 🔗)</a></span>
+</p>
+<p id="p-207">Run just one test by name:<span class="hide-hover"> <a href="#p-207">(link 🔗)</a></span>
+</p>
 <pre id="c-61"><code>npm test -- 'one paragraph'
 </code></pre>
-<p id="p-208">As per: https://stackoverflow.com/questions/10832031/how-to-run-a-single-test-with-mocha TODO: what if the test name is a substring?</p>
-<p id="p-209">Step debug during a test run. Add the statement:</p>
+<p id="p-208">As per: https://stackoverflow.com/questions/10832031/how-to-run-a-single-test-with-mocha TODO: what if the test name is a substring?<span class="hide-hover"> <a href="#p-208">(link 🔗)</a></span>
+</p>
+<p id="p-209">Step debug during a test run. Add the statement:<span class="hide-hover"> <a href="#p-209">(link 🔗)</a></span>
+</p>
 <pre id="c-62"><code>debugger;
 </code></pre>
-<p id="p-210">to where you want to break in the code, and then:</p>
+<p id="p-210">to where you want to break in the code, and then:<span class="hide-hover"> <a href="#p-210">(link 🔗)</a></span>
+</p>
 <pre id="c-63"><code>node inspect ./node_modules/.bin/mocha test --ignore-leaks "-g" "p with id before"
 </code></pre>
 <h3 id="overview-of-files-in-this-repository"><a href="#overview-of-files-in-this-repository" title="link to this element">15.2. Overview of files in this repository</a><span> <a href="#toc-overview-of-files-in-this-repository">(toc ↑)</a></span></h3>
@@ -1131,29 +1374,37 @@ cirodown --publish .
 <li id="l-65"><a id="a-18" href="README.md">README.md</a>: minimal Markdown README until GitHub / NPM support Cirodown :-)</li>
 </ul>
 <h3 id="internals-api"><a href="#internals-api" title="link to this element">15.3. Internals API</a><span> <a href="#toc-internals-api">(toc ↑)</a></span></h3>
-<p id="p-211">Tokenized token stream and AST can be obtained as JSON from the API.</p>
-<p id="p-212">Errors can be obtained as JSON from the API.</p>
-<p id="p-213">Everything that you need to write Cirodown tooling, is present in the main API.</p>
-<p id="p-214">All tooling will be merged into one single repo.</p>
+<p id="p-211">Tokenized token stream and AST can be obtained as JSON from the API.<span class="hide-hover"> <a href="#p-211">(link 🔗)</a></span>
+</p>
+<p id="p-212">Errors can be obtained as JSON from the API.<span class="hide-hover"> <a href="#p-212">(link 🔗)</a></span>
+</p>
+<p id="p-213">Everything that you need to write Cirodown tooling, is present in the main API.<span class="hide-hover"> <a href="#p-213">(link 🔗)</a></span>
+</p>
+<p id="p-214">All tooling will be merged into one single repo.<span class="hide-hover"> <a href="#p-214">(link 🔗)</a></span>
+</p>
 <h3 id="toplevel"><a href="#toplevel" title="link to this element">15.4. The <code id="c-109">\toplevel</code> implicit macro</a><span> <a href="#toc-toplevel">(toc ↑)</a></span></h3>
-<p id="p-215">Every Cirodown document is implicitly put inside a <code id="c-110">\toplevel</code> document and:</p>
+<p id="p-215">Every Cirodown document is implicitly put inside a <code id="c-110">\toplevel</code> document and:<span class="hide-hover"> <a href="#p-215">(link 🔗)</a></span>
+</p>
 <ul id="ul-26">
 <li id="l-66">any optionally given arguments at the very beginning of the document will be treated as arguments of the <code id="c-151">\toplevel</code> macro</li>
 <li id="l-67">anything else will be put inside the <code id="c-152">content</code> argument of the <code id="c-153">\toplevel</code> macro</li>
 </ul>
-<p id="p-216">E.g., a Cirodown document that contains:</p>
+<p id="p-216">E.g., a Cirodown document that contains:<span class="hide-hover"> <a href="#p-216">(link 🔗)</a></span>
+</p>
 <pre id="c-64"><code>[title=My favorite title]
 
 And now, some content!
 </code></pre>
-<p id="p-217">is morally equivalent to:</p>
+<p id="p-217">is morally equivalent to:<span class="hide-hover"> <a href="#p-217">(link 🔗)</a></span>
+</p>
 <pre id="c-65"><code>\toplevel
 [title=My favorite title]
 [
 And now, some content!
 ]
 </code></pre>
-<p id="p-218">In terms of HTML, the <code id="c-111">\toplevel</code> element corresponds to the <code id="c-112">&lt;html&gt;</code>, <code id="c-113">&lt;head&gt;</code>, <code id="c-114">&lt;header&gt;</code> and <code id="c-115">&lt;footer&gt;</code> elements of a document.</p>
+<p id="p-218">In terms of HTML, the <code id="c-111">\toplevel</code> element corresponds to the <code id="c-112">&lt;html&gt;</code>, <code id="c-113">&lt;head&gt;</code>, <code id="c-114">&lt;header&gt;</code> and <code id="c-115">&lt;footer&gt;</code> elements of a document.<span class="hide-hover"> <a href="#p-218">(link 🔗)</a></span>
+</p>
 <h4 id="html-document-title"><a href="#html-document-title" title="link to this element">15.4.1. HTML document title</a><span> <a href="#toc-html-document-title">(toc ↑)</a></span></h4>
 <ul id="ul-27">
 <li id="l-68">if the <code id="c-154">title</code> argument of <code id="c-155">toplevel</code> is given, use that</li>
@@ -1161,33 +1412,37 @@ And now, some content!
 <li id="l-70">otherwise use a dummy value</li>
 </ul>
 <h3 id="formal-grammar"><a href="#formal-grammar" title="link to this element">15.5. Formal grammar</a><span> <a href="#toc-formal-grammar">(toc ↑)</a></span></h3>
-<p id="p-219">TODO. Describe Cirodown's formal grammar, and classify it in the grammar hierarchy and parsing complexity.</p>
+<p id="p-219">TODO. Describe Cirodown's formal grammar, and classify it in the grammar hierarchy and parsing complexity.<span class="hide-hover"> <a href="#p-219">(link 🔗)</a></span>
+</p>
 <h3 id="todo"><a href="#todo" title="link to this element">15.6. TODO</a><span> <a href="#toc-todo">(toc ↑)</a></span></h3>
 <ul id="ul-28">
 <li id="l-71">expose a on over link to paragraphs, equations on right <code id="c-157">(12)</code>. Consider exposing on code blocks like equations.</li>
-<li id="l-72">publish webpage on cirosantilli.com</li>
-<li id="l-73">custom header, footer and HEAD based on files like header.html, footer.html</li>
-<li id="l-74"><a href="#id-scope" id="x-47">id_scope</a></li>
-<li id="l-75">browser live quick test</li>
-<li id="l-76">list and code caption</li>
-<li id="l-77">image description and source</li>
-<li id="l-78">input indentation skip</li>
-<li id="l-79">correct ID generation algorithm to be Unicode robust</li>
-<li id="l-80">local downloads and single HTML page with image / script embeds</li>
-<li id="l-81">image management: upload to separate media directory</li>
-<li id="l-82">handle ID calculation from title if title has HTML elements, e.g. headers with code. Use that for the title as well.</li>
-<li id="l-83">multiple newlines blow up (5 or six), create test and decide best behaviour</li>
-<li id="l-84">LaTeX output</li>
+<li id="l-72">expose git revision, especially to multipage template</li>
+<li id="l-73">multipage template language that cannot run forever</li>
+<li id="l-74">publish webpage on cirosantilli.com</li>
+<li id="l-75">custom header, footer and HEAD based on files like header.html, footer.html</li>
+<li id="l-76"><a href="#id-scope" id="x-47">id_scope</a></li>
+<li id="l-77">browser live quick test</li>
+<li id="l-78">list and code caption</li>
+<li id="l-79">image description and source</li>
+<li id="l-80">input indentation skip</li>
+<li id="l-81">correct ID generation algorithm to be Unicode robust</li>
+<li id="l-82">local downloads and single HTML page with image / script embeds</li>
+<li id="l-83">image management: upload to separate media directory</li>
+<li id="l-84">handle ID calculation from title if title has HTML elements, e.g. headers with code. Use that for the title as well.</li>
+<li id="l-85">multiple newlines blow up (5 or six), create test and decide best behaviour</li>
+<li id="l-86">LaTeX output</li>
 </ul>
 <h2 id="related-projects"><a href="#related-projects" title="link to this element">16. Related projects</a><span> <a href="#toc-related-projects">(toc ↑)</a></span></h2>
 <ul id="ul-29">
-<li id="l-85"><a id="a-19" href="https://github.com/rstudio/bookdown">https://github.com/rstudio/bookdown</a>, <a id="a-20" href="https://bookdown.org/">https://bookdown.org/</a>. Very similar feature set to what we want!!! Transpiles to markdown, and then goes through Pandoc: <a id="a-21" href="https://bookdown.org/yihui/bookdown/pandoc.html">https://bookdown.org/yihui/bookdown/pandoc.html</a>, thus will never run on browser without huge translation layers. But does have an obscene ammount of output formats however.</li>
-<li id="l-86"><a id="a-22" href="https://gohugo.io/">Hugo</a>. Pretty good, similar feature set to ours. But Go based, so hard on browser, and adds adhoc features on top of markdown once again</li>
+<li id="l-87"><a id="a-19" href="https://github.com/rstudio/bookdown">https://github.com/rstudio/bookdown</a>, <a id="a-20" href="https://bookdown.org/">https://bookdown.org/</a>. Very similar feature set to what we want!!! Transpiles to markdown, and then goes through Pandoc: <a id="a-21" href="https://bookdown.org/yihui/bookdown/pandoc.html">https://bookdown.org/yihui/bookdown/pandoc.html</a>, thus will never run on browser without huge translation layers. But does have an obscene ammount of output formats however.</li>
+<li id="l-88"><a id="a-22" href="https://gohugo.io/">Hugo</a>. Pretty good, similar feature set to ours. But Go based, so hard on browser, and adds adhoc features on top of markdown once again</li>
 </ul>
-<p id="p-220">Less related but of interest:</p>
+<p id="p-220">Less related but of interest:<span class="hide-hover"> <a href="#p-220">(link 🔗)</a></span>
+</p>
 <ul id="ul-30">
-<li id="l-87"><a id="a-23" href="http://www.uprtcl.io/">http://www.uprtcl.io/</a></li>
-<li id="l-88"><a id="a-24" href="https://libretexts.org">https://libretexts.org</a></li>
+<li id="l-89"><a id="a-23" href="http://www.uprtcl.io/">http://www.uprtcl.io/</a></li>
+<li id="l-90"><a id="a-24" href="https://libretexts.org">https://libretexts.org</a></li>
 </ul>
 </body>
 </html>
