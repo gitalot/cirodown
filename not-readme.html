@@ -54,7 +54,19 @@ figure {
   display: inline;
 }
 .math-container {
+  align-items: center;
   margin-bottom: 10px;
+}
+.math-equation {
+  align-items: center;
+  display: flex;
+}
+.math-equation > :nth-child(1) {
+  flex-grow: 9;
+}
+.math-equation > :nth-child(2) {
+  flex-grow: 1;
+  text-align: right;
 }
 /* Tables */
 /* Add borders! */
