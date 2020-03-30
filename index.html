@@ -8,7 +8,7 @@
 </style>
 <body class="cirodown">
 <h1 id="cirodown"><a href="#cirodown" title="link to this element">Cirodown</a><span> </span></h1>
-<div class="p" id="p-1"><span class="hide-hover"> <a href="#p-1">🔗</a></span>A Markup language to write multipage or single page HTML / PDF books, blogs, etc. that is <a href="#saner">saner</a> and more powerful than Markdown and Asciidoctor, but still nicer to write than XML and JSON, with reference implementation in JavaScript.</div><div class="p" id="p-2"><span class="hide-hover"> <a href="#p-2">🔗</a></span>The source for this document is at: <a href="https://github.com/cirosantilli/cirodown/blob/master/README.ciro">https://github.com/cirosantilli/cirodown/blob/master/README.ciro</a> and a rendered version can be seen at: <a href="https://cirosantilli.com/cirodown">https://cirosantilli.com/cirodown</a>.</div><div class="toc-container">
+<div class="p" id="p-1"><span class="hide-hover"> <a href="#p-1">🔗</a></span>A Markup language to write multipage or single page HTML / PDF books, blogs, etc. that is <a href="#saner">saner</a> and more powerful than Markdown and Asciidoctor, but still nicer to write than XML and JSON, with reference implementation in JavaScript.</div><div class="p" id="p-2"><span class="hide-hover"> <a href="#p-2">🔗</a></span>The source for this document is at: <a href="https://github.com/cirosantilli/cirodown/blob/master/README.ciro">https://github.com/cirosantilli/cirodown/blob/master/README.ciro</a> and a rendered version can be seen at: <a href="https://cirosantilli.com/cirodown">https://cirosantilli.com/cirodown</a> and a live demo at: <a href="https://cirosantilli.com/cirodown/editor">https://cirosantilli.com/cirodown/editor</a>.</div><div class="toc-container">
 <ul>
 <li><div id="toc-quick-start"><a href="#quick-start" id="toc-1">1. Quick start</a><span> | <a href="#toc-quick-start">🔗 link</a> | <a href="#toc-cirodown">↑ parent "Cirodown"</a></span></div></li>
 <li><div id="toc-design-goals"><a href="#design-goals" id="toc-1">2. Design goals</a><span> | <a href="#toc-design-goals">🔗 link</a> | <a href="#toc-cirodown">↑ parent "Cirodown"</a></span></div>
@@ -175,21 +175,22 @@
 </ul>
 </div>
 <h2 id="quick-start"><a href="#quick-start" title="link to this element">1. Quick start</a><span>  | <a href="#toc-quick-start">⇑ toc</a> | <a href="#cirodown">↑ parent "Cirodown"</a></span></h2>
-<div class="p" id="p-3"><span class="hide-hover"> <a href="#p-3">🔗</a></span>Install the NPM package globally and use it from the command line for a quick conversion:
-<div><span class="hide-hover"> <a href="#c-2">🔗</a></span><pre id="c-2"><code>npm install -g cirodown
-printf 'ab\ncd\n' | cirodown --body-only
-</code></pre></div>
-
-or <a href="https://stackoverflow.com/questions/9679932/how-to-use-package-installed-locally-in-node-modules">install and run locally</a>:
-<div><span class="hide-hover"> <a href="#c-3">🔗</a></span><pre id="c-3"><code>npm install -g cirodown
-printf 'ab\ncd\n' | npx cirodown --body-only
-</code></pre></div>
-</div><div class="p" id="p-4"><span class="hide-hover"> <a href="#p-4">🔗</a></span>Play with it in a still crappy <a href="#editor-with-preview">live browser editor</a> at <a href="https://cirosantilli.com/cirodown/editor">https://cirosantilli.com/cirodown/editor</a> (TODO online version broken) or by cloning locally with:
-<div><span class="hide-hover"> <a href="#c-4">🔗</a></span><pre id="c-4"><code>git clone https://github.com/cirosantilli/cirodown-template
+<div class="p" id="p-3"><span class="hide-hover"> <a href="#p-3">🔗</a></span>Live in-browser demo: <a href="https://cirosantilli.com/cirodown/editor">https://cirosantilli.com/cirodown/editor</a>. Clone and run it locally:
+<div><span class="hide-hover"> <a href="#c-2">🔗</a></span><pre id="c-2"><code>git clone https://github.com/cirosantilli/cirodown-template
 cd cirodown-template
 npm install
 ./build
 xdg-open editor.html
+</code></pre></div>
+
+We want to make that editor amazing later on: <a href="#editor-with-preview">live browser editor</a>.</div><div class="p" id="p-4"><span class="hide-hover"> <a href="#p-4">🔗</a></span>Install the NPM package globally and use it from the command line for a quick conversion:
+<div><span class="hide-hover"> <a href="#c-3">🔗</a></span><pre id="c-3"><code>npm install -g cirodown
+printf 'ab\ncd\n' | cirodown --body-only
+</code></pre></div>
+
+or <a href="https://stackoverflow.com/questions/9679932/how-to-use-package-installed-locally-in-node-modules">install and run locally</a>:
+<div><span class="hide-hover"> <a href="#c-4">🔗</a></span><pre id="c-4"><code>npm install -g cirodown
+printf 'ab\ncd\n' | npx cirodown --body-only
 </code></pre></div>
 </div><div class="p" id="p-5"><span class="hide-hover"> <a href="#p-5">🔗</a></span>To start a new project with a minimal and convenient template <a href="#generate">use <code>--generate</code></a> and then <a href="#publish-to-github-pages">publish it to GitHub with <code>--publish</code></a>:
 <div><span class="hide-hover"> <a href="#c-5">🔗</a></span><pre id="c-5"><code>mkdir -p cirodown-test
