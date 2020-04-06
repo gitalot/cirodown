@@ -99,9 +99,14 @@ function cmd_get_stdout(cmd, args=[], options={}) {
   if (!('dry_run' in options)) {
     options.dry_run = false;
   }
+  if (!('show_cmd' in options)) {
+    options.show_cmd = true;
+  }
   let out;
   const cmd_str = ([cmd].concat(args)).join(' ');
-  console.log(cmd_str);
+  if (options.show_cmd) {
+    console.log(cmd_str);
+  }
   if (!options.dry_run) {
     out = child_process.spawnSync(cmd, args);
   }
@@ -167,7 +172,7 @@ function convert_input(input, options, convert_input_options={}) {
   // the user did not explicitly request full embedding, inline all CSS.
   // Otherwise, include and external CSS to make each page lighter.
   if (convert_input_options.commander.htmlEmbed) {
-    new_options.css = fs.readFileSync(cirodown_nodejs.PACKAGE_OUT_CSS_EMBED_PATH, ENCODING);
+    new_options.template_vars.style = fs.readFileSync(cirodown_nodejs.PACKAGE_OUT_CSS_EMBED_PATH, ENCODING);
   } else {
     let css_path = convert_input_options.out_css_path;
     let includes_str = ``;
@@ -185,7 +190,7 @@ function convert_input(input, options, convert_input_options={}) {
     for (const include of includes) {
       includes_str += `@import "${include}";\n`;
     }
-    new_options.css = `\n${includes_str}`;
+    new_options.template_vars.style = `\n${includes_str}`;
   }
   let output = cirodown.convert(input, new_options, new_options.extra_returns);
   if (convert_input_options.commander.showTokens) {
@@ -328,6 +333,17 @@ function convert_path(base_path, input_path, options, convert_input_options) {
   return output;
 }
 
+/**
+ * @return {String} full Git SHA of the source.
+ */
+function git_sha(input_path, src_branch) {
+  const args = ['-C', input_path, 'log', '-n1', '--pretty=%H'];
+  if (src_branch !== undefined) {
+    args.push(src_branch);
+  }
+  return cmd_get_stdout('git', args, {show_cmd: false, throw_on_error: true}).slice(0, -1);
+}
+
 /** https://stackoverflow.com/questions/5827612/node-js-fs-readdir-recursive-directory-search
  *
  * @param {Set} skip_basenames
@@ -354,6 +370,7 @@ function* walk_files_recursively(file_or_dir, skip_basenames) {
 commander.option('--body-only', 'output only the content inside the HTLM body element', false);
 commander.option('--dry-run', "don't run most external commands, see: https://github.com/cirosantilli/linux-kernel-module-cheat/tree/6d0a900f4c3c15e65d850f9d29d63315a6f976bf#dry-run-to-get-commands-for-your-project", false);
 commander.option('--generate', 'http://cirosantilli.com/cirodown#generate', false);
+commander.option('--generate-multifile', 'http://cirosantilli.com/cirodown#generate-multifile', false);
 commander.option('--help-macros', 'print the metadata of all macros to stdout in JSON format. https://cirosantilli.com/cirodown/#', false);
 commander.option('--html-embed', 'http://cirosantilli.com/cirodown#html-embed', false);
 commander.option('--html-single-page', 'http://cirosantilli.com/cirodown#html-single-page', false);
@@ -425,6 +442,7 @@ if (commander.helpMacros) {
     show_parse: commander.showParse,
     show_tokens: commander.showTokensInside,
     show_tokenize: commander.showTokenize,
+    template_vars: {},
   };
   if (commander.template !== undefined) {
     options.template = fs.readFileSync(commander.template).toString();
@@ -433,7 +451,29 @@ if (commander.helpMacros) {
   } else {
     options.template = undefined;
   }
-  if (commander.generate) {
+  if (inputPath === undefined && (publish || commander.watch)) {
+    inputPath = '.';
+  }
+  let input_dir;
+  if (fs.lstatSync(inputPath).isFile()) {
+    input_dir = path.dirname(inputPath);
+  } else {
+    input_dir = inputPath;
+  }
+  try {
+    options.template_vars.git_sha = git_sha(input_dir);
+  } catch(error) {
+    // Not in a git repo.
+  }
+  if (commander.generate || commander.generateMultifile) {
+    let outdir;
+    if (commander.outdir !== undefined) {
+      outdir = commander.outdir;
+    } else {
+      outdir = '.';
+    }
+    fs.mkdirSync(outdir, {recursive: true});
+
     // Generate package.json.
     const package_json = JSON.parse(fs.readFileSync(cirodown_nodejs.PACKAGE_PACKAGE_JSON_PATH).toString());
     const package_json_str = `{
@@ -442,9 +482,11 @@ if (commander.helpMacros) {
   }
 }
 `;
-    fs.writeFileSync(path.join('package.json'), package_json_str);
+    fs.writeFileSync(path.join(outdir, 'package.json'), package_json_str);
 
-    // Generate .gitignore.
+    const new_cirodown_json = {};
+
+    // Generate .gitignore. Reuse our gitignore up to the first blank line.
     let gitignore_new = '';
     const gitignore = fs.readFileSync(cirodown_nodejs.GITIGNORE_PATH, ENCODING);
     for (const line of gitignore.split('\n')) {
@@ -453,15 +495,37 @@ if (commander.helpMacros) {
       }
       gitignore_new += line + '\n';
     }
-    fs.writeFileSync('.gitignore', gitignore_new);
+    fs.writeFileSync(path.join(outdir, '.gitignore'), gitignore_new);
 
-    // Generate README.ciro.
-    const readme_cirodown_str = `\\h[1][Cirodown hello world]
+    // Generate README.ciro and other .ciro files.
+    let readme_cirodown_str = `\\h[1][Cirodown hello world]
 
 Hello!
 `;
-    fs.writeFileSync(path.join('README.ciro'), readme_cirodown_str);
+    if (commander.generateMultifile) {
+      readme_cirodown_str += `
+\\toc
 
+\\h[2][And now an include]
+
+\\include[not-readme]
+`
+      not_readme_str = `\\h[1][Not the readme]
+
+A link to another file: \\x[and-now-an-include]
+`
+      fs.writeFileSync(path.join(outdir, 'not-readme.ciro'), not_readme_str);
+    }
+    fs.writeFileSync(path.join(outdir, 'README.ciro'), readme_cirodown_str);
+    if (commander.generateMultifile) {
+      fs.copyFileSync(path.join(cirodown_nodejs.PACKAGE_PATH, 'main.liquid.html'), path.join(outdir, 'main.liquid.html'));
+      fs.copyFileSync(path.join(cirodown_nodejs.PACKAGE_PATH, 'main.scss'), path.join(outdir, 'main.scss'));
+      new_cirodown_json.template = 'main.liquid.html';
+    }
+
+    if (new_cirodown_json !== {}) {
+      fs.writeFileSync(path.join(outdir, CIRODOWN_JSON), JSON.stringify(new_cirodown_json, null, 2) + '\n');
+    }
     process.exit(0);
   }
   let convert_input_options = {
@@ -471,9 +535,6 @@ Hello!
     include_contains_external: false,
     out_css_path: cirodown_nodejs.PACKAGE_OUT_CSS_LOCAL_PATH,
   };
-  if (inputPath === undefined && (publish || commander.watch)) {
-    inputPath = '.';
-  }
   if (commander.outfile !== undefined) {
     convert_input_options.output_path = commander.outfile;
   }
@@ -656,21 +717,18 @@ Hello!
           if ('prepublish' in cirodown_json) {
             const prepublish_path = cirodown_json.prepublish
             if (!fs.existsSync(prepublish_path)) {
-              cli_error(`cirodown.json prepublish file not found: ${prepublish_path}`);
+              cli_error(`${CIRODOWN_JSON} prepublish file not found: ${prepublish_path}`);
             }
             try {
               cmd_get_stdout(path.resolve(prepublish_path), [convert_input_options.outdir], cmd_options);
             } catch(error) {
-              cli_error(`cirodown.json prepublish command exited non-zero, aborting`);
+              cli_error(`${CIRODOWN_JSON} prepublish command exited non-zero, aborting`);
             }
           }
           // Copy the CSS into the repository.
           fs.copyFileSync(cirodown_nodejs.PACKAGE_OUT_CSS_PATH, convert_input_options.out_css_path)
           cmd_get_stdout('git', ['-C', convert_input_options.outdir, 'add', '.'], cmd_options);
-          source_commit = cmd_get_stdout('git', ['-C', inputPath, 'log', '-n1', '--pretty=%H', src_branch], cmd_options).slice(0, -1);
-          if (commander.dryRun) {
-            source_commit = '0000111122223333444455556666777788889999';
-          }
+          source_commit = git_sha(inputPath, src_branch);
           cmd_get_stdout('git', ['-C', convert_input_options.outdir, 'commit', '-m', source_commit], cmd_options);
           cmd_get_stdout('git', ['-C', convert_input_options.outdir, 'push', 'origin', `${publish_branch}:${publish_branch}`], cmd_options);
         }
