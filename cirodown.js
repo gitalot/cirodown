@@ -34,6 +34,9 @@ class AstNode {
     if (!('input_path' in options)) {
       options.input_path = undefined;
     }
+    if (!('parent_node' in options)) {
+      options.parent_node = undefined;
+    }
     if (!('text' in options)) {
       options.text = undefined;
     }
@@ -45,7 +48,12 @@ class AstNode {
     this.line = line;
     this.input_path = options.input_path;
     this.column = column;
+    // This is the Nth macro of this type that appears in the document.
     this.macro_count = undefined;
+    // This is the Nth indexed macro (one that can be linked to)
+    // of this type that appears in the document.
+    this.macro_count_indexed = undefined;
+    this.parent_node = options.parent_node;
 
     // For elements that are of AstType.PLAINTEXT.
     this.text = options.text
@@ -53,6 +61,8 @@ class AstNode {
     // For elements that have an id.
     // {String} or undefined.
     this.id = options.id;
+    // The ID of this element has been indexed.
+    this.index_id = undefined
     this.force_no_index = options.force_no_index;
 
     // This was added to the tree from an include.
@@ -65,6 +75,12 @@ class AstNode {
     this.header_tree_node = undefined;
     // Includes under this header.
     this.includes = [];
+
+    for (const argname in args) {
+      for (const arg of args[argname]) {
+        arg.parent_node = this;
+      }
+    }
   }
 
   /**
@@ -83,6 +99,7 @@ class AstNode {
    *        - {Object} ids - map of document IDs to their description:
    *                 - 'prefix': prefix to add if style=full, e.g. `Figure 1`, `Section 2`, etc.
    *                 - {List[AstNode]} 'title': the title of the element linked to
+   * @param {Object} context
    */
   convert(context) {
     if (context === undefined) {
@@ -106,7 +123,18 @@ class AstNode {
     if (!('macros' in context)) {
       throw new Error('contenxt does not have a mandatory .macros property');
     }
-    return context.macros[this.macro_name].convert(this, context);
+    const macro = context.macros[this.macro_name];
+    let out = macro.convert(this, context);
+    const parent_node = this.parent_node;
+    if (
+      parent_node !== undefined &&
+      parent_node.macro_name === Macro.TOPLEVEL_MACRO_NAME &&
+      this.id !== undefined &&
+      macro.toplevel_link
+    ) {
+      out = `<div>${html_hide_hover_link(this.id)}${out}</div>`;
+    }
+    return out;
   }
 
   /** Manual implementation. There must be a better way, but I can't find it... */
@@ -309,7 +337,7 @@ class Macro {
       options.caption_prefix = capitalize_first_letter(name);
     }
     if (!('get_number' in options)) {
-      options.get_number = function(ast, context) { return ast.macro_count; }
+      options.get_number = function(ast, context) { return ast.macro_count_indexed; }
     }
     if (!('id_prefix' in options)) {
       options.id_prefix = title_to_id(name);
@@ -324,6 +352,9 @@ class Macro {
     }
     if (!('properties' in options)) {
       options.properties = {};
+    }
+    if (!('toplevel_link' in options)) {
+      options.toplevel_link = true;
     }
     if (!('x_style' in options)) {
       options.x_style = XStyle.full;
@@ -344,6 +375,7 @@ class Macro {
     this.options = options;
     this.id_prefix = options.id_prefix;
     this.properties = options.properties;
+    this.toplevel_link = options.toplevel_link;
     if (!('phrasing' in this.properties)) {
       this.properties['phrasing'] = false;
     }
@@ -415,6 +447,11 @@ class Macro {
    * "Table 123. My favorite table". Both are done in a single function
    * so that style=full references will show very siimlar to the caption
    * they refer to.
+   *
+   * @param {Object} options
+   *   @param {Object} href_prefix rendered string containing the href="..."
+   *   part of a link to self to be applied e.g. to <>Figure 1<>, of undefined
+   *   if this link should not be given.
    */
   static x_text(ast, context, options={}) {
     if (!('caption_prefix_span' in options)) {
@@ -422,6 +459,9 @@ class Macro {
     }
     if (!('quote' in options)) {
       options.quote = false;
+    }
+    if (!('href_prefix' in options)) {
+      options.href_prefix = undefined;
     }
     if (!('show_caption_prefix' in options)) {
       options.show_caption_prefix = true;
@@ -432,6 +472,9 @@ class Macro {
     let ret = ``;
     let number;
     if (options.style === XStyle.full) {
+      if (options.href_prefix !== undefined) {
+        ret += `<a${options.href_prefix}>`
+      }
       if (options.show_caption_prefix) {
         if (options.caption_prefix_span) {
           ret += `<span class="caption-prefix">`;
@@ -444,6 +487,9 @@ class Macro {
       }
       if (options.show_caption_prefix && options.caption_prefix_span) {
         ret += `</span>`;
+      }
+      if (options.href_prefix !== undefined) {
+        ret += `</a>`
       }
     }
     if (Macro.TITLE_ARGUMENT_NAME in ast.args) {
@@ -470,8 +516,6 @@ Macro.HEADER_MACRO_NAME = 'h';
 Macro.ID_ARGUMENT_NAME = 'id';
 Macro.INCLUDE_MACRO_NAME = 'include';
 Macro.LINK_MACRO_NAME = 'a';
-Macro.LINK_SELF_SHORT = UNICODE_LINK;
-Macro.LINK_SELF = `(${Macro.LINK_SELF_SHORT} link)`;
 Macro.MATH_MACRO_NAME = 'm';
 Macro.PARAGRAPH_MACRO_NAME = 'p';
 Macro.PLAINTEXT_MACRO_NAME = 'plaintext';
@@ -779,7 +823,20 @@ class Tokenizer {
             // Insane autolink.
             this.push_token(TokenType.MACRO_NAME, Macro.LINK_MACRO_NAME, this.line, this.column);
             this.push_token(TokenType.POSITIONAL_ARGUMENT_START);
-            while (this.consume_plaintext_char() && !(this.cur_c == ' ' || this.cur_c == '\n')) {}
+            let link_text = '';
+            while (this.consume_plaintext_char()) {
+              if (
+                this.cur_c == ' ' ||
+                this.cur_c == '\n' ||
+                this.cur_c == END_POSITIONAL_ARGUMENT_CHAR ||
+                this.cur_c == END_NAMED_ARGUMENT_CHAR
+              ) {
+                break;
+              }
+              if (this.cur_c === ESCAPE_CHAR) {
+                this.consume();
+              }
+            }
             this.push_token(TokenType.POSITIONAL_ARGUMENT_END);
             done = true;
           }
@@ -1285,12 +1342,7 @@ function html_convert_simple_elem(elem_name, options={}) {
     newline_after_close_str = '';
   }
   return function(ast, context) {
-    let link_to_self;
-    if (!options.link_to_self || (ast.id === undefined)) {
-      link_to_self = '';
-    } else {
-      link_to_self = html_hide_hover_link(ast.id);
-    }
+    let link_to_self = '';
     let attrs = html_convert_attrs_id(ast, context);
     let extra_attrs_string = '';
     for (const key in options.attrs) {
@@ -1351,7 +1403,7 @@ function html_hide_hover_link(id) {
     return '';
   } else {
     let href = html_attr('href', '#' + html_escape_attr(id));
-    return `<span class="hide-hover"> <a${href}>${Macro.LINK_SELF_SHORT}</a></span>`;
+    return `<span class="hide-hover"> <a${href}>${UNICODE_LINK}</a></span>`;
   }
 }
 
@@ -1665,6 +1717,7 @@ function parse(tokens, macros, options, extra_returns={}) {
   // Normally only the toplevel includer will enter this code section.
   if (!options.from_include) {
     const macro_counts = {};
+    const macro_counts_indexed = {};
     let header_graph_last_level;
     const header_graph_stack = new Map();
     is_first_header = true;
@@ -1776,6 +1829,7 @@ function parse(tokens, macros, options, extra_returns={}) {
           ast.id = convert_arg_noescape(macro_id_arg, id_context);
         }
       }
+      ast.index_id = index_id;
       if (ast.id !== undefined && !ast.force_no_index) {
         const previous_ast = id_provider.get(ast.id);
         let input_path;
@@ -1800,6 +1854,15 @@ function parse(tokens, macros, options, extra_returns={}) {
           }
           message += `line ${previous_ast.line} colum ${previous_ast.column}`;
           parse_error(state, message, ast.line, ast.column);
+        }
+
+        if (index_id) {
+          if (!(macro_name in macro_counts_indexed)) {
+            macro_counts_indexed[macro_name] = 0;
+          }
+          const macro_count = macro_counts_indexed[macro_name] + 1;
+          macro_counts_indexed[macro_name] = macro_count;
+          ast.macro_count_indexed = macro_count;
         }
       }
 
@@ -1888,16 +1951,16 @@ function parse(tokens, macros, options, extra_returns={}) {
         if (paragraph_indexes.length > 0) {
           new_arg = [];
           if (paragraph_indexes[0] > 0) {
-            parse_add_paragraph(state, new_arg, arg, 0, paragraph_indexes[0]);
+            parse_add_paragraph(state, ast, new_arg, arg, 0, paragraph_indexes[0]);
           }
           let paragraph_start = paragraph_indexes[0] + 1;
           for (let i = 1; i < paragraph_indexes.length; i++) {
             const paragraph_index = paragraph_indexes[i];
-            parse_add_paragraph(state, new_arg, arg, paragraph_start, paragraph_index);
+            parse_add_paragraph(state, ast, new_arg, arg, paragraph_start, paragraph_index);
             paragraph_start = paragraph_index + 1;
           }
           if (paragraph_start < arg.length) {
-            parse_add_paragraph(state, new_arg, arg, paragraph_start, arg.length);
+            parse_add_paragraph(state, ast, new_arg, arg, paragraph_start, arg.length);
           }
           arg = new_arg;
         }
@@ -1928,7 +1991,7 @@ function parse(tokens, macros, options, extra_returns={}) {
 
 // Maybe add a paragraph after a \n\n.
 function parse_add_paragraph(
-  state, new_arg, arg, paragraph_start, paragraph_end
+  state, ast, new_arg, arg, paragraph_start, paragraph_end
 ) {
   parse_log_debug(state, 'function: parse_add_paragraph');
   parse_log_debug(state, 'paragraph_start: ' + paragraph_start);
@@ -1950,6 +2013,9 @@ function parse_add_paragraph(
           },
           arg[paragraph_start].line,
           arg[paragraph_start].column,
+          {
+            parent_node: ast,
+          }
         )
       );
     } else {
@@ -2223,7 +2289,7 @@ const DEFAULT_MACRO_LIST = [
     function(ast, context) {
       let attrs = html_convert_attrs_id(ast, context);
       let content = convert_arg(ast.args.content, context);
-      return `<div>${html_hide_hover_link(ast.id)}<pre${attrs}><code>${content}</code></pre></div>\n`;
+      return `<pre${attrs}><code>${content}</code></pre>\n`;
     },
   ),
   new Macro(
@@ -2416,17 +2482,16 @@ const DEFAULT_MACRO_LIST = [
       }
       if (do_show) {
         let href = html_attr('href', '#' + html_escape_attr(ast.id));
-        ret += `<div class="math-container"${attrs}>${html_hide_hover_link(ast.id)}`;
+        ret += `<div class="math-container"${attrs}>`;
         if (Macro.TITLE_ARGUMENT_NAME in ast.args) {
           ret += `<div class="math-caption-container">\n`;
-          ret += `<span class="math-caption">${Macro.x_text(ast, context)}</span>`;
-          ret += `<span> <a${href}>${Macro.LINK_SELF}</a></span>\n`;
+          ret += `<span class="math-caption">${Macro.x_text(ast, context, {href_prefix: href})}</span>`;
           ret += `</div>\n`;
         }
         ret += `<div class="math-equation">\n`
         ret += `<div>${katex_output}</div>\n`;
         ret += `<div><a${href}>(${context.macros[ast.macro_name].options.get_number(ast, context)})</a></div>`;
-        ret += `</div>\n`
+        ret += `</div>\n`;
         ret += `</div>\n`;
       }
       return ret;
@@ -2434,6 +2499,11 @@ const DEFAULT_MACRO_LIST = [
     {
       caption_prefix: 'Equation',
       id_prefix: 'eq',
+      get_number: function(ast, context) {
+        // Override because unlike other elements such as images, equations
+        // always get numbers even if not indexed.
+        return ast.macro_count;
+      },
       macro_counts_ignore: function(ast, context) {
         return 'show' in ast.args && convert_arg_noescape(ast.args.show, context) === '0';
       },
@@ -2473,19 +2543,20 @@ const DEFAULT_MACRO_LIST = [
       }),
     ],
     function(ast, context) {
-      let img_attrs = html_convert_attrs(ast,context, ['src', 'alt']);
+      let img_attrs = html_convert_attrs(ast, context, ['src', 'alt']);
       let figure_attrs = html_convert_attrs_id(ast, context);
       let ret = `<figure${figure_attrs}>\n`
+      let href_prefix;
       if (ast.id !== undefined) {
-        ret += `<a${this.self_link(ast)}>`
+        href_prefix = this.self_link(ast);
+      } else {
+        href_prefix = undefined;
       }
-      ret += `<img${img_attrs}>`;
-      if (ast.id !== undefined) {
-        ret += `</a>`;
-      }
-      ret += `\n`;
-      if (ast.id !== undefined) {
-        ret += `<figcaption>${Macro.x_text(ast, context)}</figcaption>\n`;
+      let src = html_attr('href', convert_arg(ast.args.src, context));
+      ret += `<a${src}><img${img_attrs}>`;
+      ret += `</a>\n`;
+      if (ast.id !== undefined && ast.index_id) {
+        ret += `<figcaption>${Macro.x_text(ast, context, {href_prefix: href_prefix})}</figcaption>\n`;
       }
       ret += '</figure>\n';
       return ret;
@@ -2592,7 +2663,7 @@ const DEFAULT_MACRO_LIST = [
       let attrs = html_convert_attrs_id(ast, context);
       let content = convert_arg(ast.args.content, context);
       let ret = ``;
-      ret += `<div class="table-container"${attrs}>${html_hide_hover_link(ast.id)}\n`;
+      ret += `<div class="table-container"${attrs}>\n`;
       if (ast.id !== undefined) {
         // TODO not using caption because I don't know how to allow the caption to be wider than the table.
         // I don't want the caption to wrap to a small table size.
@@ -2606,10 +2677,11 @@ const DEFAULT_MACRO_LIST = [
         //
         //Caption on top as per: https://tex.stackexchange.com/questions/3243/why-should-a-table-caption-be-placed-above-the-table */
         let href = html_attr('href', '#' + html_escape_attr(ast.id));
-        ret += `<div class="table-caption-container">\n`;
-        ret += `<span class="table-caption">${Macro.x_text(ast, context)}</span>`;
-        ret += `<span> <a${href}>${Macro.LINK_SELF}</a></span>\n`;
-        ret += `</div>\n`;
+        if (ast.id !== undefined && ast.index_id) {
+          ret += `<div class="table-caption-container">\n`;
+          ret += `<span class="table-caption">${Macro.x_text(ast, context, {href_prefix: href})}</span>`;
+          ret += `</div>\n`;
+        }
       }
       ret += `<table>\n${content}</table>\n`;
       ret += `</div>\n`;
@@ -2684,6 +2756,9 @@ const DEFAULT_MACRO_LIST = [
       ret += `</div>\n`
       return ret;
     },
+    {
+      toplevel_link: false,
+    }
   ),
   new Macro(
     Macro.TOPLEVEL_MACRO_NAME,
