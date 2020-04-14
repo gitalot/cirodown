@@ -407,6 +407,7 @@ assert_convert_ast('escape right curly brace',    'a\\}b\n',  [a('p', [t('a}b')]
 // Positional arguments.
 // Has no content argument.
 assert_convert_ast('p with no content argument', '\\p\n', [a('p')]);
+assert_convert_ast('table with no content argument', '\\table\n', [a('table')]);
 // Has empty content argument.
 assert_convert_ast('p with empty content argument', '\\p[]\n', [a('p', [])]);
 
@@ -594,9 +595,27 @@ assert_convert_ast('link auto insane start end document',
   'http://example.com',
   [a('p', [a('a', undefined, {'href': [t('http://example.com')]})])],
 );
-assert_convert_ast('link auto insane start end document square brackets',
+assert_convert_ast('link auto insane start end square brackets',
   '\\p[http://example.com]\n',
   [a('p', [a('a', undefined, {'href': [t('http://example.com')]})])],
+);
+assert_convert_ast('link auto insane start end literal square brackets',
+  '\\[http://example.com\\]\n',
+  [a('p', [t('[http://example.com]')])],
+);
+assert_convert_ast('link auto insane start end named argument',
+  '\\Image[aaa.jpg]{description=http://example.com}\n',
+  [a('Image', undefined, {
+    description: [a('a', undefined, {'href': [t('http://example.com')]})],
+    src: [t('aaa.jpg')],
+  })],
+);
+assert_convert_ast('link auto insane start end named argument',
+  '\\Image[aaa.jpg]{source=http://example.com}\n',
+  [a('Image', undefined, {
+    source: [t('http://example.com')],
+    src: [t('aaa.jpg')],
+  })],
 );
 assert_convert_ast('link auto insane newline',
   `a
@@ -861,6 +880,9 @@ assert_error('unknown macro', '\\reserved_undefined', 1, 1);
 assert_error('too many positional arguments', '\\p[ab][cd]', 1, 7);
 assert_error('unknown named macro argument', '\\c{reserved_undefined=abc}[]', 1, 4);
 assert_error('named argument without =', '\\p{id ab}[cd]', 1, 6);
+// TODO https://github.com/cirosantilli/cirodown/issues/5
+assert_error('missing mandatory positional argument href of a', '\\a', 1, 1);
+assert_error('missing mandatory positional argument level of h', '\\h', 1, 1);
 // TODO
 //assert_error('argument without close', '\\c[', 1, 3);
 //assert_error('unterminated argument', '\\c[ab', 1, 3);
