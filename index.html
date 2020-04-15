@@ -228,7 +228,7 @@ Or to start with a more complex template suitable for multifile projects use <a 
 cd cirodown
 npm link
 npm link cirodown
-./cirodown --html-single-page README.ciro &gt; index.html
+./cirodown --html-single-page -o index.html README.ciro
 xdg-open index.html
 </code></pre>
 or render README.ciro and all includes <a href="#includes">includes</a> into a single HTML page and view it:
@@ -236,7 +236,7 @@ or render README.ciro and all includes <a href="#includes">includes</a> into a s
 xdg-open index.html
 </code></pre>
 or render instead as one fully offline standalone HTML file that can be given directly to readers with <a href="#html-embed"><code>--html-embed</code></a>:
-<pre id="c-9"><code>./cirodown --html-single-page README.ciro &gt; index.html
+<pre id="c-9"><code>./cirodown --html-single-page -o index.html README.ciro
 </code></pre></div></div><div><span class="hide-hover"><a href="#p-8">🔗</a></span><div class="p" id="p-8">Try out the JavaScript API with <a href="api_hello.js">api_hello.js</a>:
 <pre id="c-10"><code>npm install cirodown
 ./api_hello.js
@@ -1451,7 +1451,7 @@ In terms of HTML, the <code>\toplevel</code> element corresponds to the <code>&l
 <footer>
 <div>License: <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC-BY-SA 4.0</a> unless noted</div>
 <div>Website source code: <a href="https://github.com/cirosantilli/cirodown">https://github.com/cirosantilli/cirodown</a></div>
-<div>Website Git version: <a href="https://github.com/cirosantilli/cirodown/commit/c7d3f01042b32f9f8f32779ce2c695546ea6ed78">c7d3f01042b32f9f8f32779ce2c695546ea6ed78</a></div>
+<div>Website Git version: <a href="https://github.com/cirosantilli/cirodown/commit/23352f2b15a70596626b3e3963a077afbc2ea3ce">23352f2b15a70596626b3e3963a077afbc2ea3ce</a></div>
 </footer>
 <script>
 <!-- Google Analytics, AKA selling my soul to Google for some backlinks. -->
