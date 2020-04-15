@@ -96,7 +96,7 @@ class AstNode {
    *                 otherwise e.g. `1 < 2` would escape the `<` to `&lt;` and KaTeX would receive bad input.
    *        - {TreeNode} header_graph - TreeNode graph containing AstNode headers
    *        - {Object} ids - map of document IDs to their description:
-   *                 - 'prefix': prefix to add if style=full, e.g. `Figure 1`, `Section 2`, etc.
+   *                 - 'prefix': prefix to add if style_full, e.g. `Figure 1`, `Section 2`, etc.
    *                 - {List[AstNode]} 'title': the title of the element linked to
    * @param {Object} context
    */
@@ -123,33 +123,46 @@ class AstNode {
       throw new Error('contenxt does not have a mandatory .macros property');
     }
     const macro = context.macros[this.macro_name];
-    const name_to_arg = macro.name_to_arg;
-    let error_message = undefined;
-    for (const argname in name_to_arg) {
-      const macro_arg = name_to_arg[argname];
-      if (macro_arg.mandatory && !(argname in this.args)) {
-        error_message = `missing mandatory argument ${argname} of ${this.macro_name}`;
+    let out;
+
+    // Do some error checking. If no errors are found, convert normally. Save output on out.
+    {
+      let error_message = undefined;
+      const name_to_arg = macro.name_to_arg;
+      for (const argname in name_to_arg) {
+        const macro_arg = name_to_arg[argname];
+        if (macro_arg.mandatory && !(argname in this.args)) {
+          error_message = `missing mandatory argument ${argname} of ${this.macro_name}`;
+          break;
+        }
+        if (macro_arg.boolean && (argname in this.args)) {
+          const arg = this.args[argname];
+          if (arg.length > 0) {
+            error_message = `boolean arguments like "${argname}" of "${this.macro_name}" cannot have values, use just "{${argname}}" instead`;
+            break;
+          }
+        }
+      }
+      if (error_message === undefined) {
+        out = macro.convert(this, context);
+      } else {
         macro.error(context, error_message, this.line, this.column);
-        break;
+        out = error_message_in_output(error_message, context);
       }
     }
-    let out;
-    if (error_message === undefined) {
-      out = macro.convert(this, context);
-    } else {
-      out = error_message_in_output(error_message, context);
-    }
-    const parent_node = this.parent_node;
 
     // Add a div to all direct children of toplevel to implement
     // the on hover links to self and left margin.
-    if (
-      parent_node !== undefined &&
-      parent_node.macro_name === Macro.TOPLEVEL_MACRO_NAME &&
-      this.id !== undefined &&
-      macro.toplevel_link
-    ) {
-      out = `<div>${html_hide_hover_link(this.id)}${out}</div>`;
+    {
+      const parent_node = this.parent_node;
+      if (
+        parent_node !== undefined &&
+        parent_node.macro_name === Macro.TOPLEVEL_MACRO_NAME &&
+        this.id !== undefined &&
+        macro.toplevel_link
+      ) {
+        out = `<div>${html_hide_hover_link(this.id)}${out}</div>`;
+      }
     }
 
     return out;
@@ -319,13 +332,19 @@ class MacroArgument {
       // https://cirosantilli.com/cirodown#insane-link-parsing-rules
       options.elide_link_only = false;
     }
+    if (!('boolean' in options)) {
+      // https://cirosantilli.com/cirodown#boolean-named-arguments
+      options.boolean = false;
+    }
     if (!('mandatory' in options)) {
+      // https://cirosantilli.com/cirodown#mandatory-positional-arguments
       options.mandatory = false;
     }
     if (!('remove_whitespace_children' in options)) {
       // https://cirosantilli.com/cirodown#remove_whitespace_children
       options.remove_whitespace_children = false;
     }
+    this.boolean = options.boolean;
     this.elide_link_only = options.elide_link_only;
     this.mandatory = options.mandatory;
     this.name = options.name;
@@ -389,8 +408,8 @@ class Macro {
     if (!('toplevel_link' in options)) {
       options.toplevel_link = true;
     }
-    if (!('x_style' in options)) {
-      options.x_style = XStyle.full;
+    if (!('x_style_full' in options)) {
+      options.x_style_full = true;
     }
     this.name = name;
     this.positional_args = positional_args;
@@ -478,7 +497,7 @@ class Macro {
   /** Calculate the text of a cross reference, or the text
    * that the caption text that cross references can refer to, e.g.
    * "Table 123. My favorite table". Both are done in a single function
-   * so that style=full references will show very siimlar to the caption
+   * so that style_full references will show very siimlar to the caption
    * they refer to.
    *
    * @param {Object} options
@@ -499,12 +518,12 @@ class Macro {
     if (!('show_caption_prefix' in options)) {
       options.show_caption_prefix = true;
     }
-    if (!('style' in options)) {
-      options.style = XStyle.full;
+    if (!('style_full' in options)) {
+      options.style_full = true;
     }
     let ret = ``;
     let number;
-    if (options.style === XStyle.full) {
+    if (options.style_full) {
       if (options.href_prefix !== undefined) {
         ret += `<a${options.href_prefix}>`
       }
@@ -526,7 +545,7 @@ class Macro {
       }
     }
     if (Macro.TITLE_ARGUMENT_NAME in ast.args) {
-      if (options.style === XStyle.full) {
+      if (options.style_full) {
         if (number !== undefined) {
           ret += html_escape_context(context, `. `);
         }
@@ -534,7 +553,7 @@ class Macro {
           ret += html_escape_context(context, `"`);
       }
       ret += convert_arg(ast.args[Macro.TITLE_ARGUMENT_NAME], context);
-      if (options.style === XStyle.full && options.quote) {
+      if (options.style_full && options.quote) {
         ret += html_escape_context(context, `"`);
       }
     }
@@ -767,11 +786,14 @@ class Tokenizer {
         let column = this.column;
         let arg_name = this.tokenize_func(char_is_identifier);
         this.push_token(TokenType.NAMED_ARGUMENT_NAME, arg_name, line, column);
-        if (this.cur_c !== NAMED_ARGUMENT_EQUAL_CHAR) {
-          this.error(`expected character: '${NAMED_ARGUMENT_EQUAL_CHAR}' got '${this.cur_c}'`);
+        if (this.cur_c === NAMED_ARGUMENT_EQUAL_CHAR) {
+          // Consume the = sign.
+          this.consume();
+        } else if (this.cur_c === END_NAMED_ARGUMENT_CHAR) {
+          // Boolean argument.
+        } else {
+          this.error(`expected character: '${NAMED_ARGUMENT_EQUAL_CHAR}' or '${END_NAMED_ARGUMENT_CHAR}' (for a boolean argument), got '${this.cur_c}'`);
         }
-        // Consume the = sign.
-        this.consume();
         if (open_length === 1) {
           this.consume_optional_newline(true);
         } else {
@@ -1417,7 +1439,7 @@ function html_hide_hover_link(id) {
     return '';
   } else {
     let href = html_attr('href', '#' + html_escape_attr(id));
-    return `<span class="hide-hover"> <a${href}>${UNICODE_LINK}</a></span>`;
+    return `<span class="hide-hover"><a${href}>${UNICODE_LINK}</a></span>`;
   }
 }
 
@@ -1446,6 +1468,59 @@ function macro_list_to_macros() {
   return macros;
 }
 exports.macro_list_to_macros = macro_list_to_macros;
+
+function macro_image_video_convert_function(content_func) {
+  return function(ast, context) {
+    let rendered_attrs = html_convert_attrs(ast, context, ['src']);
+    let figure_attrs = html_convert_attrs_id(ast, context);
+    let ret = `<figure${figure_attrs}>\n`
+    let href_prefix;
+    if (ast.id !== undefined) {
+      href_prefix = this.self_link(ast);
+    } else {
+      href_prefix = undefined;
+    }
+    let description = convert_arg(ast.args.description, context);
+    if (description !== '') {
+      description = '. ' + description;
+    }
+    let source
+    if (ast.args.source === undefined) {
+      source = '';
+    } else {
+      source = `<a ${html_attr('href', convert_arg(ast.args.source, context))}>Source</a>.`;
+      if (description === '') {
+        source = '. ' + source;
+      } else {
+        source = ' ' + source;
+      }
+    }
+    let src = convert_arg(ast.args.src, context);
+    let alt_arg;
+    const has_caption = ast.id !== undefined && ast.index_id;
+    if (ast.args.alt === undefined) {
+      if (has_caption) {
+        alt_arg = undefined;
+      } else {
+        alt_arg = ast.args.src;
+      }
+    } else {
+      alt_arg = ast.args.alt;
+    }
+    let alt;
+    if (alt_arg === undefined) {
+      alt = '';
+    } else {
+      alt = html_attr('alt', html_escape_attr(convert_arg(alt_arg, context)));;
+    }
+    ret += content_func(ast, context, src, rendered_attrs, alt);
+    if (has_caption) {
+      ret += `<figcaption>${Macro.x_text(ast, context, {href_prefix: href_prefix})}${description}${source}</figcaption>\n`;
+    }
+    ret += '</figure>\n';
+    return ret;
+  };
+}
 
 // https://stackoverflow.com/questions/44447847/enums-in-javascript-with-es6/49709701#49709701
 function make_enum(arr) {
@@ -1570,7 +1645,7 @@ function parse(tokens, macros, options, extra_returns={}) {
           } else {
             const x_text_options = {
               show_caption_prefix: false,
-              style: XStyle.short,
+              style_full: false,
             };
             header_node_title = Macro.x_text(target_id_ast, id_context, x_text_options);
           }
@@ -2153,7 +2228,7 @@ function parse_macro(state) {
         state.token.type !== TokenType.POSITIONAL_ARGUMENT_END &&
         state.token.type !== TokenType.NAMED_ARGUMENT_END
       ) {
-        // The recursive case.
+        // The recursive case: the arguments are lists of macros, go into them.
         arg_children.push(parse_macro(state));
       }
       if (state.token.type !== closing_token(open_type)) {
@@ -2278,10 +2353,6 @@ const AstType = make_enum([
   // magic because of the double newline madness treatment.
   'PARAGRAPH',
 ]);
-const XStyle = make_enum([
-  'full',
-  'short',
-]);
 const TokenType = make_enum([
   'PLAINTEXT',
   'MACRO_NAME',
@@ -2292,6 +2363,28 @@ const TokenType = make_enum([
   'NAMED_ARGUMENT_END',
   'NAMED_ARGUMENT_NAME',
 ]);
+const MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS = [
+  new MacroArgument({
+    name: Macro.TITLE_ARGUMENT_NAME,
+  }),
+  new MacroArgument({
+    name: 'description',
+  }),
+  new MacroArgument({
+    name: 'source',
+    elide_link_only: true,
+  }),
+];
+const MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS = [
+  new MacroArgument({
+    name: 'src',
+    elide_link_only: true,
+    mandatory: true,
+  }),
+  new MacroArgument({
+    name: 'alt',
+  }),
+];
 const DEFAULT_MACRO_LIST = [
   new Macro(
     Macro.LINK_MACRO_NAME,
@@ -2427,7 +2520,7 @@ const DEFAULT_MACRO_LIST = [
         show_caption_prefix: false,
       };
       if (level_int === context.header_graph_top_level) {
-        x_text_options.style = XStyle.short;
+        x_text_options.style_full = false;
       }
       ret += Macro.x_text(ast, context, x_text_options);
       ret += `</a>`;
@@ -2468,7 +2561,7 @@ const DEFAULT_MACRO_LIST = [
           return header_tree_node.get_nested_number(context.header_graph_top_level);
         }
       },
-      x_style: XStyle.short,
+      x_style_full: false,
     }
   ),
   new Macro(
@@ -2581,83 +2674,42 @@ const DEFAULT_MACRO_LIST = [
   ),
   new Macro(
     'Image',
-    [
-      new MacroArgument({
-        name: 'src',
-        elide_link_only: true,
-        mandatory: true,
-      }),
-      new MacroArgument({
-        name: 'alt',
-      }),
-    ],
-    function(ast, context) {
-      let img_attrs = html_convert_attrs(ast, context, ['src']);
-      let figure_attrs = html_convert_attrs_id(ast, context);
-      let ret = `<figure${figure_attrs}>\n`
-      let href_prefix;
-      if (ast.id !== undefined) {
-        href_prefix = this.self_link(ast);
+    MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS,
+    macro_image_video_convert_function(function (ast, context, src, rendered_attrs, alt) {
+      return `<a${html_attr('href', src)}><img${rendered_attrs}${alt}></a>\n`;
+    }),
+    Object.assign(
+      {
+        caption_prefix: 'Figure',
+        id_prefix: 'fig',
+        named_args: MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS,
+      },
+    ),
+  ),
+  new Macro(
+    'Video',
+    MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS,
+    macro_image_video_convert_function(function (ast, context, src, rendered_attrs, alt) {
+      if ('youtube' in ast.args) {
+        return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${src}" ` +
+               `frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; ` +
+               `picture-in-picture" allowfullscreen></iframe>`;
       } else {
-        href_prefix = undefined;
+        return `<video${rendered_attrs} controls>${alt}</video>\n`;
       }
-      let description = convert_arg(ast.args.description, context);
-      if (description !== '') {
-        description = '. ' + description;
-      }
-      let source
-      if (ast.args.source === undefined) {
-        source = '';
-      } else {
-        source = `<a ${html_attr('href', convert_arg(ast.args.source, context))}>Source</a>.`;
-        if (description === '') {
-          source = '. ' + source;
-        } else {
-          source = ' ' + source;
-        }
-      }
-      let src = html_attr('href', convert_arg(ast.args.src, context));
-      let alt_arg;
-      const has_caption = ast.id !== undefined && ast.index_id;
-      if (ast.args.alt === undefined) {
-        if (has_caption) {
-          alt_arg = undefined;
-        } else {
-          alt_arg = ast.args.src;
-        }
-      } else {
-        alt_arg = ast.args.alt;
-      }
-      let alt;
-      if (alt_arg === undefined) {
-        alt = '';
-      } else {
-        alt = html_attr('alt', html_escape_attr(convert_arg(alt_arg, context)));;
-      }
-      ret += `<a${src}><img${img_attrs}${alt}>`;
-      ret += `</a>\n`;
-      if (has_caption) {
-        ret += `<figcaption>${Macro.x_text(ast, context, {href_prefix: href_prefix})}${description}${source}</figcaption>\n`;
-      }
-      ret += '</figure>\n';
-      return ret;
-    },
-    {
-      caption_prefix: 'Figure',
-      id_prefix: 'fig',
-      named_args: [
-        new MacroArgument({
-          name: Macro.TITLE_ARGUMENT_NAME,
-        }),
-        new MacroArgument({
-          name: 'description',
-        }),
-        new MacroArgument({
-          name: 'source',
-          elide_link_only: true,
-        }),
-      ],
-    }
+    }),
+    Object.assign(
+      {
+        caption_prefix: 'Video',
+        id_prefix: 'video',
+        named_args: MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS.concat(
+          new MacroArgument({
+            name: 'youtube',
+            boolean: true,
+          }),
+        ),
+      },
+    ),
   ),
   new Macro(
     'image',
@@ -2968,19 +3020,9 @@ const DEFAULT_MACRO_LIST = [
       if (content_arg === undefined) {
         let x_text_options = {
           caption_prefix_span: false,
-          style: context.macros[target_id_ast.macro_name].options.x_style,
+          style_full: 'full' in ast.args,
           quote: true,
         };
-        let style = ast.args.style;
-        if (style !== undefined) {
-          let style_string = convert_arg_noescape(style, context);
-          if (!(style_string in XStyle)) {
-            let message = `unkown x style: "${style_string}"`;
-            this.error(context, message, ast.args.style[0].line, ast.args.style[0].column);
-            return error_message_in_output(message, context);
-          }
-          x_text_options.style = XStyle[style_string];
-        }
         content = Macro.x_text(target_id_ast, context, x_text_options);
         if (content === ``) {
           let message = `empty cross reference body: "${target_id}"`;
@@ -2997,8 +3039,8 @@ const DEFAULT_MACRO_LIST = [
     {
       named_args: [
         new MacroArgument({
-          // TODO restrict to valid choices.
-          name: 'style',
+          name: 'full',
+          boolean: true,
         }),
       ],
       properties: {

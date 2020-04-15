@@ -675,16 +675,12 @@ assert_convert_ast('link with multiple paragraphs',
 );
 
 //// Cross references \x
-// TODO subfunction test
-//assert_convert_ast('cross reference simple',
-//  `\\h[1][My header]
-//
-//\\x[my-header][link body]
-//`,
-//  `<h1 id="my-header"><a href="#my-header">1. My header</a></h1>
-//<p><a href="#my-header">link body</a></p>
-//`
-//);
+assert_no_error('cross reference simple',
+  `\\h[1][My header]
+
+\\x[my-header][link body]
+`
+);
 //assert_convert_ast('cross reference auto default',
 //  `\\h[1][My header]
 //
@@ -694,22 +690,16 @@ assert_convert_ast('link with multiple paragraphs',
 //<p><a href="#my-header">My header</a></p>
 //`
 //);
-//assert_convert_ast('cross reference auto style full',
-//  `\\h[1][My header]
-//
-//\\x[my-header]{style=full}
-//`,
-//  `<h1 id="my-header"><a href="#my-header">1. My header</a></h1>
-//<p><a href="#my-header">Section 1. "My header"</a></p>
-//`
-//);
-assert_error('cross reference with unknown style',
+assert_no_error('cross reference full boolean style correct',
   `\\h[1][My header]
 
-\\x[my-header]{style=reserved_undefined}
-`,
-  3, 21
-);
+\\x[my-header]{full}
+`, 3, 21);
+assert_error('cross reference full boolean style with value',
+  `\\h[1][My header]
+
+\\x[my-header]{full=true}
+`, 3, 1);
 //assert_convert_ast('cross reference to image',
 //  `\\Image[ab]{id=cd}{title=ef}
 //
@@ -735,10 +725,10 @@ assert_error('cross reference with unknown style',
 //`
 //);
 assert_error('cross reference undefined', '\\x[ab]', 1, 4);
-assert_error('cross reference without content nor target title style short',
+assert_error('cross reference without content nor target title nor full style',
   `\\Image[ab]{id=cd}
 
-\\x[cd]{style=short}
+\\x[cd]
 `, 3, 1);
 
 //// Headers.
