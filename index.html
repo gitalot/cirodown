@@ -578,7 +578,7 @@ This exemplifies the following parameters:
 {id=fig-my-test-image-2}
 </code></pre><div class="p" id="p-348">which renders as:</div><blockquote id="q-26"><figure id="fig-my-test-image-2">
 <a href="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"></a>
-<figcaption><a href="#fig-my-test-image-2"><span class="caption-prefix">Figure 3</span></a></figcaption>
+<figcaption><a href="#fig-my-test-image-2"><span class="caption-prefix">Figure 3</span></a>. <a  href="">Source</a>.</figcaption>
 </figure>
 </blockquote>
 We must use <a href="#cross-reference-style"><code>full</code></a> here because otherwise the link text would be empty and not show at all.</div></div><div><span class="hide-hover"><a href="#p-110">🔗</a></span><div class="p" id="p-110">If the image has neither ID nor title, then it does not get a caption at all, and it is not possible to link to it with an <a href="#internal-cross-references">internal cross reference</a>, e.g.:
@@ -595,7 +595,7 @@ This link is of course not stable across document revisions however, since if an
 {id=fig-my-test-image-3}
 </code></pre><div class="p" id="p-350">which renders as:</div><blockquote id="q-28"><figure id="fig-my-test-image-3">
 <a href="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"></a>
-<figcaption><a href="#fig-my-test-image-3"><span class="caption-prefix">Figure 4</span></a></figcaption>
+<figcaption><a href="#fig-my-test-image-3"><span class="caption-prefix">Figure 4</span></a>. <a  href="">Source</a>.</figcaption>
 </figure>
 </blockquote></div></div><div><span class="hide-hover"><a href="#p-112">🔗</a></span><div class="p" id="p-112">And this is how you make an inline image inline one with lower case <code>i</code>:
 <pre id="c-65"><code>My inline \image[https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg][test image] is awesome.
@@ -619,7 +619,7 @@ Paragraph after.
 <div class="p" id="p-409">Paragraph after.</div></blockquote>
 Maybe we could improve this with some CSS styling, but generally when you want multiple paragraphs inside the image, you might instead be better off making an <a href="#internal-cross-file-references">internal cross reference</a> to the the image and adding your extended explanation outside.</div></div><div><span class="hide-hover"><a href="#p-114">🔗</a></span><div class="p" id="p-114">And now an image outside of <a href="#cirodown-example"><code>cirodown_example</code></a> to test how it looks directly under <a href="#toplevel">The <code>\toplevel</code> implicit macro</a>:</div></div><div><span class="hide-hover"><a href="#fig-my-test-image-toplevel">🔗</a></span><figure id="fig-my-test-image-toplevel">
 <a href="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"></a>
-<figcaption><a href="#fig-my-test-image-toplevel"><span class="caption-prefix">Figure 1</span></a></figcaption>
+<figcaption><a href="#fig-my-test-image-toplevel"><span class="caption-prefix">Figure 1</span></a>. <a  href="">Source</a>.</figcaption>
 </figure>
 </div><div><span class="hide-hover"><a href="#where-to-store-images">🔗</a></span><h3 id="where-to-store-images"><a href="#where-to-store-images" title="link to this element">8.1. Where to store images</a><span>  | <a href="#toc-where-to-store-images">⇑ toc</a> | <a href="#images">↑ parent "Images (<code>\Image</code> and <code>\image</code>)"</a></span></h3>
 </div><div><span class="hide-hover"><a href="#p-115">🔗</a></span><div class="p" id="p-115">If you are making a limited repository that will not have a ton of images, then you can get away with simply git tracking your images in the main repository.</div></div><div><span class="hide-hover"><a href="#p-116">🔗</a></span><div class="p" id="p-116">With this setup, no further action is needed. For example, with a file structure of:
@@ -698,7 +698,7 @@ Hello
 {id=sample-video-from-youtube}
 {title=Nice sample video embedded from YouTube}
 </code></pre><div class="p" id="p-358">which renders as:</div><blockquote id="q-36"><figure id="sample-video-from-youtube">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/YeFzeNAHEhU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><figcaption><a href="#sample-video-from-youtube"><span class="caption-prefix">Video 1</span></a>. Nice sample video embedded from YouTube</figcaption>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/YeFzeNAHEhU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><figcaption><a href="#sample-video-from-youtube"><span class="caption-prefix">Video 1</span></a>. Nice sample video embedded from YouTube. <a  href="https://youtube.com/watch?v=YeFzeNAHEhU">Source</a>.</figcaption>
 </figure>
 </blockquote>
 When this option is given, the Video address should only to contain the YouTube video ID, which shows in the YouTube URL for the video as:
@@ -1451,7 +1451,7 @@ In terms of HTML, the <code>\toplevel</code> element corresponds to the <code>&l
 <footer>
 <div>License: <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC-BY-SA 4.0</a> unless noted</div>
 <div>Website source code: <a href="https://github.com/cirosantilli/cirodown">https://github.com/cirosantilli/cirodown</a></div>
-<div>Website Git version: <a href="https://github.com/cirosantilli/cirodown/commit/59fbcedbeca15e542d7358cb7038db01f8426c5f">59fbcedbeca15e542d7358cb7038db01f8426c5f</a></div>
+<div>Website Git version: <a href="https://github.com/cirosantilli/cirodown/commit/d7442e44e22b99b46728a5b4151a52c21a095b32">d7442e44e22b99b46728a5b4151a52c21a095b32</a></div>
 </footer>
 <script>
 <!-- Google Analytics, AKA selling my soul to Google for some backlinks. -->
