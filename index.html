@@ -106,8 +106,8 @@
 <li><div id="toc-where-to-store-images"><a href="#where-to-store-images">8.1. Where to store images</a><span> | <a href="#toc-where-to-store-images">🔗 link</a> | <a href="#toc-images">↑ parent "Images (<code>\Image</code> and <code>\image</code>)"</a></span></div></li>
 <li><div id="toc-image-generators"><a href="#image-generators">8.2. Image generators</a><span> | <a href="#toc-image-generators">🔗 link</a> | <a href="#toc-images">↑ parent "Images (<code>\Image</code> and <code>\image</code>)"</a></span></div></li>
 </ul>
-<li><div id="toc-code"><a href="#code">9. Code <code>`</code>, <code>``</code>, <code>\c</code> and <code>\C</code></a><span> | <a href="#toc-code">🔗 link</a> | <a href="#toc-cirodown">↑ parent "Cirodown"</a></span></div></li>
-<li><div id="toc-videos"><a href="#videos">10. Videos (<code>\Video</code> and <code>\video</code>)</a><span> | <a href="#toc-videos">🔗 link</a> | <a href="#toc-cirodown">↑ parent "Cirodown"</a></span></div></li>
+<li><div id="toc-videos"><a href="#videos">9. Videos (<code>\Video</code> and <code>\video</code>)</a><span> | <a href="#toc-videos">🔗 link</a> | <a href="#toc-cirodown">↑ parent "Cirodown"</a></span></div></li>
+<li><div id="toc-code"><a href="#code">10. Code <code>`</code>, <code>``</code>, <code>\c</code> and <code>\C</code></a><span> | <a href="#toc-code">🔗 link</a> | <a href="#toc-cirodown">↑ parent "Cirodown"</a></span></div></li>
 <li><div id="toc-math"><a href="#math">11. Mathematics <code>$</code>, <code>$$</code>, <code>\m</code> and <code>\M</code></a><span> | <a href="#toc-math">🔗 link</a> | <a href="#toc-cirodown">↑ parent "Cirodown"</a></span></div>
 <ul>
 <li><div id="toc-math-defines-across-blocks"><a href="#math-defines-across-blocks">11.1. Math defines across blocks</a><span> | <a href="#toc-math-defines-across-blocks">🔗 link</a> | <a href="#toc-math">↑ parent "Mathematics <code>$</code>, <code>$$</code>, <code>\m</code> and <code>\M</code>"</a></span></div></li>
@@ -219,6 +219,8 @@ cd cirodown-test
 git init
 git remote add origin git@github.com:USERNAME/cirodown-test.git
 cirodown --generate
+git add .
+git commit -m 'First commit'
 cirodown --publish
 </code></pre>
 Or to start with a more complex template suitable for multifile projects use <a href="#generate-multifile">use <code>--generate-multifile</code></a> instead:
@@ -578,7 +580,7 @@ This exemplifies the following parameters:
 {id=fig-my-test-image-2}
 </code></pre><div class="p" id="p-348">which renders as:</div><blockquote id="q-26"><figure id="fig-my-test-image-2">
 <a href="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"></a>
-<figcaption><a href="#fig-my-test-image-2"><span class="caption-prefix">Figure 3</span></a>. <a  href="">Source</a>.</figcaption>
+<figcaption><a href="#fig-my-test-image-2"><span class="caption-prefix">Figure 3</span></a></figcaption>
 </figure>
 </blockquote>
 We must use <a href="#cross-reference-style"><code>full</code></a> here because otherwise the link text would be empty and not show at all.</div></div><div><span class="hide-hover"><a href="#p-110">🔗</a></span><div class="p" id="p-110">If the image has neither ID nor title, then it does not get a caption at all, and it is not possible to link to it with an <a href="#internal-cross-references">internal cross reference</a>, e.g.:
@@ -595,7 +597,7 @@ This link is of course not stable across document revisions however, since if an
 {id=fig-my-test-image-3}
 </code></pre><div class="p" id="p-350">which renders as:</div><blockquote id="q-28"><figure id="fig-my-test-image-3">
 <a href="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"></a>
-<figcaption><a href="#fig-my-test-image-3"><span class="caption-prefix">Figure 4</span></a>. <a  href="">Source</a>.</figcaption>
+<figcaption><a href="#fig-my-test-image-3"><span class="caption-prefix">Figure 4</span></a></figcaption>
 </figure>
 </blockquote></div></div><div><span class="hide-hover"><a href="#p-112">🔗</a></span><div class="p" id="p-112">And this is how you make an inline image inline one with lower case <code>i</code>:
 <pre id="c-65"><code>My inline \image[https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg][test image] is awesome.
@@ -619,7 +621,7 @@ Paragraph after.
 <div class="p" id="p-409">Paragraph after.</div></blockquote>
 Maybe we could improve this with some CSS styling, but generally when you want multiple paragraphs inside the image, you might instead be better off making an <a href="#internal-cross-file-references">internal cross reference</a> to the the image and adding your extended explanation outside.</div></div><div><span class="hide-hover"><a href="#p-114">🔗</a></span><div class="p" id="p-114">And now an image outside of <a href="#cirodown-example"><code>cirodown_example</code></a> to test how it looks directly under <a href="#toplevel">The <code>\toplevel</code> implicit macro</a>:</div></div><div><span class="hide-hover"><a href="#fig-my-test-image-toplevel">🔗</a></span><figure id="fig-my-test-image-toplevel">
 <a href="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"><img src="https://raw.githubusercontent.com/cirosantilli/media/master/Chrysanthemum_Xi_Jinping_with_black_red_liusi_added_by_Ciro_Santilli.jpg"></a>
-<figcaption><a href="#fig-my-test-image-toplevel"><span class="caption-prefix">Figure 1</span></a>. <a  href="">Source</a>.</figcaption>
+<figcaption><a href="#fig-my-test-image-toplevel"><span class="caption-prefix">Figure 1</span></a></figcaption>
 </figure>
 </div><div><span class="hide-hover"><a href="#where-to-store-images">🔗</a></span><h3 id="where-to-store-images"><a href="#where-to-store-images" title="link to this element">8.1. Where to store images</a><span>  | <a href="#toc-where-to-store-images">⇑ toc</a> | <a href="#images">↑ parent "Images (<code>\Image</code> and <code>\image</code>)"</a></span></h3>
 </div><div><span class="hide-hover"><a href="#p-115">🔗</a></span><div class="p" id="p-115">If you are making a limited repository that will not have a ton of images, then you can get away with simply git tracking your images in the main repository.</div></div><div><span class="hide-hover"><a href="#p-116">🔗</a></span><div class="p" id="p-116">With this setup, no further action is needed. For example, with a file structure of:
@@ -642,33 +644,53 @@ The name <code>*-media</code> suffix is not mandatory, but if you use this defau
 </code></pre></div></div><div><span class="hide-hover"><a href="#p-122">🔗</a></span><div class="p" id="p-122"><code>cirodown</code> will even automatically add and push used images in the <code>my-tutorial-media</code> repository for you during publishing!</div></div><div><span class="hide-hover"><a href="#p-123">🔗</a></span><div class="p" id="p-123">You should then use the following rules inside <code>my-tutorial-media</code>:
 <div><ul id="ul-25">
 <li id="l-77">give every file a very descriptive and unique name as a full English sentence</li><li id="l-78">never ever delete any files, nor change their content, unless it is an improvement in format that does change the information contained of the image TODO link to nice Wikimedia Commons guideline page</li></ul></div></div></div><div><span class="hide-hover"><a href="#p-124">🔗</a></span><div class="p" id="p-124">This way, even though the repositories are not fully in sync, anyone who clones the latest version of the <code>*-media</code> directory will be able to view any version of the main repository.</div></div><div><span class="hide-hover"><a href="#p-125">🔗</a></span><div class="p" id="p-125">Then, if one day the media repository ever blows up GitHub's limit, you can just migrate the images to another image server that allows arbitrary basenames, e.g. AWS, and just configure your project to use that new media base URL with the <a href="#media-base-url"><code>media_base_url</code></a> option.</div></div><div><span class="hide-hover"><a href="#p-126">🔗</a></span><div class="p" id="p-126">The reason why images should be kept in a separate repository is that images are hundreds or thousands of times larger than hand written text.</div></div><div><span class="hide-hover"><a href="#p-127">🔗</a></span><div class="p" id="p-127">Therefore, images could easily fill up the maximum repository size you are allowed: <a href="https://webapps.stackexchange.com/questions/45254/file-size-and-storage-limits-on-github#84746">https://webapps.stackexchange.com/questions/45254/file-size-and-storage-limits-on-github#84746</a> and then what will you do when GitHub comes asking you to reduce the repository size?</div></div><div><span class="hide-hover"><a href="#p-128">🔗</a></span><div class="p" id="p-128"><a href="https://git-lfs.github.com/">Git LFS</a> is one approach to deal with this, but we feel that it adds too much development overhead.</div></div><div><span class="hide-hover"><a href="#image-generators">🔗</a></span><h3 id="image-generators"><a href="#image-generators" title="link to this element">8.2. Image generators</a><span>  | <a href="#toc-image-generators">⇑ toc</a> | <a href="#images">↑ parent "Images (<code>\Image</code> and <code>\image</code>)"</a></span></h3>
-</div><div><span class="hide-hover"><a href="#p-129">🔗</a></span><div class="p" id="p-129">TODO implement: mechanism where you enter a textual description of the image inside the code body, and it then converts to an image, adds to the <code>-media</code> repo and pushes all automatically. Start with dot.</div></div><div><span class="hide-hover"><a href="#code">🔗</a></span><h2 id="code"><a href="#code" title="link to this element">9. Code <code>`</code>, <code>``</code>, <code>\c</code> and <code>\C</code></a><span>  | <a href="#toc-code">⇑ toc</a> | <a href="#cirodown">↑ parent "Cirodown"</a></span></h2>
-</div><div><span class="hide-hover"><a href="#p-130">🔗</a></span><div class="p" id="p-130">Inline code (code that should appear in the middle of a paragraph rather than on its own line) is done with a single backtick (<code>`</code>) <a href="#insane-macro-shortcuts">insane macro shortcut</a>:
-<pre id="c-72"><code>My inline `x = 'hello\n'` is awesome.
-</code></pre><div class="p" id="p-353">which renders as:</div><blockquote id="q-31"><div class="p" id="p-410">My inline <code>x = 'hello\n'</code> is awesome.</div></blockquote>
+</div><div><span class="hide-hover"><a href="#p-129">🔗</a></span><div class="p" id="p-129">TODO implement: mechanism where you enter a textual description of the image inside the code body, and it then converts to an image, adds to the <code>-media</code> repo and pushes all automatically. Start with dot.</div></div><div><span class="hide-hover"><a href="#videos">🔗</a></span><h2 id="videos"><a href="#videos" title="link to this element">9. Videos (<code>\Video</code> and <code>\video</code>)</a><span>  | <a href="#toc-videos">⇑ toc</a> | <a href="#cirodown">↑ parent "Cirodown"</a></span></h2>
+</div><div><span class="hide-hover"><a href="#p-130">🔗</a></span><div class="p" id="p-130">Very analogous to <a href="#images">Images (<code>\Image</code> and <code>\image</code>)</a>, only differences will be documented here.</div></div><div><span class="hide-hover"><a href="#p-131">🔗</a></span><div class="p" id="p-131">First, <a href="#where-to-store-images">Where to store images</a> becomes even more critical here since videos are even larger than images. Arguably, the only reasonable option is to sell your soul to YouTube with the <code>youtube</code> <a href="#boolean-named-arguments">boolean named argument</a>. Here is an example: <a href="#sample-video-from-youtube">Nice sample video embedded from YouTube</a>.
+<pre id="c-72"><code>\Video[YeFzeNAHEhU]{youtube}
+{id=sample-video-from-youtube}
+{title=Nice sample video embedded from YouTube}
+</code></pre><div class="p" id="p-353">which renders as:</div><blockquote id="q-31"><figure id="sample-video-from-youtube">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/YeFzeNAHEhU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><figcaption><a href="#sample-video-from-youtube"><span class="caption-prefix">Video 1</span></a>. Nice sample video embedded from YouTube. <a  href="https://youtube.com/watch?v=YeFzeNAHEhU">Source</a>.</figcaption>
+</figure>
+</blockquote>
+When this option is given, the Video address should only to contain the YouTube video ID, which shows in the YouTube URL for the video as:
+<pre id="c-73"><code>https://www.youtube.com/watch?v=&lt;video-id&gt;
+</code></pre></div></div><div><span class="hide-hover"><a href="#p-132">🔗</a></span><div class="p" id="p-132">But you can also use raw video files from any location that can serve them of course, e.g. here is one stored in this repository: <a href="#sample-video-in-repository">Nice sample video stored in this repository</a>.
+<pre id="c-74"><code>\Video[video.mp4]
+{id=sample-video-in-repository}
+{title=Nice sample video stored in this repository}
+{source=https://www.youtube.com/watch?v=YeFzeNAHEhU}
+</code></pre><div class="p" id="p-354">which renders as:</div><blockquote id="q-32"><figure id="sample-video-in-repository">
+<video src="video.mp4" controls></video>
+<figcaption><a href="#sample-video-in-repository"><span class="caption-prefix">Video 2</span></a>. Nice sample video stored in this repository. <a  href="https://www.youtube.com/watch?v=YeFzeNAHEhU">Source</a>.</figcaption>
+</figure>
+</blockquote></div></div><div><span class="hide-hover"><a href="#code">🔗</a></span><h2 id="code"><a href="#code" title="link to this element">10. Code <code>`</code>, <code>``</code>, <code>\c</code> and <code>\C</code></a><span>  | <a href="#toc-code">⇑ toc</a> | <a href="#cirodown">↑ parent "Cirodown"</a></span></h2>
+</div><div><span class="hide-hover"><a href="#p-133">🔗</a></span><div class="p" id="p-133">Inline code (code that should appear in the middle of a paragraph rather than on its own line) is done with a single backtick (<code>`</code>) <a href="#insane-macro-shortcuts">insane macro shortcut</a>:
+<pre id="c-75"><code>My inline `x = 'hello\n'` is awesome.
+</code></pre><div class="p" id="p-355">which renders as:</div><blockquote id="q-33"><div class="p" id="p-410">My inline <code>x = 'hello\n'</code> is awesome.</div></blockquote>
 and block code (code that should appear on their own line) is done with two or more backticks (<code>``</code>):
-<pre id="c-73"><code>``
+<pre id="c-76"><code>``
 f() {
   return 'hello\n';
 }
 ``
-</code></pre><div class="p" id="p-354">which renders as:</div><blockquote id="q-32"><pre id="c-164"><code>f() {
+</code></pre><div class="p" id="p-356">which renders as:</div><blockquote id="q-34"><pre id="c-164"><code>f() {
   return 'hello\n';
 }
-</code></pre></blockquote></div></div><div><span class="hide-hover"><a href="#p-131">🔗</a></span><div class="p" id="p-131">The sane version of inline code is a lower case <code>c</code>:
-<pre id="c-74"><code>My inline \c[[x = 'hello\n']] is awesome.
-</code></pre><div class="p" id="p-355">which renders as:</div><blockquote id="q-33"><div class="p" id="p-411">My inline <code>x = 'hello\n'</code> is awesome.</div></blockquote>
+</code></pre></blockquote></div></div><div><span class="hide-hover"><a href="#p-134">🔗</a></span><div class="p" id="p-134">The sane version of inline code is a lower case <code>c</code>:
+<pre id="c-77"><code>My inline \c[[x = 'hello\n']] is awesome.
+</code></pre><div class="p" id="p-357">which renders as:</div><blockquote id="q-35"><div class="p" id="p-411">My inline <code>x = 'hello\n'</code> is awesome.</div></blockquote>
 and the sane version of block math is with an upper case <code>C</code>:
-<pre id="c-75"><code>\C[[
+<pre id="c-78"><code>\C[[
 f() {
   return 'hello\n';
 }
 ]]
-</code></pre><div class="p" id="p-356">which renders as:</div><blockquote id="q-34"><pre id="c-165"><code>f() {
+</code></pre><div class="p" id="p-358">which renders as:</div><blockquote id="q-36"><pre id="c-165"><code>f() {
   return 'hello\n';
 }
-</code></pre></blockquote></div></div><div><span class="hide-hover"><a href="#p-132">🔗</a></span><div class="p" id="p-132">The capital vs lower case theme is also used in other elements, see: <a href="#macro-capitalization-for-block-vs-inline">Macro capitalization for block vs inline</a>.</div></div><div><span class="hide-hover"><a href="#p-133">🔗</a></span><div class="p" id="p-133">If the content of the sane code block has many characters that you would need to <a href="#escape-characters">escape</a>, you will often want to use <a href="#literal-arguments">Literal arguments (<code>[[...]]</code> and <code>{{key=...}}</code>)</a>, which work just like the do for any other argument. For example:
-<pre id="c-76"><code>\C[[[
+</code></pre></blockquote></div></div><div><span class="hide-hover"><a href="#p-135">🔗</a></span><div class="p" id="p-135">The capital vs lower case theme is also used in other elements, see: <a href="#macro-capitalization-for-block-vs-inline">Macro capitalization for block vs inline</a>.</div></div><div><span class="hide-hover"><a href="#p-136">🔗</a></span><div class="p" id="p-136">If the content of the sane code block has many characters that you would need to <a href="#escape-characters">escape</a>, you will often want to use <a href="#literal-arguments">Literal arguments (<code>[[...]]</code> and <code>{{key=...}}</code>)</a>, which work just like the do for any other argument. For example:
+<pre id="c-79"><code>\C[[[
 A paragraph.
 
 \C[[
@@ -679,7 +701,7 @@ of chars that you would need to escape:
 
 A paragraph.
 ]]]
-</code></pre><div class="p" id="p-357">which renders as:</div><blockquote id="q-35"><pre id="c-166"><code>A paragraph.
+</code></pre><div class="p" id="p-359">which renders as:</div><blockquote id="q-37"><pre id="c-166"><code>A paragraph.
 
 \C[[
 And now, some long, long code, with lots
@@ -689,30 +711,10 @@ of chars that you would need to escape:
 
 A paragraph.
 </code></pre></blockquote>
-Note that the initial newline is skipped automatically in code blocks, just as for any other element, due to: <a href="#argument-leading-newline-removal">Argument leading newline removal</a>, so you don't have to worry about it.</div></div><div><span class="hide-hover"><a href="#p-134">🔗</a></span><div class="p" id="p-134">The distinction between inline <code>c</code> and block <code>C</code> code blocks is needed because in HTML, <a href="https://stackoverflow.com/questions/5371787/can-i-have-a-pre-tag-inside-a-p-tag-in-tumblr/58603596#58603596"><code>pre</code> cannot go inside <code>p</code></a>.</div></div><div><span class="hide-hover"><a href="#p-135">🔗</a></span><div class="p" id="p-135">We could have chosen to do some magic to differentiate between them, e.g. checking if the block is the only element in a paragraph, but we decided not to do that to keep the language saner.</div></div><div><span class="hide-hover"><a href="#p-136">🔗</a></span><div class="p" id="p-136">And now a code block outside of <a href="#cirodown-example"><code>cirodown_example</code></a> to test how it looks directly under <a href="#toplevel">The <code>\toplevel</code> implicit macro</a>:</div></div><div><span class="hide-hover"><a href="#c-1">🔗</a></span><pre id="c-1"><code>Hello
+Note that the initial newline is skipped automatically in code blocks, just as for any other element, due to: <a href="#argument-leading-newline-removal">Argument leading newline removal</a>, so you don't have to worry about it.</div></div><div><span class="hide-hover"><a href="#p-137">🔗</a></span><div class="p" id="p-137">The distinction between inline <code>c</code> and block <code>C</code> code blocks is needed because in HTML, <a href="https://stackoverflow.com/questions/5371787/can-i-have-a-pre-tag-inside-a-p-tag-in-tumblr/58603596#58603596"><code>pre</code> cannot go inside <code>p</code></a>.</div></div><div><span class="hide-hover"><a href="#p-138">🔗</a></span><div class="p" id="p-138">We could have chosen to do some magic to differentiate between them, e.g. checking if the block is the only element in a paragraph, but we decided not to do that to keep the language saner.</div></div><div><span class="hide-hover"><a href="#p-139">🔗</a></span><div class="p" id="p-139">And now a code block outside of <a href="#cirodown-example"><code>cirodown_example</code></a> to test how it looks directly under <a href="#toplevel">The <code>\toplevel</code> implicit macro</a>:</div></div><div><span class="hide-hover"><a href="#c-1">🔗</a></span><pre id="c-1"><code>Hello
 Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello Hello
 Hello
-</code></pre></div><div><span class="hide-hover"><a href="#videos">🔗</a></span><h2 id="videos"><a href="#videos" title="link to this element">10. Videos (<code>\Video</code> and <code>\video</code>)</a><span>  | <a href="#toc-videos">⇑ toc</a> | <a href="#cirodown">↑ parent "Cirodown"</a></span></h2>
-</div><div><span class="hide-hover"><a href="#p-137">🔗</a></span><div class="p" id="p-137">Very analogous to <a href="#images">Images (<code>\Image</code> and <code>\image</code>)</a>, only differences will be documented here.</div></div><div><span class="hide-hover"><a href="#p-138">🔗</a></span><div class="p" id="p-138">First, <a href="#where-to-store-images">Where to store images</a> becomes even more critical here since videos are even larger than images. Arguably, the only reasonable option is to sell your soul to YouTube with the <code>youtube</code> <a href="#boolean-named-arguments">boolean named argument</a>. Here is an example: <a href="#sample-video-from-youtube">Nice sample video embedded from YouTube</a>.
-<pre id="c-77"><code>\Video[YeFzeNAHEhU]{youtube}
-{id=sample-video-from-youtube}
-{title=Nice sample video embedded from YouTube}
-</code></pre><div class="p" id="p-358">which renders as:</div><blockquote id="q-36"><figure id="sample-video-from-youtube">
-<iframe width="560" height="315" src="https://www.youtube.com/embed/YeFzeNAHEhU" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe><figcaption><a href="#sample-video-from-youtube"><span class="caption-prefix">Video 1</span></a>. Nice sample video embedded from YouTube. <a  href="https://youtube.com/watch?v=YeFzeNAHEhU">Source</a>.</figcaption>
-</figure>
-</blockquote>
-When this option is given, the Video address should only to contain the YouTube video ID, which shows in the YouTube URL for the video as:
-<pre id="c-78"><code>https://www.youtube.com/watch?v=&lt;video-id&gt;
-</code></pre></div></div><div><span class="hide-hover"><a href="#p-139">🔗</a></span><div class="p" id="p-139">But you can also use raw video files from any location that can serve them of course, e.g. here is one stored in this repository: <a href="#sample-video-in-repository">Nice sample video stored in this repository</a>.
-<pre id="c-79"><code>\Video[video.mp4]
-{id=sample-video-in-repository}
-{title=Nice sample video stored in this repository}
-{source=https://www.youtube.com/watch?v=YeFzeNAHEhU}
-</code></pre><div class="p" id="p-359">which renders as:</div><blockquote id="q-37"><figure id="sample-video-in-repository">
-<video src="video.mp4" controls></video>
-<figcaption><a href="#sample-video-in-repository"><span class="caption-prefix">Video 2</span></a>. Nice sample video stored in this repository. <a  href="https://www.youtube.com/watch?v=YeFzeNAHEhU">Source</a>.</figcaption>
-</figure>
-</blockquote></div></div><div><span class="hide-hover"><a href="#math">🔗</a></span><h2 id="math"><a href="#math" title="link to this element">11. Mathematics <code>$</code>, <code>$$</code>, <code>\m</code> and <code>\M</code></a><span>  | <a href="#toc-math">⇑ toc</a> | <a href="#cirodown">↑ parent "Cirodown"</a></span></h2>
+</code></pre></div><div><span class="hide-hover"><a href="#math">🔗</a></span><h2 id="math"><a href="#math" title="link to this element">11. Mathematics <code>$</code>, <code>$$</code>, <code>\m</code> and <code>\M</code></a><span>  | <a href="#toc-math">⇑ toc</a> | <a href="#cirodown">↑ parent "Cirodown"</a></span></h2>
 </div><div><span class="hide-hover"><a href="#p-140">🔗</a></span><div class="p" id="p-140">Via <a href="https://katex.org/">KaTeX</a> server side, oh yes!</div></div><div><span class="hide-hover"><a href="#p-141">🔗</a></span><div class="p" id="p-141">Inline math is done with the dollar sign (<code>$</code>) <a href="#insane-macro-shortcuts">insane macro shortcut</a>:
 <pre id="c-80"><code>My inline $\sqrt{1 + 1}$ is awesome.
 </code></pre><div class="p" id="p-360">which renders as:</div><blockquote id="q-38"><div class="p" id="p-412">My inline <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msqrt><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow></msqrt></mrow><annotation encoding="application/x-tex">\sqrt{1 + 1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.04em;vertical-align:-0.17444499999999996em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8655550000000001em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord" style="padding-left:0.833em;"><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord">1</span></span></span><span style="top:-2.825555em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg width='400em' height='1.08em' viewBox='0 0 400000 1080' preserveAspectRatio='xMinYMin slice'><path d='M95,702
@@ -1451,7 +1453,7 @@ In terms of HTML, the <code>\toplevel</code> element corresponds to the <code>&l
 <footer>
 <div>License: <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC-BY-SA 4.0</a> unless noted</div>
 <div>Website source code: <a href="https://github.com/cirosantilli/cirodown">https://github.com/cirosantilli/cirodown</a></div>
-<div>Website Git version: <a href="https://github.com/cirosantilli/cirodown/commit/23352f2b15a70596626b3e3963a077afbc2ea3ce">23352f2b15a70596626b3e3963a077afbc2ea3ce</a></div>
+<div>Website Git version: <a href="https://github.com/cirosantilli/cirodown/commit/bbd1b4087b77af3e0629018d1e03c59e8f7eac52">bbd1b4087b77af3e0629018d1e03c59e8f7eac52</a></div>
 </footer>
 <script>
 <!-- Google Analytics, AKA selling my soul to Google for some backlinks. -->
