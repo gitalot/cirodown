@@ -13,7 +13,7 @@ class AstNode {
    *                                AstType.PLAINTEXT_MACRO_NAME
    *                              - elif node_type === AstType.PARAGRAPH: fixed to undefined
    *                              - else: arbitrary regular macro
-   * @param {Object[String, Array[AstNode]]} args - dict of arg names to arguments.
+   * @param {Object[String, AstArgument]} args - dict of arg names to arguments.
    *        where arguments are arrays of AstNode
    * @param {Number} line - the best representation of where the macro is starts in the document
    *                        used primarily to present useful debug messages
@@ -98,7 +98,7 @@ class AstNode {
    *        - {TreeNode} header_graph - TreeNode graph containing AstNode headers
    *        - {Object} ids - map of document IDs to their description:
    *                 - 'prefix': prefix to add if style_full, e.g. `Figure 1`, `Section 2`, etc.
-   *                 - {List[AstNode]} 'title': the title of the element linked to
+   *                 - {AstArgument} 'title': the title of the element linked to
    * @param {Object} context
    */
   convert(context) {
@@ -121,34 +121,64 @@ class AstNode {
       context.katex_macros = {};
     }
     if (!('macros' in context)) {
-      throw new Error('contenxt does not have a mandatory .macros property');
+      throw new Error('context does not have a mandatory .macros property');
     }
     const macro = context.macros[this.macro_name];
     let out;
+    // Make a shallow copy because we can set default argument values here.
+    let effective_this = Object.assign({}, this);
+    effective_this.args = Object.assign({}, this.args);
 
     // Do some error checking. If no errors are found, convert normally. Save output on out.
     {
       let error_message = undefined;
       const name_to_arg = macro.name_to_arg;
+      const validation_output = {};
       for (const argname in name_to_arg) {
         const macro_arg = name_to_arg[argname];
-        if (macro_arg.mandatory && !(argname in this.args)) {
-          error_message = `missing mandatory argument ${argname} of ${this.macro_name}`;
-          break;
-        }
-        if (macro_arg.boolean && (argname in this.args)) {
-          const arg = this.args[argname];
-          if (arg.length > 0) {
-            error_message = `boolean arguments like "${argname}" of "${this.macro_name}" cannot have values, use just "{${argname}}" instead`;
+        if (!(argname in effective_this.args)) {
+          if (macro_arg.mandatory) {
+            error_message = [
+              `missing mandatory argument ${argname} of ${effective_this.macro_name}`,
+              effective_this.line, this.column];
             break;
+          }
+          if (macro_arg.default !== undefined) {
+            effective_this.args[argname] = new AstArgument([new PlaintextAstNode(this.line, this.column, macro_arg.default)]);
+          }
+        }
+      }
+      for (const argname in name_to_arg) {
+        validation_output[argname] = {};
+        const macro_arg = name_to_arg[argname];
+        if (argname in effective_this.args) {
+          const arg = effective_this.args[argname];
+          if (macro_arg.boolean) {
+            if (arg.length > 0) {
+              error_message = [
+                `boolean arguments like "${argname}" of "${effective_this.macro_name}" cannot have values, use just "{${argname}}" instead`,
+                arg.line, arg.column];
+              break;
+            }
+          }
+          if (macro_arg.positive_nonzero_integer) {
+            const arg_string = convert_arg_noescape(arg, context);
+            const int_value = parseInt(arg_string);
+            validation_output[argname]['positive_nonzero_integer'] = int_value;
+            if (!Number.isInteger(int_value) || !(int_value > 0)) {
+              error_message = [
+                `argument "${argname}" of macro "${effective_this.macro_name}" must be a positive non-zero integer, got: "${arg_string}"`,
+                arg.line, arg.column];
+              break;
+            }
           }
         }
       }
       if (error_message === undefined) {
-        out = macro.convert(this, context);
+        out = macro.convert(effective_this, context, validation_output);
       } else {
-        macro.error(context, error_message, this.line, this.column);
-        out = error_message_in_output(error_message, context);
+        macro.error(context, error_message[0], error_message[1], error_message[2]);
+        out = error_message_in_output(error_message[0], context);
       }
     }
 
@@ -204,6 +234,21 @@ class AstNode {
   }
 }
 exports.AstNode = AstNode;
+
+class AstArgument extends Array {
+  constructor(nodes, line, column) {
+    super(...nodes)
+    this.line = line;
+    this.column = column;
+  }
+
+  // https://stackoverflow.com/questions/3261587/subclassing-javascript-arrays-typeerror-array-prototype-tostring-is-not-generi/61269027#61269027
+  static get [Symbol.species]() {
+    return Object.assign(function (...items) {
+      return new AstArgument(new Array(...items))
+    }, AstArgument);
+  }
+}
 
 class ErrorMessage {
   constructor(message, line, column) {
@@ -337,18 +382,27 @@ class MacroArgument {
       // https://cirosantilli.com/cirodown#boolean-named-arguments
       options.boolean = false;
     }
+    if (!('default' in options)) {
+      // https://cirosantilli.com/cirodown#boolean-named-arguments
+      options.default = undefined;
+    }
     if (!('mandatory' in options)) {
       // https://cirosantilli.com/cirodown#mandatory-positional-arguments
       options.mandatory = false;
+    }
+    if (!('positive_nonzero_integer' in options)) {
+      options.positive_nonzero_integer = false;
     }
     if (!('remove_whitespace_children' in options)) {
       // https://cirosantilli.com/cirodown#remove_whitespace_children
       options.remove_whitespace_children = false;
     }
     this.boolean = options.boolean;
+    this.default = options.default;
     this.elide_link_only = options.elide_link_only;
     this.mandatory = options.mandatory;
     this.name = options.name;
+    this.positive_nonzero_integer = options.positive_nonzero_integer;
     this.remove_whitespace_children = options.remove_whitespace_children;
   }
 }
@@ -389,6 +443,9 @@ class Macro {
     if (!('caption_prefix' in options)) {
       options.caption_prefix = capitalize_first_letter(name);
     }
+    if (!('default_x_style_full' in options)) {
+      options.default_x_style_full = true;
+    }
     if (!('get_number' in options)) {
       options.get_number = function(ast, context) { return ast.macro_count_indexed; }
     }
@@ -403,14 +460,11 @@ class Macro {
     if (!('named_args' in options)) {
       options.named_args = [];
     }
-    if (!('properties' in options)) {
-      options.properties = {};
+    if (!('phrasing' in options)) {
+      options.phrasing = false;
     }
     if (!('toplevel_link' in options)) {
       options.toplevel_link = true;
-    }
-    if (!('x_style_full' in options)) {
-      options.x_style_full = true;
     }
     this.name = name;
     this.positional_args = positional_args;
@@ -423,15 +477,11 @@ class Macro {
     }
     this.auto_parent = options.auto_parent;
     this.auto_parent_skip = options.auto_parent_skip;
-    this.remove_whitespace_children = options.remove_whitespace_children;
     this.convert = convert;
-    this.options = options;
     this.id_prefix = options.id_prefix;
-    this.properties = options.properties;
+    this.options = options;
+    this.remove_whitespace_children = options.remove_whitespace_children;
     this.toplevel_link = options.toplevel_link;
-    if (!('phrasing' in this.properties)) {
-      this.properties['phrasing'] = false;
-    }
     this.name_to_arg = {};
     for (const arg of this.positional_args) {
       let name = arg.name;
@@ -447,6 +497,7 @@ class Macro {
       name: Macro.ID_ARGUMENT_NAME,
     })
     this.name_to_arg[Macro.ID_ARGUMENT_NAME] = this.named_args[Macro.ID_ARGUMENT_NAME];
+    delete this.options.named_args;
   }
 
   check_name(name) {
@@ -477,7 +528,7 @@ class Macro {
       // It uses Unicode char hacks to add underlines... and there are two trailing
       // chars after the final newline, so the error message is taking up two lines
       let message = error.toString().replace(/\n\xcc\xb2$/, '');
-      this.error(context, message, ast.args.content[0].line, ast.args.content[0].column);
+      this.error(context, message, ast.args.content.line, ast.args.content.column);
       return error_message_in_output(message, context);
     }
   }
@@ -487,11 +538,16 @@ class Macro {
   }
 
   toJSON() {
+    const options = this.options;
+    const ordered_options = {};
+    Object.keys(options).sort().forEach(function(key) {
+      ordered_options[key] = options[key];
+    });
     return {
       name: this.name,
+      options: ordered_options,
       positional_args: this.positional_args,
       named_args: this.named_args,
-      properties: this.properties,
     }
   }
 
@@ -519,12 +575,16 @@ class Macro {
     if (!('show_caption_prefix' in options)) {
       options.show_caption_prefix = true;
     }
-    if (!('style_full' in options)) {
-      options.style_full = true;
+    const macro = context.macros[ast.macro_name];
+    let style_full;
+    if ('style_full' in options) {
+      style_full = options.style_full;
+    } else {
+      style_full = macro.options.default_x_style_full;
     }
     let ret = ``;
     let number;
-    if (options.style_full) {
+    if (style_full) {
       if (options.href_prefix !== undefined) {
         ret += `<a${options.href_prefix}>`
       }
@@ -532,9 +592,9 @@ class Macro {
         if (options.caption_prefix_span) {
           ret += `<span class="caption-prefix">`;
         }
-        ret += `${context.macros[ast.macro_name].options.caption_prefix} `;
+        ret += `${macro.options.caption_prefix} `;
       }
-      number = context.macros[ast.macro_name].options.get_number(ast, context);
+      number = macro.options.get_number(ast, context);
       if (number !== undefined) {
         ret += number;
       }
@@ -546,7 +606,7 @@ class Macro {
       }
     }
     if (Macro.TITLE_ARGUMENT_NAME in ast.args) {
-      if (options.style_full) {
+      if (style_full) {
         if (number !== undefined) {
           ret += html_escape_context(context, `. `);
         }
@@ -554,7 +614,7 @@ class Macro {
           ret += html_escape_context(context, `"`);
       }
       ret += convert_arg(ast.args[Macro.TITLE_ARGUMENT_NAME], context);
-      if (options.style_full && options.quote) {
+      if (style_full && options.quote) {
         ret += html_escape_context(context, `"`);
       }
     }
@@ -1223,7 +1283,7 @@ exports.convert = convert;
  * An argument contains a list of nodes, loop over that list of nodes,
  * converting them to strings and concatenate all strings.
  *
- * @param {Array[AstNode]} arg
+ * @param {AstArgument} arg
  * @return {String}
  */
 function convert_arg(arg, context) {
@@ -1241,14 +1301,14 @@ function convert_arg(arg, context) {
  * Because IDs are used programmatically in cirodown, we don't escape
  * HTML characters at this point.
  *
- * @param {Array[AstNode]} arg
+ * @param {AstArgument} arg
  * @return {String}
  */
 function convert_arg_noescape(arg, context={}) {
   return convert_arg(arg, clone_and_set(context, 'html_escape', false));
 }
 
-/** @return {Array[AstNode]} */
+/** @return {AstArgument} */
 function convert_include(input_string, options, cur_header_level, href, start_line) {
   const include_options = Object.assign({}, options);
   include_options.from_include = true;
@@ -1289,7 +1349,7 @@ function error_message_in_output(msg, context) {
   e.g. with html_attr_value.
  *
  * @param {String} key
- * @param {Array[AstNode]} arg
+ * @param {AstArgument} arg
  * @return {String} - of form ' a="b"' (with a leading space)
  */
 function html_attr(key, value) {
@@ -1298,7 +1358,7 @@ function html_attr(key, value) {
 
 /** Convert an argument to an HTML attribute value.
  *
- * @param {Array[AstNode]} arg
+ * @param {AstArgument} arg
  * @param {Object} context
  * @return {String}
  */
@@ -1467,23 +1527,31 @@ function html_elem(tag, content) {
   return `<${tag}>${content}</${tag}>`;
 }
 
+/**
+ * @return {Object} dict of macro name to macro
+ */
 function macro_list_to_macros() {
   const macros = {};
-  for (const macro of DEFAULT_MACRO_LIST) {
+  for (const macro of macro_list()) {
     macros[macro.name] = macro;
   }
   return macros;
 }
-exports.macro_list_to_macros = macro_list_to_macros;
 
-function macro_image_video_convert_function(content_func, source_func) {
+/** At some point we will generalize this to on-the-fly macro definitions. */
+function macro_list() {
+  return DEFAULT_MACRO_LIST;
+}
+exports.macro_list = macro_list;
+
+function macro_image_video_block_convert_function(content_func, source_func) {
   if (source_func === undefined) {
     source_func = function(ast, context, src) {
       return convert_arg(ast.args.source, context);
     }
   }
-  return function(ast, context) {
-    let rendered_attrs = html_convert_attrs(ast, context, ['src']);
+  return function(ast, context, validation_output) {
+    let rendered_attrs = html_convert_attrs(ast, context, ['height', 'width']);
     let figure_attrs = html_convert_attrs_id(ast, context);
     let ret = `<figure${figure_attrs}>\n`
     let href_prefix;
@@ -1497,7 +1565,7 @@ function macro_image_video_convert_function(content_func, source_func) {
       description = '. ' + description;
     }
     let src = convert_arg(ast.args.src, context);
-    let source = source_func(ast, context, src);
+    let source = source_func(ast, context, validation_output, src);
     if (source !== '') {
       source = `<a ${html_attr('href', source)}>Source</a>.`;
       if (description === '') {
@@ -1523,7 +1591,7 @@ function macro_image_video_convert_function(content_func, source_func) {
     } else {
       alt = html_attr('alt', html_escape_attr(convert_arg(alt_arg, context)));;
     }
-    ret += content_func(ast, context, src, rendered_attrs, alt);
+    ret += content_func(ast, context, validation_output, src, rendered_attrs, alt);
     if (has_caption) {
       ret += `<figcaption>${Macro.x_text(ast, context, {href_prefix: href_prefix})}${description}${source}</figcaption>\n`;
     }
@@ -1585,7 +1653,7 @@ function parse(tokens, macros, options, extra_returns={}) {
   // but let's not complicate that further either, shall we?
   let cur_header;
   let cur_header_level;
-  let toplevel_parent_arg = []
+  let toplevel_parent_arg = new AstArgument([], 1, 1);
   let todo_visit = [[toplevel_parent_arg, ast_toplevel]];
   const id_context = {'macros': macros};
   // IDs that are indexed: you can link to those.
@@ -1797,7 +1865,7 @@ function parse(tokens, macros, options, extra_returns={}) {
         let arg = ast.args[arg_name];
         // We make the new argument be empty so that children can
         // decide if they want to push themselves or not.
-        const new_arg = [];
+        const new_arg = new AstArgument([], arg.line, arg.column);
         for (const child_node of arg) {
           todo_visit.push([new_arg, child_node]);
         }
@@ -1827,7 +1895,7 @@ function parse(tokens, macros, options, extra_returns={}) {
     extra_returns.context.id_provider = id_provider;
     extra_returns.context.header_graph = new TreeNode();
     extra_returns.context.has_toc = false;
-    let toplevel_parent_arg = []
+    let toplevel_parent_arg = new AstArgument([], 1, 1);
     const todo_visit = [[toplevel_parent_arg, ast_toplevel]];
     while (todo_visit.length > 0) {
       const [parent_arg, ast] = todo_visit.shift();
@@ -1856,14 +1924,14 @@ function parse(tokens, macros, options, extra_returns={}) {
           const message = `skipped a header level from ${header_graph_last_level} to ${ast.level}`;
           ast.args[Macro.TITLE_ARGUMENT_NAME].push(
             new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
-          parse_error(state, message, ast.args.level[0].line, ast.args.level[0].column);
+          parse_error(state, message, ast.args.level.line, ast.args.level.column);
         }
         if (cur_header_level < first_header_level) {
           parse_error(
             state,
             `header level ${cur_header_level} is smaller than the level of the first header of the document ${first_header_level}`,
-            ast.args.level[0].line,
-            ast.args.level[0].column
+            ast.args.level.line,
+            ast.args.level.column
           );
         }
         let parent_tree_node = header_graph_stack[cur_header_level - 1];
@@ -1917,7 +1985,7 @@ function parse(tokens, macros, options, extra_returns={}) {
             // TODO correct unicode aware algorithm.
             id_text += title_to_id(convert_arg_noescape(title_arg, id_context));
             ast.id = id_text;
-          } else if (!macro.properties.phrasing) {
+          } else if (!macro.options.phrasing) {
             // ID from element count.
             if (ast.macro_count !== undefined) {
               id_text += ast.macro_count;
@@ -1996,7 +2064,7 @@ function parse(tokens, macros, options, extra_returns={}) {
         // Child loop that
         // Adds ul and table implicit parents.
         {
-          const new_arg = [];
+          const new_arg = new AstArgument([], arg.line, arg.column);
           for (let i = 0; i < arg.length; i++) {
             let child_node = arg[i];
             let new_child_nodes = [];
@@ -2019,7 +2087,7 @@ function parse(tokens, macros, options, extra_returns={}) {
                   !child_macro.auto_parent_skip.has(ast.macro_name)
                 ) {
                   let start_auto_child_node = child_node;
-                  const new_arg_auto_parent = [];
+                  const new_arg_auto_parent = new AstArgument([], child_node.line, child_node.column);
                   while (i < arg.length) {
                     const arg_i = arg[i];
                     if (arg_i.node_type === AstType.MACRO) {
@@ -2039,7 +2107,7 @@ function parse(tokens, macros, options, extra_returns={}) {
                     i++;
                   }
                   new_child_nodes_set = true;
-                  new_child_nodes = [new AstNode(
+                  new_child_nodes = new AstArgument([new AstNode(
                     AstType.MACRO,
                     auto_parent_name,
                     {
@@ -2047,7 +2115,7 @@ function parse(tokens, macros, options, extra_returns={}) {
                     },
                     start_auto_child_node.line,
                     start_auto_child_node.column,
-                  )];
+                  )], child_node.line, child_node.column);
                   // Because the for loop will advance past it.
                   i--;
                 }
@@ -2071,7 +2139,7 @@ function parse(tokens, macros, options, extra_returns={}) {
             }
           }
           if (paragraph_indexes.length > 0) {
-            const new_arg = [];
+            const new_arg = new AstArgument([], arg.line, arg.column);
             if (paragraph_indexes[0] > 0) {
               parse_add_paragraph(state, ast, new_arg, arg, 0, paragraph_indexes[0]);
             }
@@ -2091,7 +2159,7 @@ function parse(tokens, macros, options, extra_returns={}) {
         // Push children to continue the search. We make the new argument be empty
         // so that children can decide if they want to push themselves or not.
         {
-          const new_arg = [];
+          const new_arg = new AstArgument([], arg.line, arg.column);
           for (const child_node of arg) {
             todo_visit.push([new_arg, child_node]);
           }
@@ -2125,7 +2193,7 @@ function parse_add_paragraph(
   if (paragraph_start < paragraph_end) {
     const macro = state.macros[arg[paragraph_start].macro_name];
     const slice = arg.slice(paragraph_start, paragraph_end);
-    if (macro.properties.phrasing || slice.length > 1) {
+    if (macro.options.phrasing || slice.length > 1) {
       // If the first element after the double newline is phrasing content,
       // create a paragraph and put all elements until the next paragraph inside
       // that paragraph.
@@ -2169,7 +2237,7 @@ function parse_log_debug(state, msg='') {
   }
 }
 
-// Parse one macro.
+// Parse one macro. This is the centerpiece of the parsing!
 function parse_macro(state) {
   parse_log_debug(state, 'function: parse_macro');
   parse_log_debug(state, 'state = ' + JSON.stringify(state.token));
@@ -2233,7 +2301,7 @@ function parse_macro(state) {
         // Parse the argument name out.
         parse_consume(state);
       }
-      let arg_children = [];
+      let arg_children = new AstArgument([], open_argument_line, open_argument_column);
       while (
         state.token.type !== TokenType.POSITIONAL_ARGUMENT_END &&
         state.token.type !== TokenType.NAMED_ARGUMENT_END
@@ -2373,6 +2441,7 @@ const TokenType = make_enum([
   'NAMED_ARGUMENT_END',
   'NAMED_ARGUMENT_NAME',
 ]);
+const DEFAULT_MEDIA_HEIGHT = 315;
 const MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS = [
   new MacroArgument({
     name: Macro.TITLE_ARGUMENT_NAME,
@@ -2381,10 +2450,20 @@ const MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS = [
     name: 'description',
   }),
   new MacroArgument({
+    name: 'height',
+    default: DEFAULT_MEDIA_HEIGHT.toString(),
+    positive_nonzero_integer: true,
+  }),
+  new MacroArgument({
     name: 'source',
     elide_link_only: true,
   }),
+  new MacroArgument({
+    name: 'width',
+    positive_nonzero_integer: true,
+  }),
 ];
+const MACRO_IMAGE_VIDEO_OPTIONS = {}
 const MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS = [
   new MacroArgument({
     name: 'src',
@@ -2418,9 +2497,7 @@ const DEFAULT_MACRO_LIST = [
       return `<a${attrs}>${content}</a>`;
     },
     {
-      properties: {
-        phrasing: true,
-      }
+      phrasing: true,
     }
   ),
   new Macro(
@@ -2447,9 +2524,7 @@ const DEFAULT_MACRO_LIST = [
     ],
     html_convert_simple_elem('code', {newline_after_close: false}),
     {
-      properties: {
-        phrasing: true,
-      }
+      phrasing: true,
     }
   ),
   new Macro(
@@ -2491,9 +2566,7 @@ const DEFAULT_MACRO_LIST = [
       return '';
     },
     {
-      properties: {
-        phrasing: true,
-      }
+      phrasing: true,
     }
   ),
   new Macro(
@@ -2502,6 +2575,7 @@ const DEFAULT_MACRO_LIST = [
       new MacroArgument({
         name: 'level',
         mandatory: true,
+        positive_nonzero_integer: true,
       }),
       new MacroArgument({
         name: Macro.TITLE_ARGUMENT_NAME,
@@ -2512,14 +2586,9 @@ const DEFAULT_MACRO_LIST = [
       let level_arg = ast.args.level;
       let level = convert_arg_noescape(level_arg, context);
       let level_int = ast.level;
-      if (!Number.isInteger(level_int) || !(level_int > 0)) {
-        let message = `level must be a positive non-zero integer: "${level}"`;
-        this.error(context, message, level_arg[0].line, level_arg[0].column);
-        return error_message_in_output(message, context);
-      }
       if (level_int > 6) {
-        custom_args = {'data-level': [new PlaintextAstNode(
-          ast.line, ast.column, level)]};
+        custom_args = {'data-level': new AstArgument([new PlaintextAstNode(
+          ast.line, ast.column, level)], ast.line, ast.column)};
         level = '6';
       } else {
         custom_args = {};
@@ -2529,9 +2598,7 @@ const DEFAULT_MACRO_LIST = [
       let x_text_options = {
         show_caption_prefix: false,
       };
-      if (level_int === context.header_graph_top_level) {
-        x_text_options.style_full = false;
-      }
+      x_text_options.style_full = level_int !== context.header_graph_top_level;
       ret += Macro.x_text(ast, context, x_text_options);
       ret += `</a>`;
       ret += `<span> `;
@@ -2563,6 +2630,7 @@ const DEFAULT_MACRO_LIST = [
     {
       caption_prefix: 'Section',
       id_prefix: '',
+      default_x_style_full: false,
       get_number: function(ast, context) {
         let header_tree_node = ast.header_tree_node;
         if (header_tree_node === undefined) {
@@ -2571,7 +2639,6 @@ const DEFAULT_MACRO_LIST = [
           return header_tree_node.get_nested_number(context.header_graph_top_level);
         }
       },
-      x_style_full: false,
     }
   ),
   new Macro(
@@ -2622,7 +2689,7 @@ const DEFAULT_MACRO_LIST = [
         let show = convert_arg_noescape(show_arg, context);
         if (!(show === '0' || show === '1')) {
           let message = `show must be 0 or 1: "${level}"`;
-          this.error(context, message, show_arg, show_arg[0].column);
+          this.error(context, message, show_arg, show_arg.column);
           return error_message_in_output(message, context);
         }
         do_show = (show === '1');
@@ -2677,16 +2744,14 @@ const DEFAULT_MACRO_LIST = [
       return this.katex_convert(ast, context);
     },
     {
-      properties: {
-        phrasing: true,
-      }
+      phrasing: true,
     }
   ),
   new Macro(
     'Image',
     MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS,
-    macro_image_video_convert_function(function (ast, context, src, rendered_attrs, alt) {
-      return `<a${html_attr('href', src)}><img${rendered_attrs}${alt}></a>\n`;
+    macro_image_video_block_convert_function(function (ast, context, validation_output, src, rendered_attrs, alt) {
+      return `<a${html_attr('href', src)}><img${html_attr('src', src)}${rendered_attrs}${alt}></a>\n`;
     }),
     Object.assign(
       {
@@ -2694,6 +2759,7 @@ const DEFAULT_MACRO_LIST = [
         id_prefix: 'fig',
         named_args: MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS,
       },
+      MACRO_IMAGE_VIDEO_OPTIONS,
     ),
   ),
   new Macro(
@@ -2716,10 +2782,21 @@ const DEFAULT_MACRO_LIST = [
         alt_arg = ast.args.alt;
       }
       let alt = html_attr('alt', html_escape_attr(convert_arg(alt_arg, context)));
-      let img_attrs = html_convert_attrs_id(ast, context, ['src']);
+      let img_attrs = html_convert_attrs_id(ast, context, ['src', 'height', 'width']);
       return `<img${img_attrs}${alt}>`;
     },
     {
+      named_args: [
+        new MacroArgument({
+          name: 'height',
+          default: DEFAULT_MEDIA_HEIGHT.toString(),
+          positive_nonzero_integer: true,
+        }),
+        new MacroArgument({
+          name: 'width',
+          positive_nonzero_integer: true,
+        }),
+      ],
       phrasing: true,
     }
   ),
@@ -2759,9 +2836,7 @@ const DEFAULT_MACRO_LIST = [
       return html_escape_context(context, ast.text);
     },
     {
-      properties: {
-        phrasing: true,
-      }
+      phrasing: true,
     }
   ),
   new Macro(
@@ -2856,7 +2931,7 @@ const DEFAULT_MACRO_LIST = [
           ret += `</li>\n`;
         }
         let target_ast = tree_node.value;
-        let content = Macro.x_text(target_ast, context, {show_caption_prefix: false});
+        let content = Macro.x_text(target_ast, context, {style_full: true, show_caption_prefix: false});
         let target_id = html_escape_attr(target_ast.id);
         let href = html_attr('href', '#' + target_id);
         let id_to_toc = html_attr('id', Macro.TOC_PREFIX + target_id);
@@ -2908,7 +2983,7 @@ const DEFAULT_MACRO_LIST = [
         } else {
           text_title = 'dummy title because title is mandatory in HTML';
         }
-        title = [new PlaintextAstNode(ast.line, ast.column, text_title)];
+        title = new AstArgument([new PlaintextAstNode(ast.line, ast.column, text_title)], ast.column, text_title);
       }
       let ret;
       const body = convert_arg(ast.args.content, context);
@@ -3000,7 +3075,7 @@ const DEFAULT_MACRO_LIST = [
       const target_id_ast = context.id_provider.get(target_id);
       if (target_id_ast === undefined) {
         let message = `cross reference to unknown id: "${target_id}"`;
-        this.error(context, message, ast.args.href[0].line, ast.args.href[0].column);
+        this.error(context, message, ast.args.href.line, ast.args.href.column);
         return error_message_in_output(message, context);
       }
       const content_arg = ast.args.content;
@@ -3008,9 +3083,11 @@ const DEFAULT_MACRO_LIST = [
       if (content_arg === undefined) {
         let x_text_options = {
           caption_prefix_span: false,
-          style_full: 'full' in ast.args,
           quote: true,
         };
+        if ('full' in ast.args) {
+          x_text_options.style_full = true;
+        }
         content = Macro.x_text(target_id_ast, context, x_text_options);
         if (content === ``) {
           let message = `empty cross reference body: "${target_id}"`;
@@ -3031,25 +3108,36 @@ const DEFAULT_MACRO_LIST = [
           boolean: true,
         }),
       ],
-      properties: {
-        phrasing: true,
-      }
+      phrasing: true,
     }
   ),
   new Macro(
     'Video',
     MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS,
-    macro_image_video_convert_function(
-      function (ast, context, src, rendered_attrs, alt) {
+    macro_image_video_block_convert_function(
+      function (ast, context, validation_output, src, rendered_attrs, alt) {
         if ('youtube' in ast.args) {
-          return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${src}" ` +
+          let start;
+          if ('start' in ast.args) {
+            start = `?start=${validation_output['start']['positive_nonzero_integer']}`;
+          } else {
+            start = '';
+          }
+          return `<iframe width="560" height="${DEFAULT_MEDIA_HEIGHT}" src="https://www.youtube.com/embed/${src}${start}" ` +
                 `frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; ` +
                 `picture-in-picture" allowfullscreen></iframe>`;
         } else {
-          return `<video${rendered_attrs} controls>${alt}</video>\n`;
+          let start;
+          if ('start' in ast.args) {
+            // https://stackoverflow.com/questions/5981427/start-html5-video-at-a-particular-position-when-loading
+            start = `#t=${validation_output['start']['positive_nonzero_integer']}`;
+          } else {
+            start = '';
+          }
+          return `<video${html_attr('src', src + start)}${rendered_attrs} controls>${alt}</video>\n`;
         }
       },
-      function (ast, context, src) {
+      function (ast, context, validation_output, src) {
         if ('source' in ast.args) {
           return convert_arg(ast.args.source, context);
         } else if ('youtube' in ast.args) {
@@ -3065,11 +3153,16 @@ const DEFAULT_MACRO_LIST = [
         id_prefix: 'video',
         named_args: MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS.concat(
           new MacroArgument({
+            name: 'start',
+            positive_nonzero_integer: true,
+          }),
+          new MacroArgument({
             name: 'youtube',
             boolean: true,
           }),
         ),
       },
+      MACRO_IMAGE_VIDEO_OPTIONS,
     ),
   ),
 ];

@@ -681,58 +681,35 @@ assert_no_error('cross reference simple',
 \\x[my-header][link body]
 `
 );
-//assert_convert_ast('cross reference auto default',
-//  `\\h[1][My header]
-//
-//\\x[my-header]
-//`,
-//  `<h1 id="my-header"><a href="#my-header">1. My header</a></h1>
-//<p><a href="#my-header">My header</a></p>
-//`
-//);
+assert_no_error('cross reference auto default',
+  `\\h[1][My header]
+
+\\x[my-header]
+`);
 assert_no_error('cross reference full boolean style correct',
   `\\h[1][My header]
 
 \\x[my-header]{full}
 `, 3, 21);
 assert_error('cross reference full boolean style with value',
-  `\\h[1][My header]
+  `\\h[1][abc]
 
-\\x[my-header]{full=true}
-`, 3, 1);
-//assert_convert_ast('cross reference to image',
-//  `\\Image[ab]{id=cd}{title=ef}
-//
-//\\x[cd]
-//`,
-//  `<figure id="cd">
-//<a href="#cd"><img src="ab"></a>
-//<figcaption>Image 1. ef</figcaption>
-//</figure>
-//<p><a href="#cd">Image 1. "ef"</a></p>
-//`
-//);
-//assert_convert_ast('cross reference without content nor target title style full',
-//  `\\Image[ab]{id=cd}
-//
-//\\x[cd]
-//`,
-//  `<figure id="cd">
-//<a href="#cd"><img src="ab"></a>
-//<figcaption>Image 1</figcaption>
-//</figure>
-//<p><a href="#cd">Image 1</a></p>
-//`
-//);
-assert_error('cross reference undefined', '\\x[ab]', 1, 4);
-assert_error('cross reference without content nor target title nor full style',
+\\x[abc]{full=true}
+`, 3, 8);
+assert_no_error('cross reference to image',
+  `\\Image[ab]{id=cd}{title=ef}
+
+\\x[cd]
+`);
+assert_no_error('cross reference without content nor target title style full',
   `\\Image[ab]{id=cd}
 
 \\x[cd]
-`, 3, 1);
+`);
+assert_error('cross reference undefined', '\\x[ab]', 1, 3);
 
 //// Headers.
-// TODO inner property test
+// TODO inner ID property test
 //assert_convert_ast('header simple',
 //  '\\h[1][My header]\n',
 //  `<h1 id="my-header"><a href="#my-header">1. My header</a></h1>\n`
@@ -778,9 +755,25 @@ assert_convert_ast('header 7',
   a('h', undefined, {level: [t('7')], title: [t('7')]}),
 ]
 );
-assert_error('header must be an integer', '\\h[a][b]\n', 1, 4);
-assert_error('header must not be zero', '\\h[0][b]\n', 1, 4);
-assert_error('header skip level is an error', '\\h[1][a]\n\\h[3][b]\n', 2, 4);
+assert_error('header must be an integer letters', '\\h[a][b]\n', 1, 3);
+assert_error('header h2 must be an integer toc',
+  `\\h[1][h1]
+
+\\toc
+
+\\h[][h2 1]
+
+\\h[2][h2 2]
+`, 5, 3);
+// TODO failing
+//assert_error('header h1 must be an integer toc',
+//  `\\h[][h1]
+//
+//\\toc
+//`, 1, 1);
+assert_error('header must be an integer empty', '\\h[][b]\n', 1, 3);
+assert_error('header must not be zero', '\\h[0][b]\n', 1, 3);
+assert_error('header skip level is an error', '\\h[1][a]\n\n\\h[3][b]\n', 3, 3);
 
 // Code.
 assert_convert_ast('code inline sane',
@@ -861,7 +854,7 @@ assert_no_error('math block insane',
   '$$\\sqrt{1 + 1}$$',
   [a('M', [t('\\sqrt{1 + 1}')])],
 );
-assert_error('math undefined macro', '\\m[[\\reserved_undefined]]', 1, 5);
+assert_error('math undefined macro', '\\m[[\\reserved_undefined]]', 1, 3);
 
 // Errors. Check that they return gracefully with the error line number,
 // rather than blowing up an exception, or worse, not blowing up at all!
@@ -870,10 +863,9 @@ assert_error('unknown macro', '\\reserved_undefined', 1, 1);
 assert_error('too many positional arguments', '\\p[ab][cd]', 1, 7);
 assert_error('unknown named macro argument', '\\c{reserved_undefined=abc}[]', 1, 4);
 assert_error('named argument without =', '\\p{id ab}[cd]', 1, 6);
-// TODO https://github.com/cirosantilli/cirodown/issues/5
 assert_error('missing mandatory positional argument href of a', '\\a', 1, 1);
 assert_error('missing mandatory positional argument level of h', '\\h', 1, 1);
-// TODO
+// TODO failing
 //assert_error('argument without close', '\\c[', 1, 3);
 //assert_error('unterminated argument', '\\c[ab', 1, 3);
 //assert_error('argument without open', ']', 1, 1);
