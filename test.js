@@ -228,11 +228,21 @@ gh
 `,
   l_with_explicit_ul_expect
 );
-assert_convert_ast('l with implicit ul',
+assert_convert_ast('l with implicit ul sane',
   `ab
 
 \\l[cd]
 \\l[ef]
+
+gh
+`,
+  l_with_explicit_ul_expect
+);
+assert_convert_ast('l with implicit ul insane',
+  `ab
+
+* cd
+* ef
 
 gh
 `,
@@ -270,6 +280,78 @@ gh
   a('p', [t('gh')]),
 ]
 );
+assert_convert_ast('list with paragraph sane',
+  `\\l[
+aa
+
+bb
+]
+`,
+  [
+    a('ul', [
+      a('l', [
+        a('p', [t('aa')]),
+        a('p', [t('bb\n')]),
+      ]),
+    ]),
+  ]
+)
+assert_convert_ast('list with paragraph insane',
+  `* aa
+
+  bb
+`,
+  [
+    a('ul', [
+      a('l', [
+        a('p', [t('aa')]),
+        a('p', [t('bb')]),
+      ]),
+    ]),
+  ]
+)
+assert_convert_ast('nested list sane',
+  `\\l[
+aa
+\\l[
+bb
+]
+]
+`,
+  [
+    a('ul', [
+      a('l', [
+        t('aa\n'),
+        a('ul', [
+          a('l', [
+            t('bb\n')
+          ]),
+        ]),
+      ]),
+    ]),
+  ]
+)
+assert_convert_ast('nested list insane',
+  `* aa
+  * bb
+`,
+  [
+    a('ul', [
+      a('l', [
+        t('aa'),
+        a('ul', [
+          a('l', [
+            t('bb')
+          ]),
+        ]),
+      ]),
+    ]),
+  ]
+)
+assert_convert_ast('escape insane list',
+  '\\* a',
+  [a('p', [t('* a')])],
+)
 
 // Table.
 const tr_with_explicit_table_expect = [
@@ -646,6 +728,22 @@ b
     a('p', [t('a')]),
     a('p', [a('a', undefined, {'href': [t('http://example.com')]})]),
     a('p', [t('b')]),
+  ]
+);
+assert_convert_ast('link insane with custom body no newline',
+  'http://example.com[aa]',
+  [
+    a('p', [
+      a('a', [t('aa')], {'href': [t('http://example.com')]}),
+    ]),
+  ]
+);
+assert_convert_ast('link insane with custom body with newline',
+  'http://example.com\n[aa]',
+  [
+    a('p', [
+      a('a', [t('aa')], {'href': [t('http://example.com')]}),
+    ]),
   ]
 );
 assert_convert_ast('link auto end in space',
