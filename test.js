@@ -802,12 +802,66 @@ assert_no_error('cross reference auto default',
 
 \\x[my-header]
 `);
-assert_no_error('cross reference full boolean style correct',
+assert_no_error('cross reference full boolean style without value',
   `\\h[1][My header]
 
 \\x[my-header]{full}
-`, 3, 21);
-assert_error('cross reference full boolean style with value',
+`,
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [t('abc')],
+    }),
+    a('p', [
+      a('x', undefined, {
+        full: [],
+        href: [t('abc')],
+      }),
+    ]),
+  ]
+);
+assert_convert_ast('cross reference full boolean style with value 0',
+  `\\h[1][abc]
+
+\\x[abc]{full=0}
+`,
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [t('abc')],
+    }),
+    a('p', [
+      a('x', undefined, {
+        full: [t('0')],
+        href: [t('abc')],
+      }),
+    ]),
+  ]
+);
+assert_convert_ast('cross reference full boolean style with value 1',
+  `\\h[1][abc]
+
+\\x[abc]{full=1}
+`,
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [t('abc')],
+    }),
+    a('p', [
+      a('x', undefined, {
+        full: [t('1')],
+        href: [t('abc')],
+      }),
+    ]),
+  ]
+);
+assert_error('cross reference full boolean style with invalid value 2',
+  `\\h[1][abc]
+
+\\x[abc]{full=2}
+`, 3, 8);
+assert_error('cross reference full boolean style with invalid value true',
   `\\h[1][abc]
 
 \\x[abc]{full=true}
@@ -823,12 +877,50 @@ assert_no_error('cross reference without content nor target title style full',
 \\x[cd]
 `);
 assert_error('cross reference undefined', '\\x[ab]', 1, 3);
-// TODO failing https://github.com/cirosantilli/cirodown/issues/34
-//assert_error('cross reference infinite recursion',
+//// TODO failing https://github.com/cirosantilli/cirodown/issues/34
+//assert_error('cross reference circular loop infinite recursion implicit body',
 //  `\\h[1][\\x[h2]]{id=h1}
 //
 //\\h[2][\\x[h1]]{id=h2}
-//`, 1, 1
+//`, 1, 1);
+// This is fine because the content is explicitly given.
+assert_convert_ast('cross reference circular loop infinite recursion explicit body',
+  `\\h[1][\\x[h2][myh2]]{id=h1}
+
+\\h[2][\\x[h1][myh1]]{id=h2}
+`,
+  // TODO
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [a('x', [t('myh2')], {'href': [t('h2')]})],
+    }),
+    a('h', undefined, {
+      level: [t('2')],
+      title: [a('x', [t('myh1')], {'href': [t('h1')]})],
+    }),
+  ]
+);
+//// https://github.com/cirosantilli/cirodown/issues/45
+//assert_convert_ast('cross reference to plaintext id calculated from title',
+//  `\\h[1][aa \`bb\` cc]
+//
+//\\x[aa-bb-cc]
+//`,
+//  // TODO
+//  [
+//    a('h', undefined, {
+//      level: [t('1')],
+//      title: [
+//        t('aa '),
+//        a('c', [t('bb')]),
+//        t(' cc'),
+//      ],
+//    }),
+//    a('p', [
+//      a('x', undefined, { href: [t('aa-bb-cc')]}),
+//    ]),
+//  ]
 //);
 
 //// Headers.
@@ -846,14 +938,23 @@ My paragraph 1.
 
 My paragraph 2.
 `,
-[
-  a('h', undefined, {level: [t('1')], title: [t('My header 1')]}),
-  a('p', [t('My paragraph 1.')]),
-  a('h', undefined, {level: [t('2')], title: [t('My header 2')]}),
-  a('p', [t('My paragraph 2.')]),
-]
+  [
+    a('h', undefined, {level: [t('1')], title: [t('My header 1')]}),
+    a('p', [t('My paragraph 1.')]),
+    a('h', undefined, {level: [t('2')], title: [t('My header 2')]}),
+    a('p', [t('My paragraph 2.')]),
+  ]
 );
-assert_convert_ast('header 7',
+const header_7_expect = [
+  a('h', undefined, {level: [t('1')], title: [t('1')]}),
+  a('h', undefined, {level: [t('2')], title: [t('2')]}),
+  a('h', undefined, {level: [t('3')], title: [t('3')]}),
+  a('h', undefined, {level: [t('4')], title: [t('4')]}),
+  a('h', undefined, {level: [t('5')], title: [t('5')]}),
+  a('h', undefined, {level: [t('6')], title: [t('6')]}),
+  a('h', undefined, {level: [t('7')], title: [t('7')]}),
+];
+assert_convert_ast('header 7 sane',
   `\\h[1][1]
 
 \\h[2][2]
@@ -868,15 +969,47 @@ assert_convert_ast('header 7',
 
 \\h[7][7]
 `,
-[
-  a('h', undefined, {level: [t('1')], title: [t('1')]}),
-  a('h', undefined, {level: [t('2')], title: [t('2')]}),
-  a('h', undefined, {level: [t('3')], title: [t('3')]}),
-  a('h', undefined, {level: [t('4')], title: [t('4')]}),
-  a('h', undefined, {level: [t('5')], title: [t('5')]}),
-  a('h', undefined, {level: [t('6')], title: [t('6')]}),
-  a('h', undefined, {level: [t('7')], title: [t('7')]}),
-]
+  header_7_expect
+);
+// https://github.com/cirosantilli/cirodown/issues/32
+assert_convert_ast('header 7 insane',
+  `= 1
+
+== 2
+
+=== 3
+
+==== 4
+
+===== 5
+
+====== 6
+
+======= 7
+`,
+  header_7_expect
+);
+const header_id_new_line_expect =
+  [a('h', undefined, {level: [t('1')], title: [t('aa')], id: [t('bb')]})];
+assert_convert_ast('header id new line sane',
+  '\\h[1][aa]\n{id=bb}',
+  header_id_new_line_expect,
+);
+assert_convert_ast('header id new line insane no trailing elment',
+  '= aa\n{id=bb}',
+  header_id_new_line_expect,
+);
+// TODO id goes to code.
+assert_convert_ast('header id new line insane trailing element',
+  '= aa \\c[bb]\n{id=cc}',
+  [a('h', undefined, {
+      level: [t('1')],
+      title: [
+        t('aa '),
+        a('c', [t('bb')]),
+      ],
+      id: [t('cc')],
+  })],
 );
 assert_error('header must be an integer letters', '\\h[a][b]\n', 1, 3);
 assert_error('header h2 must be an integer toc',
@@ -887,13 +1020,14 @@ assert_error('header h2 must be an integer toc',
 \\h[][h2 1]
 
 \\h[2][h2 2]
+
+\\h[][h2 3]
 `, 5, 3);
-// TODO failing
-//assert_error('header h1 must be an integer toc',
-//  `\\h[][h1]
-//
-//\\toc
-//`, 1, 1);
+assert_error('header h1 must be an integer with ToC',
+  `\\h[][h1]
+
+\\toc
+`, 1, 3);
 assert_error('header must be an integer empty', '\\h[][b]\n', 1, 3);
 assert_error('header must not be zero', '\\h[0][b]\n', 1, 3);
 assert_error('header skip level is an error', '\\h[1][a]\n\n\\h[3][b]\n', 3, 3);

@@ -27,7 +27,7 @@ class AstNode {
     if (!('force_no_index' in options)) {
       options.force_no_index = false;
     }
-    if (!('id' in options)) {
+    if (!(Macro.ID_ARGUMENT_NAME in options)) {
       options.id = undefined;
     }
     if (!('input_path' in options)) {
@@ -96,7 +96,7 @@ class AstNode {
    *                 otherwise e.g. `1 < 2` would escape the `<` to `&lt;` and KaTeX would receive bad input.
    *        - {TreeNode} header_graph - TreeNode graph containing AstNode headers
    *        - {Object} ids - map of document IDs to their description:
-   *                 - 'prefix': prefix to add if style_full, e.g. `Figure 1`, `Section 2`, etc.
+   *                 - 'prefix': prefix to add for a  full reference, e.g. `Figure 1`, `Section 2`, etc.
    *                 - {AstArgument} 'title': the title of the element linked to
    * @param {Object} context
    */
@@ -131,11 +131,16 @@ class AstNode {
     // Do some error checking. If no errors are found, convert normally. Save output on out.
     {
       let error_message = undefined;
-      const name_to_arg = macro.name_to_arg;
       const validation_output = {};
+      const name_to_arg = macro.name_to_arg;
+      // First pass sets defaults on missing arguments.
       for (const argname in name_to_arg) {
+        validation_output[argname] = {};
         const macro_arg = name_to_arg[argname];
-        if (!(argname in effective_this.args)) {
+        if (argname in effective_this.args) {
+          validation_output[argname].given = true;
+        } else {
+          validation_output[argname].given = false;
           if (macro_arg.mandatory) {
             error_message = [
               `missing mandatory argument ${argname} of ${effective_this.macro_name}`,
@@ -144,18 +149,31 @@ class AstNode {
           }
           if (macro_arg.default !== undefined) {
             effective_this.args[argname] = new AstArgument([new PlaintextAstNode(this.line, this.column, macro_arg.default)]);
+          } else if (macro_arg.boolean) {
+            effective_this.args[argname] = new AstArgument([new PlaintextAstNode(this.line, this.column, '0')]);
           }
         }
       }
+      // Second pass processes the values including defaults.
       for (const argname in name_to_arg) {
-        validation_output[argname] = {};
         const macro_arg = name_to_arg[argname];
         if (argname in effective_this.args) {
           const arg = effective_this.args[argname];
           if (macro_arg.boolean) {
+            let arg_string;
             if (arg.length > 0) {
+              arg_string = convert_arg_noescape(arg, context);
+            } else {
+              arg_string = '1';
+            }
+            if (arg_string === '0') {
+              validation_output[argname]['boolean'] = false;
+            } else if (arg_string === '1') {
+              validation_output[argname]['boolean'] = true;
+            } else {
+              validation_output[argname]['boolean'] = false;
               error_message = [
-                `boolean arguments like "${argname}" of "${effective_this.macro_name}" cannot have values, use just "{${argname}}" instead`,
+                `boolean argument "${argname}" of "${effective_this.macro_name}" has invalid value: "${arg_string}", only "0" and "1" are allowed`,
                 arg.line, arg.column];
               break;
             }
@@ -176,7 +194,7 @@ class AstNode {
       if (error_message === undefined) {
         out = macro.convert(effective_this, context, validation_output);
       } else {
-        macro.error(context, error_message[0], error_message[1], error_message[2]);
+        render_error(context, error_message[0], error_message[1], error_message[2]);
         out = error_message_in_output(error_message[0], context);
       }
     }
@@ -508,34 +526,6 @@ class Macro {
     }
   }
 
-  error(context, message, line, column) {
-    context.errors.push(new ErrorMessage(message, line, column));
-  }
-
-  katex_convert(ast, context) {
-    try {
-      return katex.renderToString(
-        convert_arg(ast.args.content, clone_and_set(context, 'html_escape', false)),
-        {
-          macros: context.katex_macros,
-          throwOnError: true,
-          globalGroup: true,
-        }
-      );
-    } catch(error) {
-      // TODO get working remove the crap KaTeX adds to the end of the string.
-      // It uses Unicode char hacks to add underlines... and there are two trailing
-      // chars after the final newline, so the error message is taking up two lines
-      let message = error.toString().replace(/\n\xcc\xb2$/, '');
-      this.error(context, message, ast.args.content.line, ast.args.content.column);
-      return error_message_in_output(message, context);
-    }
-  }
-
-  self_link(ast) {
-    return ` href="#${html_escape_attr(ast.id)}"`;
-  }
-
   toJSON() {
     const options = this.options;
     const ordered_options = {};
@@ -680,6 +670,7 @@ class Tokenizer {
     this.extra_returns = extra_returns;
     this.extra_returns.errors = [];
     this.i = 0;
+    this.in_insane_header = false;
     this.line = start_line;
     this.list_level = 0;
     this.tokens = [];
@@ -759,7 +750,8 @@ class Tokenizer {
   consume_optional_newline_after_argument() {
     if (
       !this.is_end() &&
-      this.cur_c === '\n'
+      this.cur_c === '\n' &&
+      !this.in_insane_header
     ) {
       const peek = this.peek();
       if (
@@ -841,7 +833,11 @@ class Tokenizer {
       this.log_debug('this.line: ' + this.line);
       this.log_debug('this.column: ' + this.column);
       this.log_debug('this.cur_c: ' + this.cur_c);
-      this.log_debug();
+      if (this.in_insane_header && this.cur_c === '\n') {
+        this.in_insane_header = false;
+        this.push_token(TokenType.POSITIONAL_ARGUMENT_END);
+        this.consume_optional_newline_after_argument()
+      }
       this.consume_list_indent();
       start_line = this.line;
       start_column = this.column;
@@ -936,7 +932,7 @@ class Tokenizer {
         if (open_length > 1) {
           macro_name = macro_name.toUpperCase();
         }
-        this.push_token(TokenType.MACRO_NAME, macro_name, this.line, this.column);
+        this.push_token(TokenType.MACRO_NAME, macro_name);
         this.push_token(TokenType.POSITIONAL_ARGUMENT_START);
         if (!this.tokenize_literal(open_char, close_string)) {
           unterminated_literal = true;
@@ -976,7 +972,7 @@ class Tokenizer {
             array_contains_array_at(this.chars, this.i, 'http://') ||
             array_contains_array_at(this.chars, this.i, 'https://')
           ) {
-            this.push_token(TokenType.MACRO_NAME, Macro.LINK_MACRO_NAME, this.line, this.column);
+            this.push_token(TokenType.MACRO_NAME, Macro.LINK_MACRO_NAME);
             this.push_token(TokenType.POSITIONAL_ARGUMENT_START);
             let link_text = '';
             while (this.consume_plaintext_char()) {
@@ -1021,7 +1017,7 @@ class Tokenizer {
                 this.consume();
               }
               this.consume_list_indent();
-              this.push_token(TokenType.MACRO_NAME, Macro.LIST_MACRO_NAME, this.line, this.column);
+              this.push_token(TokenType.MACRO_NAME, Macro.LIST_MACRO_NAME);
               this.push_token(TokenType.POSITIONAL_ARGUMENT_START);
               this.list_level += 1;
               done = true;
@@ -1031,8 +1027,34 @@ class Tokenizer {
             }
           }
         }
+
+        // Insane headers.
+        if (!done && (
+          this.i === 0 ||
+          this.chars[this.i - 1] === '\n'
+        )) {
+          let i = this.i;
+          let new_header_level = 0;
+          debugger;
+          while (this.chars[i] === INSANE_HEADER_CHAR) {
+            i += 1;
+            new_header_level += 1;
+          }
+          if (new_header_level > 0 && this.chars[i] === ' ') {
+            this.push_token(TokenType.MACRO_NAME, Macro.HEADER_MACRO_NAME);
+            this.push_token(TokenType.POSITIONAL_ARGUMENT_START, INSANE_HEADER_CHAR.repeat(new_header_level));
+            this.push_token(TokenType.PLAINTEXT, new_header_level.toString());
+            this.push_token(TokenType.POSITIONAL_ARGUMENT_END);
+            this.push_token(TokenType.POSITIONAL_ARGUMENT_START);
+            for (let i = 0; i <= new_header_level; i++)
+              this.consume();
+            this.in_insane_header = true;
+            done = true;
+          }
+        }
+
+        // Character is nothing else, so finally it is a regular plaintext character.
         if (!done) {
-          // Character is nothing else, so finally it is a regular plaintext character.
           this.consume_plaintext_char();
         }
       }
@@ -1040,9 +1062,17 @@ class Tokenizer {
     if (unterminated_literal) {
       this.error(`unterminated literal argument`, start_line, start_column);
     }
+
+    // Close any open headers at the end of the document.
+    if (this.in_insane_header) {
+      this.push_token(TokenType.POSITIONAL_ARGUMENT_END);
+    }
+
+    // Close any open list levels at the end of the document.
     for (let i = 0; i < this.list_level; i++) {
       this.push_token(TokenType.POSITIONAL_ARGUMENT_END);
     }
+
     this.push_token(TokenType.PARAGRAPH);
     this.push_token(TokenType.INPUT_END);
     return this.tokens;
@@ -1476,14 +1506,6 @@ function html_convert_attrs(
   return ret;
 }
 
-function title_to_id(title) {
-  return title.toLowerCase()
-    .replace(/[^a-z0-9-]+/g, ID_SEPARATOR)
-    .replace(new RegExp('^' + ID_SEPARATOR + '+'), '')
-    .replace(new RegExp(ID_SEPARATOR + '+$'), '')
-  ;
-}
-
 /**
  * Same interface as html_convert_attrs, but automatically add the ID to the list
  * of arguments.
@@ -1549,6 +1571,10 @@ function html_convert_simple_elem(elem_name, options={}) {
   };
 }
 
+function html_elem(tag, content) {
+  return `<${tag}>${content}</${tag}>`;
+}
+
 function html_escape_attr(str) {
   return html_escape_content(str)
     .replace(/"/g, '&quot;')
@@ -1599,8 +1625,28 @@ function html_is_whitespace(string) {
   return true;
 }
 
-function html_elem(tag, content) {
-  return `<${tag}>${content}</${tag}>`;
+function html_katex_convert(ast, context) {
+  try {
+    return katex.renderToString(
+      convert_arg(ast.args.content, clone_and_set(context, 'html_escape', false)),
+      {
+        macros: context.katex_macros,
+        throwOnError: true,
+        globalGroup: true,
+      }
+    );
+  } catch(error) {
+    // TODO get working remove the crap KaTeX adds to the end of the string.
+    // It uses Unicode char hacks to add underlines... and there are two trailing
+    // chars after the final newline, so the error message is taking up two lines
+    let message = error.toString().replace(/\n\xcc\xb2$/, '');
+    render_error(context, message, ast.args.content.line, ast.args.content.column);
+    return error_message_in_output(message, context);
+  }
+}
+
+function html_self_link(ast) {
+  return ` href="#${html_escape_attr(ast.id)}"`;
 }
 
 /**
@@ -1632,7 +1678,7 @@ function macro_image_video_block_convert_function(content_func, source_func) {
     let ret = `<figure${figure_attrs}>\n`
     let href_prefix;
     if (ast.id !== undefined) {
-      href_prefix = this.self_link(ast);
+      href_prefix = html_self_link(ast);
     } else {
       href_prefix = undefined;
     }
@@ -2523,6 +2569,18 @@ function parse_error(state, message, line, column) {
     message, line, column));
 }
 
+function render_error(context, message, line, column) {
+  context.errors.push(new ErrorMessage(message, line, column));
+}
+
+function title_to_id(title) {
+  return title.toLowerCase()
+    .replace(/[^a-z0-9-]+/g, ID_SEPARATOR)
+    .replace(new RegExp('^' + ID_SEPARATOR + '+'), '')
+    .replace(new RegExp(ID_SEPARATOR + '+$'), '')
+  ;
+}
+
 /**
   * @param {AstNode} target_id_ast
   * @return {String} the href="..." that an \x cross reference to the given target_id_ast
@@ -2553,6 +2611,7 @@ const HTML_ASCII_WHITESPACE = new Set([' ', '\r', '\n', '\f', '\t']);
 const ID_SEPARATOR = '-';
 const INSANE_LIST_START = '* ';
 const INSANE_LIST_INDENT = '  ';
+const INSANE_HEADER_CHAR = '=';
 const MAGIC_CHAR_ARGS = {
   '$': Macro.MATH_MACRO_NAME,
   '`': Macro.CODE_MACRO_NAME,
@@ -2747,7 +2806,7 @@ const DEFAULT_MACRO_LIST = [
         level_int_capped = level_int;
       }
       let attrs = html_convert_attrs_id(ast, context, [], custom_args);
-      let ret = `<h${level_int_capped}${attrs}><a${this.self_link(ast)} title="link to this element">`;
+      let ret = `<h${level_int_capped}${attrs}><a${html_self_link(ast)} title="link to this element">`;
       let x_text_options = {
         show_caption_prefix: false,
       };
@@ -2832,7 +2891,7 @@ const DEFAULT_MACRO_LIST = [
     ],
     function(ast, context) {
       let attrs = html_convert_attrs_id(ast, context);
-      let katex_output = this.katex_convert(ast, context);
+      let katex_output = html_katex_convert(ast, context);
       let ret = ``;
       let do_show;
       let show_arg = ast.args.show;
@@ -2842,7 +2901,7 @@ const DEFAULT_MACRO_LIST = [
         let show = convert_arg_noescape(show_arg, context);
         if (!(show === '0' || show === '1')) {
           let message = `show must be 0 or 1: "${level}"`;
-          this.error(context, message, show_arg, show_arg.column);
+          render_error(context, message, show_arg, show_arg.column);
           return error_message_in_output(message, context);
         }
         do_show = (show === '1');
@@ -2894,7 +2953,7 @@ const DEFAULT_MACRO_LIST = [
     ],
     function(ast, context) {
       // KaTeX already adds a <span> for us.
-      return this.katex_convert(ast, context);
+      return html_katex_convert(ast, context);
     },
     {
       phrasing: true,
@@ -3087,16 +3146,19 @@ const DEFAULT_MACRO_LIST = [
         let content = Macro.x_text(target_ast, context, {style_full: true, show_caption_prefix: false});
         let target_id = html_escape_attr(target_ast.id);
         let href = html_attr('href', '#' + target_id);
-        let id_to_toc = html_attr('id', Macro.TOC_PREFIX + target_id);
+        let id_to_toc = html_attr(Macro.ID_ARGUMENT_NAME, Macro.TOC_PREFIX + target_id);
         ret += `<li><div${id_to_toc}><a${href}>${content}</a><span>`;
 
         let toc_href = html_attr('href', '#' + Macro.TOC_PREFIX + target_id);
         ret += ` | <a${toc_href}>${UNICODE_LINK} link</a>`;
 
         let parent_ast = target_ast.header_tree_node.parent_node.value;
-        let parent_href = html_attr('href', '#' + Macro.TOC_PREFIX + parent_ast.id);
-        let parent_body = convert_arg(parent_ast.args[Macro.TITLE_ARGUMENT_NAME], context);
-        ret += ` | <a${parent_href}>\u2191 parent "${parent_body}"</a>`;
+        // Possible on broken h1 level.
+        if (parent_ast !== undefined) {
+          let parent_href = html_attr('href', '#' + Macro.TOC_PREFIX + parent_ast.id);
+          let parent_body = convert_arg(parent_ast.args[Macro.TITLE_ARGUMENT_NAME], context);
+          ret += ` | <a${parent_href}>\u2191 parent "${parent_body}"</a>`;
+        }
 
         ret += `</span></div>`;
         if (tree_node.children.length > 0) {
@@ -3227,12 +3289,12 @@ const DEFAULT_MACRO_LIST = [
         name: 'content',
       }),
     ],
-    function(ast, context) {
+    function(ast, context, validation_output) {
       const target_id = convert_arg_noescape(ast.args.href, context);
       const target_id_ast = context.id_provider.get(target_id);
       if (target_id_ast === undefined) {
         let message = `cross reference to unknown id: "${target_id}"`;
-        this.error(context, message, ast.args.href.line, ast.args.href.column);
+        render_error(context, message, ast.args.href.line, ast.args.href.column);
         return error_message_in_output(message, context);
       }
       const content_arg = ast.args.content;
@@ -3242,13 +3304,13 @@ const DEFAULT_MACRO_LIST = [
           caption_prefix_span: false,
           quote: true,
         };
-        if ('full' in ast.args) {
-          x_text_options.style_full = true;
+        if (validation_output.full.given) {
+          x_text_options.style_full = validation_output.full.boolean;
         }
         content = Macro.x_text(target_id_ast, context, x_text_options);
         if (content === ``) {
           let message = `empty cross reference body: "${target_id}"`;
-          this.error(context, message, ast.line, ast.column);
+          render_error(context, message, ast.line, ast.column);
           return error_message_in_output(message, context);
         }
       } else {
