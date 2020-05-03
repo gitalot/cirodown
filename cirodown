@@ -718,6 +718,8 @@ A link to another file: \\x[and-now-an-include]
           // Generate special files needed for GitHub pages.
           gemfile_content = "gem 'github-pages', group: :jekyll_plugins\n";
           fs.writeFileSync(path.join(convert_input_options.outdir, 'Gemfile'), gemfile_content);
+          //for (let redirect_src in cirodown_json.redirects) {
+          //}
 
           // Commit and push.
           if ('prepublish' in cirodown_json) {
