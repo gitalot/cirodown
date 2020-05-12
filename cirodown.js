@@ -565,25 +565,28 @@ class Tokenizer {
    * The current index must only be incremented through this function
    * and never directly.
    *
+   * @param {Number} how many to consume
    * @return {boolean} true iff we are not reading past the end of the input
    */
-  consume() {
-    this.log_debug('consume');
-    this.log_debug('this.i: ' + this.i);
-    this.log_debug('this.cur_c: ' + this.cur_c);
-    this.log_debug();
-    if (this.chars[this.i] === '\n') {
-      this.line += 1;
-      this.column = 1;
-    } else {
-      this.column += 1;
+  consume(n=1) {
+    for (let done = 0; done < n; done++) {
+      this.log_debug('consume');
+      this.log_debug('this.i: ' + this.i);
+      this.log_debug('this.cur_c: ' + this.cur_c);
+      this.log_debug();
+      if (this.chars[this.i] === '\n') {
+        this.line += 1;
+        this.column = 1;
+      } else {
+        this.column += 1;
+      }
+      this.i += 1;
+      if (this.i >= this.chars.length) {
+        this.cur_c = undefined;
+        return false;
+      }
+      this.cur_c = this.chars[this.i];
     }
-    this.i += 1;
-    if (this.i >= this.chars.length) {
-      this.cur_c = undefined;
-      return false;
-    }
-    this.cur_c = this.chars[this.i];
     return true;
   }
 
@@ -630,12 +633,12 @@ class Tokenizer {
       this.cur_c === '\n' &&
       !this.in_insane_header
     ) {
-      const peek = this.peek();
+      const full_indent = INSANE_LIST_INDENT.repeat(this.list_level);
       if (
-        peek === START_POSITIONAL_ARGUMENT_CHAR ||
-        peek === START_NAMED_ARGUMENT_CHAR
+        array_contains_array_at(this.chars, this.i + 1, full_indent + START_POSITIONAL_ARGUMENT_CHAR) ||
+        array_contains_array_at(this.chars, this.i + 1, full_indent + START_NAMED_ARGUMENT_CHAR)
       ) {
-        this.consume();
+        this.consume(full_indent.length + 1);
       }
     }
   }
@@ -845,10 +848,14 @@ class Tokenizer {
           this.tokens[this.tokens.length - 1].type === TokenType.POSITIONAL_ARGUMENT_START ||
           this.tokens[this.tokens.length - 1].type === TokenType.NAMED_ARGUMENT_NAME
         ) {
-          if (
-            array_contains_array_at(this.chars, this.i, 'http://') ||
-            array_contains_array_at(this.chars, this.i, 'https://')
-          ) {
+          let protocol_is_known = false;
+          for (const known_url_protocol of KNOWN_URL_PROTOCOLS) {
+            if (array_contains_array_at(this.chars, this.i, known_url_protocol)) {
+              protocol_is_known = true;
+              break;
+            }
+          }
+          if (protocol_is_known) {
             this.push_token(TokenType.MACRO_NAME, Macro.LINK_MACRO_NAME);
             this.push_token(TokenType.POSITIONAL_ARGUMENT_START);
             let link_text = '';
@@ -1032,9 +1039,31 @@ class Tokenizer {
       end_i = this.i;
       append = '';
     }
+
+    // Remove insane list indents.
+    let plaintext = '';
+    {
+      let i = start_i;
+      while (true) {
+        if (this.chars[i - 1] === '\n') {
+          if (!array_contains_array_at(this.chars, i, INSANE_LIST_INDENT.repeat(this.list_level))) {
+            this.error(`literal argument with indent smaller than current insane list`, start_line, start_column);
+          }
+          i += INSANE_LIST_INDENT.length * this.list_level;
+        }
+        if (i < end_i) {
+          plaintext += this.chars[i];
+        } else {
+          break;
+        }
+        i++;
+      }
+    }
+
+    // Create the token.
     this.push_token(
       TokenType.PLAINTEXT,
-      this.chars.slice(start_i, end_i).join('') + append,
+      plaintext + append,
       start_line,
       start_column
     );
@@ -1108,7 +1137,7 @@ function array_equals(arr1, arr2) {
 }
 
 function basename(str) {
-    return str.substr(str.lastIndexOf('/') + 1);
+    return str.substr(str.lastIndexOf(URL_SEP) + 1);
 }
 
 function capitalize_first_letter(string) {
@@ -1182,17 +1211,27 @@ function convert(
     options = {};
   }
   if (!('body_only' in options)) { options.body_only = false; }
-  if (!('template_vars' in options)) { options.template_vars = {}; }
-  if (!('style' in options.template_vars)) { options.template_vars.style = ''; }
+  if (!('cirodown_json' in options)) { options.cirodown_json = {}; }
+    const cirodown_json = options.cirodown_json;
+    {
+      if (!('media-providers' in cirodown_json)) { cirodown_json['media-providers'] = {}; }
+      {
+        const media_providers = cirodown_json['media-providers'];
+        if (!('local' in media_providers)) { media_providers.local = {}; }
+        if (!('path' in media_providers.local)) { media_providers.local.path = ''; }
+        if (!('github' in media_providers)) { media_providers.github = {}; }
+        if (!('remote' in media_providers.github)) { media_providers.github.remote = 'TODO determine from git remote origin if any'; }
+      }
+    }
   if (!('from_include' in options)) { options.from_include = false; }
-  if (!('include_path_set' in options)) { options.include_path_set = new Set(); }
-  if (!('id_provider' in options)) {
-    options.id_provider = undefined;
-  }
   if (!('html_embed' in options)) { options.html_embed = false; }
   if (!('html_single_page' in options)) { options.html_single_page = false; }
   if (!('html_x_extension' in options)) { options.html_x_extension = true; }
   if (!('h_level_offset' in options)) { options.h_level_offset = 0; }
+  if (!('id_provider' in options)) {
+    options.id_provider = undefined;
+  }
+  if (!('include_path_set' in options)) { options.include_path_set = new Set(); }
   if (!('input_path' in options)) { options.input_path = undefined; }
   if (!('render' in options)) { options.render = true; }
   if (!('start_line' in options)) { options.start_line = 1; }
@@ -1201,6 +1240,8 @@ function convert(
   if (!('show_tokenize' in options)) { options.show_tokenize = false; }
   if (!('show_tokens' in options)) { options.show_tokens = false; }
   if (!('template' in options)) { options.template = undefined; }
+  if (!('template_vars' in options)) { options.template_vars = {}; }
+    if (!('style' in options.template_vars)) { options.template_vars.style = ''; }
   // https://cirosantilli.com/cirodown#the-id-of-the-first-header-is-derived-from-the-filename
   if (!('toplevel_id' in options)) { options.toplevel_id = undefined; }
   const macros = macro_list_to_macros();
@@ -1219,31 +1260,62 @@ function convert(
   extra_returns.tokens = tokens;
   extra_returns.errors.push(...sub_extra_returns.errors);
   sub_extra_returns = {};
-  let ast = parse(tokens, macros, options, sub_extra_returns);
+  let context = {
+      errors: [],
+      extra_returns: extra_returns,
+      macros: macros,
+      options: options,
+  };
+
+  // Setup context.media_provider_default based on `default-for`.
+  {
+    const media_providers = cirodown_json['media-providers'];
+    context.media_provider_default = {};
+    for (const media_provider_macro_name in media_providers) {
+      const media_provider = media_providers[media_provider_macro_name];
+      if ('default-for' in media_provider) {
+        for (const default_for of media_provider['default-for']) {
+          if (default_for === 'all') {
+            for (const macro_name of MACRO_WITH_MEDIA_PROVIDER) {
+              context.media_provider_default[default_for] === media_provider_macro_name;
+            }
+          } else {
+            if (MACRO_WITH_MEDIA_PROVIDER.has(default_for)) {
+              if (context.media_provider_default[default_for] === undefined) {
+                context.media_provider_default[default_for] = media_provider_macro_name;
+              } else {
+                context.errors.push(new ErrorMessage(`multiple media providers set for macro "${default_for}"`, 1, 1));
+              }
+            } else {
+              context.errors.push(new ErrorMessage(`macro "${default_for}" does not accept media providers`, 1, 1));
+            }
+          }
+        }
+      }
+    }
+    for (const macro_name of MACRO_WITH_MEDIA_PROVIDER) {
+      if (context.media_provider_default[macro_name] === undefined) {
+        context.media_provider_default[macro_name] = 'local';
+      }
+    }
+  }
+
+  let ast = parse(tokens, macros, options, context, sub_extra_returns);
   if (options.show_ast) {
     console.error('ast:');
     console.error(JSON.stringify(ast, null, 2));
     console.error();
   }
   extra_returns.ast = ast;
-  extra_returns.context = sub_extra_returns.context;
+  extra_returns.context = context;
   extra_returns.context.include_path_set = sub_extra_returns.include_path_set;
   extra_returns.ids = sub_extra_returns.ids;
   extra_returns.errors.push(...sub_extra_returns.errors);
   let output;
   if (options.render) {
-    let errors = [];
-    let context = Object.assign(
-      sub_extra_returns.context,
-      {
-        errors: errors,
-        extra_returns: extra_returns,
-        macros: macros,
-        options: options,
-      }
-    );
+    context.extra_returns = extra_returns;
     output = ast.convert(context);
-    extra_returns.errors.push(...errors);
+    extra_returns.errors.push(...context.errors);
   }
   extra_returns.errors = extra_returns.errors.sort((a, b)=>{
     if (a.line < b.line)
@@ -1572,7 +1644,10 @@ function macro_image_video_block_convert_function(ast, context) {
   if (description !== '') {
     description = '. ' + description;
   }
-  let {src, source, source_type} = macro_image_video_source(ast, context);
+  let {error_message, src, source, source_type} = macro_image_video_source(ast, context);
+  if (error_message !== undefined) {
+    return error_message;
+  }
   if (source !== '') {
     source = `<a ${html_attr('href', source)}>Source</a>.`;
     if (description === '') {
@@ -1634,8 +1709,7 @@ function object_subset(source_object, keys) {
  *         - {Object} ids
  * @return {AstNode}
  */
-function parse(tokens, macros, options, extra_returns={}) {
-  extra_returns.context = {};
+function parse(tokens, macros, options, context, extra_returns={}) {
   extra_returns.errors = [];
   extra_returns.include_path_set = new Set(options.include_path_set);
   let state = {
@@ -1685,10 +1759,6 @@ function parse(tokens, macros, options, extra_returns={}) {
   let cur_header_level;
   let toplevel_parent_arg = new AstArgument([], 1, 1);
   let todo_visit = [[toplevel_parent_arg, ast_toplevel]];
-  // Some AST postprocessing decisions need information from the render step,
-  // so we define a minimal context here. This is ugly and will case problems
-  // one day, but it is also simple.
-  const id_context = {'macros': macros};
   // IDs that are indexed: you can link to those.
   let indexed_ids = {};
   // Non-indexed-ids: auto-generated numeric ID's like p-1, p-2, etc.
@@ -1719,7 +1789,7 @@ function parse(tokens, macros, options, extra_returns={}) {
     ast.from_include = options.from_include;
     ast.input_path = options.input_path;
     if (macro_name === Macro.INCLUDE_MACRO_NAME) {
-      const href = convert_arg_noescape(ast.args.href, id_context);
+      const href = convert_arg_noescape(ast.args.href, context);
       cur_header.includes.push(href);
       if (extra_returns.include_path_set.has(href)) {
         let message = `circular include detected to: "${href}"`;
@@ -1760,7 +1830,7 @@ function parse(tokens, macros, options, extra_returns={}) {
               show_caption_prefix: false,
               style_full: false,
             };
-            header_node_title = x_text(target_id_ast, id_context, x_text_options);
+            header_node_title = x_text(target_id_ast, context, x_text_options);
           }
           // Don't merge into a single file, render as a dummy header and an xref link instead.
           new_child_nodes = [
@@ -1872,7 +1942,7 @@ function parse(tokens, macros, options, extra_returns={}) {
           'q',
           {
             'content': convert_include(
-              convert_arg_noescape(ast.args.content, id_context),
+              convert_arg_noescape(ast.args.content, context),
               options,
               0,
               options.input_path,
@@ -1891,7 +1961,7 @@ function parse(tokens, macros, options, extra_returns={}) {
         }
         cur_header = ast;
         cur_header_level = parseInt(
-          convert_arg_noescape(ast.args.level, id_context)
+          convert_arg_noescape(ast.args.level, context)
         ) + options.h_level_offset;
         ast.level = cur_header_level;
         if ('level' in ast.args) {
@@ -1936,10 +2006,10 @@ function parse(tokens, macros, options, extra_returns={}) {
     let is_first_header = true;
     let first_header_level;
     let first_header;
-    extra_returns.context.headers_with_include = [];
-    extra_returns.context.id_provider = id_provider;
-    extra_returns.context.header_graph = new TreeNode();
-    extra_returns.context.has_toc = false;
+    context.headers_with_include = [];
+    context.id_provider = id_provider;
+    context.header_graph = new TreeNode();
+    context.has_toc = false;
     let toplevel_parent_arg = new AstArgument([], 1, 1);
 
     // First do a pass that makes any changes to the tree.
@@ -1955,7 +2025,7 @@ function parse(tokens, macros, options, extra_returns={}) {
             // Skip.
             continue;
           }
-          extra_returns.context.has_toc = true;
+          context.has_toc = true;
         } else if (macro_name === Macro.TOPLEVEL_MACRO_NAME && ast.parent_node !== undefined) {
           // Prevent this from happening. When this was committed originally,
           // it actually worked and output an `html` inside another `html`.
@@ -2118,7 +2188,7 @@ function parse(tokens, macros, options, extra_returns={}) {
         if (macro_name === Macro.HEADER_MACRO_NAME) {
           // Create the header tree.
           if (ast.level === undefined) {
-            cur_header_level = parseInt(convert_arg_noescape(ast.args.level, id_context)) + options.h_level_offset;
+            cur_header_level = parseInt(convert_arg_noescape(ast.args.level, context)) + options.h_level_offset;
             ast.level = cur_header_level;
           } else {
             // Possible for included headers.
@@ -2129,7 +2199,7 @@ function parse(tokens, macros, options, extra_returns={}) {
             is_first_header = false;
             first_header_level = cur_header_level;
             header_graph_last_level = cur_header_level - 1;
-            header_graph_stack[header_graph_last_level] = extra_returns.context.header_graph;
+            header_graph_stack[header_graph_last_level] = context.header_graph;
           }
           cur_header_tree_node = new TreeNode(ast, header_graph_stack[cur_header_level - 1]);
           ast.header_tree_node = cur_header_tree_node;
@@ -2154,7 +2224,7 @@ function parse(tokens, macros, options, extra_returns={}) {
           header_graph_stack[cur_header_level] = cur_header_tree_node;
           header_graph_last_level = cur_header_level;
           if (ast.includes.length > 0) {
-            extra_returns.context.headers_with_include.push(ast);
+            context.headers_with_include.push(ast);
           }
         }
 
@@ -2190,7 +2260,7 @@ function parse(tokens, macros, options, extra_returns={}) {
               if (macro_arg.boolean) {
                 let arg_string;
                 if (arg.length > 0) {
-                  arg_string = convert_arg_noescape(arg, id_context);
+                  arg_string = convert_arg_noescape(arg, context);
                 } else {
                   arg_string = '1';
                 }
@@ -2207,7 +2277,7 @@ function parse(tokens, macros, options, extra_returns={}) {
                 }
               }
               if (macro_arg.positive_nonzero_integer) {
-                const arg_string = convert_arg_noescape(arg, id_context);
+                const arg_string = convert_arg_noescape(arg, context);
                 const int_value = parseInt(arg_string);
                 ast.validation_output[argname]['positive_nonzero_integer'] = int_value;
                 if (!Number.isInteger(int_value) || !(int_value > 0)) {
@@ -2249,7 +2319,7 @@ function parse(tokens, macros, options, extra_returns={}) {
             if (title_arg !== undefined) {
               // ID from title.
               // TODO correct unicode aware algorithm.
-              id_text += title_to_id(convert_arg_noescape(title_arg, id_context));
+              id_text += title_to_id(convert_arg_noescape(title_arg, context));
               ast.id = id_text;
             } else if (!macro.options.phrasing) {
               // ID from element count.
@@ -2260,7 +2330,7 @@ function parse(tokens, macros, options, extra_returns={}) {
               }
             }
           } else {
-            ast.id = convert_arg_noescape(macro_id_arg, id_context);
+            ast.id = convert_arg_noescape(macro_id_arg, context);
           }
         }
         ast.index_id = index_id;
@@ -2289,7 +2359,7 @@ function parse(tokens, macros, options, extra_returns={}) {
             message += `line ${previous_ast.line} colum ${previous_ast.column}`;
             parse_error(state, message, ast.line, ast.column);
           }
-          if (index_id || macro.options.caption_number_visible(ast, id_context)) {
+          if (index_id || macro.options.caption_number_visible(ast, context)) {
             if (!(macro_name in macro_counts_visible)) {
               macro_counts_visible[macro_name] = 0;
             }
@@ -2312,11 +2382,11 @@ function parse(tokens, macros, options, extra_returns={}) {
     extra_returns.ids = indexed_ids;
 
     // Calculate header_graph_top_level.
-    let level0_header = extra_returns.context.header_graph;
+    let level0_header = context.header_graph;
     if (level0_header.children.length === 1) {
-      extra_returns.context.header_graph_top_level = first_header_level;
+      context.header_graph_top_level = first_header_level;
     } else {
-      extra_returns.context.header_graph_top_level = first_header_level - 1;
+      context.header_graph_top_level = first_header_level - 1;
     }
   }
 
@@ -2719,6 +2789,9 @@ const MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS = [
     positive_nonzero_integer: true,
   }),
   new MacroArgument({
+    name: 'provider',
+  }),
+  new MacroArgument({
     name: 'source',
     elide_link_only: true,
   }),
@@ -2729,6 +2802,33 @@ const MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS = [
 ];
 function macro_image_video_source(ast, context) {
   let src = convert_arg_noescape(ast.args.src, context);
+  let error_message;
+  let protocol_is_known = false;
+  for (const known_url_protocol of KNOWN_URL_PROTOCOLS) {
+    if (src.startsWith(known_url_protocol)) {
+      protocol_is_known = true;
+      break;
+    }
+  }
+  if (!protocol_is_known) {
+    let provider;
+    if (ast.validation_output.provider.given) {
+      provider = convert_arg_noescape(ast.args.provider, context);
+    } else {
+      provider = context.media_provider_default[ast.macro_name];
+    }
+    if (provider === 'local') {
+      const path = context.options.cirodown_json['media-providers'].local.path;
+      if (path !== '') {
+        src = path + URL_SEP + src;
+      }
+    } else if (provider === 'github') {
+      src = `https://raw.githubusercontent.com/${context.options.cirodown_json['media-providers'].github.remote}/master/${src}`;
+    } else {
+      error_message = `unknown media provider: "${html_escape_attr(provider)}"`;
+      render_error(context, error_message, ast.args.provider.line, ast.args.provider.column);
+    }
+  }
   let source_type;
   if (src.match(macro_image_video_block_convert_function_source_types_wikimedia_re)) {
     source_type = macro_image_video_block_convert_function_source_types.WIKIMEDIA;
@@ -2738,6 +2838,7 @@ function macro_image_video_source(ast, context) {
     source_type = macro_image_video_block_convert_function_source_types.UNKNOWN;
   }
   return {
+    error_message: error_message,
     source: context.macros[ast.macro_name].options.source_func(ast, context, src, source_type),
     src: src,
     type: source_type,
@@ -2758,6 +2859,10 @@ const MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS = [
     name: 'alt',
   }),
 ];
+// https://cirosantilli.com/cirodown#known-url-protocols
+const KNOWN_URL_PROTOCOLS = new Set(['http://', 'https://']);
+const URL_SEP = '/';
+const MACRO_WITH_MEDIA_PROVIDER = new Set(['Image', 'Video']);
 const DEFAULT_MACRO_LIST = [
   new Macro(
     Macro.LINK_MACRO_NAME,

@@ -310,23 +310,63 @@ assert_convert_ast('list with paragraph insane',
     ]),
   ]
 )
-assert_convert_ast('nested list sane',
-  `\\l[
-aa
-\\l[
-bb
-]
-]
+assert_convert_ast('list with multiline paragraph insane',
+  `* aa
+
+  bb
+  cc
 `,
   [
     a('ul', [
       a('l', [
-        t('aa\n'),
-        a('ul', [
-          a('l', [
-            t('bb\n')
-          ]),
-        ]),
+        a('p', [t('aa')]),
+        a('p', [t('bb\ncc')]),
+      ]),
+    ]),
+  ]
+)
+// https://github.com/cirosantilli/cirodown/issues/54
+assert_convert_ast('insane list with literal no error',
+  `* aa
+
+  \`\`
+  bb
+  cc
+  \`\`
+`,
+  [
+    a('ul', [
+      a('l', [
+        a('p', [t('aa')]),
+        a('C', [t('bb\ncc\n')]),
+      ]),
+    ]),
+  ]
+)
+assert_error('insane list with literal with error',
+  `* aa
+
+  \`\`
+  bb
+cc
+  \`\`
+`,
+  4, 1
+)
+// https://github.com/cirosantilli/cirodown/issues/53
+assert_convert_ast('insane list with element with newline separated arguments',
+  `* aa
+
+  \`\`
+  bb
+  \`\`
+  {id=cc}
+`,
+  [
+    a('ul', [
+      a('l', [
+        a('p', [t('aa')]),
+        a('C', [t('bb\n')], {'id': [t('cc')]}),
       ]),
     ]),
   ]
@@ -474,7 +514,11 @@ assert_convert_ast('image title',
     title: [t('c d')],
   }),
 ]
-)
+);
+assert_error('image with unknown provider',
+  `\\Image[ab]{provider=reserved_undefined}`,
+  1, 11
+);
 // TODO inner property test
 //assert_convert_ast('image without id does not increment image count',
 //  `\\Image[ab]
