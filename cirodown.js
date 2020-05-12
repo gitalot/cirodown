@@ -4026,6 +4026,7 @@ function () {
     this.trust = void 0;
     this.maxSize = void 0;
     this.maxExpand = void 0;
+    this.globalGroup = void 0;
     // allow null options
     options = options || {};
     this.displayMode = utils.deflt(options.displayMode, false);
@@ -4041,6 +4042,7 @@ function () {
     this.trust = utils.deflt(options.trust, false);
     this.maxSize = Math.max(0, utils.deflt(options.maxSize, Infinity));
     this.maxExpand = Math.max(0, utils.deflt(options.maxExpand, 1000));
+    this.globalGroup = utils.deflt(options.globalGroup, false);
   }
   /**
    * Report nonstrict (non-LaTeX-compatible) input.
@@ -19805,11 +19807,14 @@ function () {
   ;
 
   _proto.parse = function parse() {
-    // Create a group namespace for the math expression.
-    // (LaTeX creates a new group for every $...$, $$...$$, \[...\].)
-    this.gullet.beginGroup(); // Use old \color behavior (same as LaTeX's \textcolor) if requested.
+    if (!this.settings.globalGroup) {
+      // Create a group namespace for the math expression.
+      // (LaTeX creates a new group for every $...$, $$...$$, \[...\].)
+      this.gullet.beginGroup();
+    } // Use old \color behavior (same as LaTeX's \textcolor) if requested.
     // We do this within the group for the math expression, so it doesn't
     // pollute settings.macros.
+
 
     if (this.settings.colorIsTextColor) {
       this.gullet.macros.set("\\color", "\\textcolor");
@@ -19820,7 +19825,10 @@ function () {
 
     this.expect("EOF"); // End the group namespace for the expression
 
-    this.gullet.endGroup();
+    if (!this.settings.globalGroup) {
+      this.gullet.endGroup();
+    }
+
     return parse;
   };
 
@@ -20934,7 +20942,7 @@ var katex_renderToHTMLTree = function renderToHTMLTree(expression, options) {
   /**
    * Current KaTeX version
    */
-  version: "0.11.1",
+  version: "0.12.0-pre",
 
   /**
    * Renders the given LaTeX into an HTML+MathML combination, and adds
