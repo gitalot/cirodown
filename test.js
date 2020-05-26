@@ -353,6 +353,24 @@ cc
 `,
   4, 1
 )
+assert_convert_ast('insane list with literal with double newline is not an error',
+  `* aa
+
+  \`\`
+  bb
+
+  cc
+  \`\`
+`,
+  [
+    a('ul', [
+      a('l', [
+        a('p', [t('aa')]),
+        a('C', [t('bb\n\ncc\n')]),
+      ]),
+    ]),
+  ]
+)
 // https://github.com/cirosantilli/cirodown/issues/53
 assert_convert_ast('insane list with element with newline separated arguments',
   `* aa
@@ -518,6 +536,14 @@ assert_convert_ast('image title',
 assert_error('image with unknown provider',
   `\\Image[ab]{provider=reserved_undefined}`,
   1, 11
+);
+assert_error('image provider that does not match actual source',
+  `\\Image[https://upload.wikimedia.org/wikipedia/commons/5/5b/Gel_electrophoresis_insert_comb.jpg]{provider=local}`,
+  1, 96
+);
+assert_no_error('image provider that does match actual source',
+  `\\Image[https://upload.wikimedia.org/wikipedia/commons/5/5b/Gel_electrophoresis_insert_comb.jpg]{provider=wikimedia}`,
+  1, 96
 );
 // TODO inner property test
 //assert_convert_ast('image without id does not increment image count',
@@ -944,6 +970,102 @@ assert_convert_ast('cross reference circular loop infinite recursion explicit bo
       title: [a('x', [t('myh1')], {'href': [t('h1')]})],
     }),
   ]
+);
+assert_convert_ast('cross reference from image title before with x content without image id works',
+  `= ab
+
+\\Image[cd]{title=\\x[ab][cd]}
+`,
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [t('ab')],
+    }),
+    a('Image', undefined, {
+      src: [t('cd')],
+      title: [a('x', [t('cd')], {'href': [t('ab')]})],
+    }),
+  ]
+);
+assert_convert_ast('cross reference from image title before without x content with image id works',
+  `= ab
+
+\\Image[cd]{title=\\x[ab]}{id=cd}
+`,
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [t('ab')],
+    }),
+    a('Image', undefined, {
+      id: [t('cd')],
+      src: [t('cd')],
+      title: [a('x', undefined, {'href': [t('ab')]})],
+    }),
+  ]
+);
+// https://cirosantilli.com/cirodown#x-within-title-restrictions
+assert_error('cross reference from image title before without x content without image is an error',
+  `= ab
+
+\\Image[cd]{title=\\x[ab]}
+`,
+  3, 18
+);
+assert_convert_ast('cross reference from image title after with x content without image works',
+  `= ab
+
+\\Image[cd]{title=\\x[ef][gh]}
+
+== ef
+`,
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [t('ab')],
+    }),
+    a('Image', undefined, {
+      src: [t('cd')],
+      title: [a('x', [t('gh')], {'href': [t('ef')]})],
+    }),
+    a('h', undefined, {
+      level: [t('2')],
+      title: [t('ef')],
+    }),
+  ]
+);
+assert_convert_ast('cross reference from image title after without x content with image works',
+  `= ab
+
+\\Image[cd]{title=\\x[ef]}{id=gh}
+
+== ef
+`,
+  [
+    a('h', undefined, {
+      level: [t('1')],
+      title: [t('ab')],
+    }),
+    a('Image', undefined, {
+      id: [t('gh')],
+      src: [t('cd')],
+      title: [a('x', undefined, {'href': [t('ef')]})],
+    }),
+    a('h', undefined, {
+      level: [t('2')],
+      title: [t('ef')],
+    }),
+  ]
+);
+// https://cirosantilli.com/cirodown#x-within-title-restrictions
+assert_error('cross reference from image title after without x content without image is an error',
+  `= ab
+
+\\Image[cd]{title=\\x[ef]}
+
+== ef
+`,
+  3, 18
 );
 //// https://github.com/cirosantilli/cirodown/issues/45
 //assert_convert_ast('cross reference to plaintext id calculated from title',

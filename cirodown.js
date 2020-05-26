@@ -104,6 +104,7 @@ class AstNode {
    *        - {Object} ids - map of document IDs to their description:
    *                 - 'prefix': prefix to add for a  full reference, e.g. `Figure 1`, `Section 2`, etc.
    *                 - {AstArgument} 'title': the title of the element linked to
+   *        - {bool} in_caption_number_visible
    * @param {Object} context
    */
   convert(context) {
@@ -121,6 +122,9 @@ class AstNode {
     }
     if (!('id_provider' in context)) {
       context.id_provider = {};
+    }
+    if (!('in_title_no_id' in context)) {
+      context.in_title = false;
     }
     if (!('katex_macros' in context)) {
       context.katex_macros = {};
@@ -258,14 +262,14 @@ class IdProvider {
    *         undefined: ID not found
    *         Otherwise, the ast node for the given ID
    */
-  get(id) { throw 'unimplemented'; }
+  get(id, context) { throw 'unimplemented'; }
 
   /**
    * @param {String} id
    * @return {Array[AstNode]}: all header nodes that have the given ID
    *                           as a parent includer.
    */
-  get_includes(id) { throw 'unimplemented'; }
+  get_includes(id, context) { throw 'unimplemented'; }
 }
 exports.IdProvider = IdProvider;
 
@@ -280,21 +284,21 @@ class ChainedIdProvider extends IdProvider {
     this.id_provider_1 = id_provider_1;
     this.id_provider_2 = id_provider_2;
   }
-  get(id) {
+  get(id, context) {
     let ret;
-    ret = this.id_provider_1.get(id);
+    ret = this.id_provider_1.get(id, context);
     if (ret !== undefined) {
       return ret;
     }
-    ret = this.id_provider_2.get(id);
+    ret = this.id_provider_2.get(id, context);
     if (ret !== undefined) {
       return ret;
     }
     return undefined;
   }
-  get_includes(id) {
-    return this.id_provider_1.get_includes(id).concat(
-      this.id_provider_2.get_includes(id));
+  get_includes(id, context) {
+    return this.id_provider_1.get_includes(id, context).concat(
+      this.id_provider_2.get_includes(id, context));
   }
 }
 
@@ -307,13 +311,13 @@ class DictIdProvider extends IdProvider {
     super();
     this.dict = dict;
   }
-  get(id) {
+  get(id, context) {
     if (id in this.dict) {
       return this.dict[id];
     }
     return undefined;
   }
-  get_includes(id) {
+  get_includes(id, context) {
     return [];
   }
 }
@@ -401,17 +405,22 @@ class Macro {
     if (!('caption_prefix' in options)) {
       options.caption_prefix = capitalize_first_letter(name);
     }
-    if (!('content_func' in options)) {
-      options.content_func = function() { throw new Error('unimplemented'); };
-    }
     if (!('default_x_style_full' in options)) {
       options.default_x_style_full = true;
     }
     if (!('get_number' in options)) {
       options.get_number = function(ast, context) { return ast.macro_count_visible; }
     }
+    if (!('get_title_arg' in options)) {
+      options.get_title_arg = function(ast, context) {
+        return ast.args[Macro.TITLE_ARGUMENT_NAME];
+      }
+    }
     if (!('id_prefix' in options)) {
       options.id_prefix = title_to_id(name);
+    }
+    if (!('image_video_content_func' in options)) {
+      options.image_video_content_func = function() { throw new Error('unimplemented'); };
     }
     if (!('macro_counts_ignore' in options)) {
       options.macro_counts_ignore = function(ast) {
@@ -919,7 +928,6 @@ class Tokenizer {
         )) {
           let i = this.i;
           let new_header_level = 0;
-          debugger;
           while (this.chars[i] === INSANE_HEADER_CHAR) {
             i += 1;
             new_header_level += 1;
@@ -1046,10 +1054,12 @@ class Tokenizer {
       let i = start_i;
       while (true) {
         if (this.chars[i - 1] === '\n') {
-          if (!array_contains_array_at(this.chars, i, INSANE_LIST_INDENT.repeat(this.list_level))) {
+          if (this.chars[i] === '\n') {
+          } else if (array_contains_array_at(this.chars, i, INSANE_LIST_INDENT.repeat(this.list_level))) {
+            i += INSANE_LIST_INDENT.length * this.list_level;
+          } else {
             this.error(`literal argument with indent smaller than current insane list`, start_line, start_column);
           }
-          i += INSANE_LIST_INDENT.length * this.list_level;
         }
         if (i < end_i) {
           plaintext += this.chars[i];
@@ -1137,11 +1147,15 @@ function array_equals(arr1, arr2) {
 }
 
 function basename(str) {
-    return str.substr(str.lastIndexOf(URL_SEP) + 1);
+  return str.substr(str.lastIndexOf(URL_SEP) + 1);
 }
 
 function capitalize_first_letter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function caption_number_visible(ast, context) {
+  return ast.index_id || context.macros[ast.macro_name].options.caption_number_visible(ast, context);
 }
 
 function char_is_alphanumeric(c) {
@@ -1217,10 +1231,28 @@ function convert(
       if (!('media-providers' in cirodown_json)) { cirodown_json['media-providers'] = {}; }
       {
         const media_providers = cirodown_json['media-providers'];
-        if (!('local' in media_providers)) { media_providers.local = {}; }
-        if (!('path' in media_providers.local)) { media_providers.local.path = ''; }
-        if (!('github' in media_providers)) { media_providers.github = {}; }
-        if (!('remote' in media_providers.github)) { media_providers.github.remote = 'TODO determine from git remote origin if any'; }
+
+        for (const media_provider_type of MEDIA_PROVIDER_TYPES) {
+          if (!(media_provider_type in media_providers)) {
+            media_providers[media_provider_type] = {};
+          }
+          const media_provider = media_providers[media_provider_type];
+          if (!('title-from-src' in media_provider)) {
+            media_provider['title-from-src'] = false;
+          }
+        }
+        if (!('path' in media_providers.local)) {
+          media_providers.local.path = '';
+        }
+        if (!('remote' in media_providers.github)) {
+          media_providers.github.remote = 'TODO determine from git remote origin if any';
+        }
+        for (const media_provider_name in media_providers) {
+          const media_provider = media_providers[media_provider_name];
+          if (!('title-from-src' in media_provider)) {
+            media_provider['title-from-src'] = false;
+          }
+        }
       }
     }
   if (!('from_include' in options)) { options.from_include = false; }
@@ -1261,33 +1293,40 @@ function convert(
   extra_returns.errors.push(...sub_extra_returns.errors);
   sub_extra_returns = {};
   let context = {
-      errors: [],
-      extra_returns: extra_returns,
-      macros: macros,
-      options: options,
+    errors: [],
+    extra_returns: extra_returns,
+    include_path_set: new Set(options.include_path_set),
+    macros: macros,
+    options: options,
   };
 
   // Setup context.media_provider_default based on `default-for`.
   {
     const media_providers = cirodown_json['media-providers'];
     context.media_provider_default = {};
-    for (const media_provider_macro_name in media_providers) {
-      const media_provider = media_providers[media_provider_macro_name];
+    for (const media_provider_name in media_providers) {
+      const media_provider = media_providers[media_provider_name];
       if ('default-for' in media_provider) {
         for (const default_for of media_provider['default-for']) {
-          if (default_for === 'all') {
-            for (const macro_name of MACRO_WITH_MEDIA_PROVIDER) {
-              context.media_provider_default[default_for] === media_provider_macro_name;
-            }
+          if (default_for[0] == default_for[0].toUpperCase()) {
+            context.errors.push(new ErrorMessage(`default-for names must start with a lower case letter`, 1, 1));
           } else {
-            if (MACRO_WITH_MEDIA_PROVIDER.has(default_for)) {
-              if (context.media_provider_default[default_for] === undefined) {
-                context.media_provider_default[default_for] = media_provider_macro_name;
-              } else {
-                context.errors.push(new ErrorMessage(`multiple media providers set for macro "${default_for}"`, 1, 1));
+            if (default_for === 'all') {
+              for (const macro_name of MACRO_WITH_MEDIA_PROVIDER) {
+                context.media_provider_default[default_for] = media_provider_name;
+                context.media_provider_default[capitalize_first_letter(default_for)] = media_provider_name;
               }
             } else {
-              context.errors.push(new ErrorMessage(`macro "${default_for}" does not accept media providers`, 1, 1));
+              if (MACRO_WITH_MEDIA_PROVIDER.has(default_for)) {
+                if (context.media_provider_default[default_for] === undefined) {
+                  context.media_provider_default[default_for] = media_provider_name;
+                  context.media_provider_default[capitalize_first_letter(default_for)] = media_provider_name;
+                } else {
+                  context.errors.push(new ErrorMessage(`multiple media providers set for macro "${default_for}"`, 1, 1));
+                }
+              } else {
+                context.errors.push(new ErrorMessage(`macro "${default_for}" does not accept media providers`, 1, 1));
+              }
             }
           }
         }
@@ -1296,11 +1335,12 @@ function convert(
     for (const macro_name of MACRO_WITH_MEDIA_PROVIDER) {
       if (context.media_provider_default[macro_name] === undefined) {
         context.media_provider_default[macro_name] = 'local';
+        context.media_provider_default[capitalize_first_letter(macro_name)] = 'local';
       }
     }
   }
 
-  let ast = parse(tokens, macros, options, context, sub_extra_returns);
+  let ast = parse(tokens, options, context, sub_extra_returns);
   if (options.show_ast) {
     console.error('ast:');
     console.error(JSON.stringify(ast, null, 2));
@@ -1308,7 +1348,6 @@ function convert(
   }
   extra_returns.ast = ast;
   extra_returns.context = context;
-  extra_returns.context.include_path_set = sub_extra_returns.include_path_set;
   extra_returns.ids = sub_extra_returns.ids;
   extra_returns.errors.push(...sub_extra_returns.errors);
   let output;
@@ -1343,7 +1382,7 @@ exports.convert = convert;
  * converting them to strings and concatenate all strings.
  *
  * @param {AstArgument} arg
- * @return {String}
+ * @return {String} empty string if arg is undefined
  */
 function convert_arg(arg, context) {
   let converted_arg = '';
@@ -1619,13 +1658,15 @@ function macro_list() {
 }
 exports.macro_list = macro_list;
 
-const macro_image_video_block_convert_function_source_types = make_enum([
-  'UNKNOWN',
-  'WIKIMEDIA',
-  'YOUTUBE',
+const MEDIA_PROVIDER_TYPES = new Set([
+  'github',
+  'local',
+  'unknown',
+  'wikimedia',
+  'youtube',
 ]);
-const macro_image_video_block_convert_function_source_types_wikimedia_re = new RegExp('^https?://upload.wikimedia.org/wikipedia/commons/');
-const macro_image_video_block_convert_function_source_types_youtube_re = new RegExp('^https?://(youtube.com|youtu.be)/');
+const media_provider_type_wikimedia_re = new RegExp('^https?://upload.wikimedia.org/wikipedia/commons/');
+const media_provider_type_youtube_re = new RegExp('^https?://(youtube.com|youtu.be)/');
 const macro_image_video_block_convert_function_wikimedia_source_url = 'https://commons.wikimedia.org/wiki/File:';
 const macro_image_video_block_convert_function_wikimedia_source_image_re = new RegExp('^\\d+px-');
 const macro_image_video_block_convert_function_wikimedia_source_video_re = new RegExp('^([^.]+\.[^.]+).*');
@@ -1641,45 +1682,42 @@ function macro_image_video_block_convert_function(ast, context) {
     href_prefix = undefined;
   }
   let description = convert_arg(ast.args.description, context);
+  let force_separator = false;
   if (description !== '') {
-    description = '. ' + description;
+    description = ' ' + description;
+    force_separator = true;
   }
-  let {error_message, src, source, source_type} = macro_image_video_source(ast, context);
+  let {error_message, media_provider_type, source, src, is_url}
+    = macro_image_video_resolve_params_with_source(ast, context);
   if (error_message !== undefined) {
     return error_message;
   }
   if (source !== '') {
-    source = `<a ${html_attr('href', source)}>Source</a>.`;
-    if (description === '') {
-      source = '. ' + source;
-    } else {
-      source = ' ' + source;
-    }
+    force_separator = true;
+    source = ` <a ${html_attr('href', source)}>Source</a>.`;
   }
-  let alt_arg;
-  const macro = context.macros[ast.macro_name];
-  const has_caption = ast.id !== undefined && (
-    ast.index_id ||
-    macro.options.caption_number_visible(ast, context)
-  );
+  let alt_val;
+  const has_caption = (ast.id !== undefined) && caption_number_visible(ast, context);
   if (ast.args.alt === undefined) {
     if (has_caption) {
-      alt_arg = undefined;
+      alt_val = undefined;
     } else {
-      alt_arg = ast.args.src;
+      alt_val = src;
     }
   } else {
-    alt_arg = ast.args.alt;
+    alt_val = convert_arg(ast.args.alt, context);
   }
   let alt;
-  if (alt_arg === undefined) {
+  if (alt_val === undefined) {
     alt = '';
   } else {
-    alt = html_attr('alt', html_escape_attr(convert_arg(alt_arg, context)));;
+    alt = html_attr('alt', html_escape_attr(alt_val));
   }
-  ret += macro.options.content_func(ast, context, src, rendered_attrs, alt, source_type);
+  ret += context.macros[ast.macro_name].options.image_video_content_func(
+    ast, context, src, rendered_attrs, alt, media_provider_type, is_url);
   if (has_caption) {
-    ret += `<figcaption>${x_text(ast, context, {href_prefix: href_prefix})}${description}${source}</figcaption>\n`;
+    ret += `<figcaption>${x_text(ast, context, {href_prefix:
+      href_prefix, force_separator: force_separator})}${description}${source}</figcaption>\n`;
   }
   ret += '</figure>\n';
   return ret;
@@ -1709,13 +1747,12 @@ function object_subset(source_object, keys) {
  *         - {Object} ids
  * @return {AstNode}
  */
-function parse(tokens, macros, options, context, extra_returns={}) {
+function parse(tokens, options, context, extra_returns={}) {
   extra_returns.errors = [];
-  extra_returns.include_path_set = new Set(options.include_path_set);
   let state = {
     extra_returns: extra_returns,
     i: 0,
-    macros: macros,
+    macros: context.macros,
     options: options,
     token: tokens[0],
     tokens: tokens,
@@ -1781,8 +1818,8 @@ function parse(tokens, macros, options, context, extra_returns={}) {
     id_provider = local_id_provider;
   }
   const include_options = Object.assign({}, options);
-  include_options.include_path_set = extra_returns.include_path_set;
-  extra_returns.include_path_set.add(options.input_path);
+  include_options.include_path_set = context.include_path_set;
+  context.include_path_set.add(options.input_path);
   while (todo_visit.length > 0) {
     const [parent_arg, ast] = todo_visit.pop();
     const macro_name = ast.macro_name;
@@ -1791,7 +1828,7 @@ function parse(tokens, macros, options, context, extra_returns={}) {
     if (macro_name === Macro.INCLUDE_MACRO_NAME) {
       const href = convert_arg_noescape(ast.args.href, context);
       cur_header.includes.push(href);
-      if (extra_returns.include_path_set.has(href)) {
+      if (context.include_path_set.has(href)) {
         let message = `circular include detected to: "${href}"`;
         parse_error(
           state,
@@ -1810,10 +1847,11 @@ function parse(tokens, macros, options, context, extra_returns={}) {
             href
           );
         } else {
-          const target_id_ast = id_provider.get(href);
+          const target_id_ast = id_provider.get(href, context);
           let header_node_title;
           if (target_id_ast === undefined) {
-            let message = `ID in include not found on database: "${href}", needed to calculate the cross reference title. Did you forget to convert all files beforehand?`;
+            let message = `ID in include not found on database: "${href}", ` +
+              `needed to calculate the cross reference title. Did you forget to convert all files beforehand?`;
             header_node_title = error_message_in_output(message);
             // Don't do an error if we are not going to render, because this is how
             // we extract IDs on the first pass of ./cirodown .
@@ -2018,7 +2056,7 @@ function parse(tokens, macros, options, context, extra_returns={}) {
       while (todo_visit.length > 0) {
         let [parent_arg, ast] = todo_visit.pop();
         const macro_name = ast.macro_name;
-        const macro = macros[macro_name];
+        const macro = context.macros[macro_name];
 
         if (macro_name === Macro.TOC_MACRO_NAME) {
           if (ast.from_include) {
@@ -2038,6 +2076,8 @@ function parse(tokens, macros, options, context, extra_returns={}) {
         // Push this node into the parent argument list.
         // This allows us to skip nodes, or push multiple nodes if needed.
         parent_arg.push(ast);
+
+        validate_ast(ast, context);
 
         // Loop over the child arguments. We do this rather than recurse into them
         // to be able to easily remove or add nodes to the tree during this AST
@@ -2183,7 +2223,7 @@ function parse(tokens, macros, options, context, extra_returns={}) {
       while (todo_visit.length > 0) {
         let ast = todo_visit.pop();
         const macro_name = ast.macro_name;
-        const macro = macros[macro_name];
+        const macro = context.macros[macro_name];
 
         if (macro_name === Macro.HEADER_MACRO_NAME) {
           // Create the header tree.
@@ -2228,69 +2268,6 @@ function parse(tokens, macros, options, context, extra_returns={}) {
           }
         }
 
-        // Do some error checking. If no errors are found, convert normally. Save output on out.
-        {
-          const name_to_arg = macro.name_to_arg;
-          // First pass sets defaults on missing arguments.
-          for (const argname in name_to_arg) {
-            ast.validation_output[argname] = {};
-            const macro_arg = name_to_arg[argname];
-            if (argname in ast.args) {
-              ast.validation_output[argname].given = true;
-            } else {
-              ast.validation_output[argname].given = false;
-              if (macro_arg.mandatory) {
-                ast.validation_error = [
-                  `missing mandatory argument ${argname} of ${ast.macro_name}`,
-                  ast.line, ast.column];
-                break;
-              }
-              if (macro_arg.default !== undefined) {
-                ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.line, ast.column, macro_arg.default)]);
-              } else if (macro_arg.boolean) {
-                ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.line, ast.column, '0')]);
-              }
-            }
-          }
-          // Second pass processes the values including defaults.
-          for (const argname in name_to_arg) {
-            const macro_arg = name_to_arg[argname];
-            if (argname in ast.args) {
-              const arg = ast.args[argname];
-              if (macro_arg.boolean) {
-                let arg_string;
-                if (arg.length > 0) {
-                  arg_string = convert_arg_noescape(arg, context);
-                } else {
-                  arg_string = '1';
-                }
-                if (arg_string === '0') {
-                  ast.validation_output[argname]['boolean'] = false;
-                } else if (arg_string === '1') {
-                  ast.validation_output[argname]['boolean'] = true;
-                } else {
-                  ast.validation_output[argname]['boolean'] = false;
-                  ast.validation_error = [
-                    `boolean argument "${argname}" of "${ast.macro_name}" has invalid value: "${arg_string}", only "0" and "1" are allowed`,
-                    arg.line, arg.column];
-                  break;
-                }
-              }
-              if (macro_arg.positive_nonzero_integer) {
-                const arg_string = convert_arg_noescape(arg, context);
-                const int_value = parseInt(arg_string);
-                ast.validation_output[argname]['positive_nonzero_integer'] = int_value;
-                if (!Number.isInteger(int_value) || !(int_value > 0)) {
-                  ast.validation_error = [
-                    `argument "${argname}" of macro "${ast.macro_name}" must be a positive non-zero integer, got: "${arg_string}"`,
-                    arg.line, arg.column];
-                  break;
-                }
-              }
-            }
-          }
-        }
-
         // Linear count of each macro type for macros that have IDs.
         if (!macro.options.macro_counts_ignore(ast)) {
           if (!(macro_name in macro_counts)) {
@@ -2311,17 +2288,34 @@ function parse(tokens, macros, options, context, extra_returns={}) {
         if (ast.id === undefined) {
           if (macro_id_arg === undefined) {
             let id_text = '';
-            let id_prefix = macros[ast.macro_name].id_prefix;
+            let id_prefix = context.macros[ast.macro_name].id_prefix;
             if (id_prefix !== '') {
               id_text += id_prefix + ID_SEPARATOR
             }
-            let title_arg = ast.args[Macro.TITLE_ARGUMENT_NAME];
+            let title_arg = macro.options.get_title_arg(ast, context);
             if (title_arg !== undefined) {
               // ID from title.
               // TODO correct unicode aware algorithm.
-              id_text += title_to_id(convert_arg_noescape(title_arg, context));
-              ast.id = id_text;
-            } else if (!macro.options.phrasing) {
+              context.extra_returns.x_no_content_in_title_no_id = false;
+              id_text += title_to_id(convert_arg_noescape(title_arg, clone_and_set(context, 'in_title_no_id', true)));
+              if (context.extra_returns.x_no_content_in_title_no_id) {
+                const message = `x cross reference to id "${context.extra_returns.x_no_content_in_title_no_id_target}" ` +
+                                `without content used inside a title without an id, see: https://cirosantilli.com/cirodown#x-within-title-restrictions`;
+                title_arg.push(
+                  new PlaintextAstNode(
+                    context.extra_returns.x_no_content_in_title_no_id_line,
+                    context.extra_returns.x_no_content_in_title_no_id_column,
+                    ' ' + error_message_in_output(message)
+                  )
+                );
+                parse_error(state, message,
+                  context.extra_returns.x_no_content_in_title_no_id_line,
+                  context.extra_returns.x_no_content_in_title_no_id_column);
+              } else {
+                ast.id = id_text;
+              }
+            }
+            if (ast.id === undefined && !macro.options.phrasing) {
               // ID from element count.
               if (ast.macro_count !== undefined) {
                 id_text += ast.macro_count;
@@ -2335,7 +2329,7 @@ function parse(tokens, macros, options, context, extra_returns={}) {
         }
         ast.index_id = index_id;
         if (ast.id !== undefined && !ast.force_no_index) {
-          const previous_ast = id_provider.get(ast.id);
+          const previous_ast = id_provider.get(ast.id, context);
           let input_path;
           if (previous_ast === undefined) {
             let non_indexed_id = non_indexed_ids[ast.id];
@@ -2359,7 +2353,7 @@ function parse(tokens, macros, options, context, extra_returns={}) {
             message += `line ${previous_ast.line} colum ${previous_ast.column}`;
             parse_error(state, message, ast.line, ast.column);
           }
-          if (index_id || macro.options.caption_number_visible(ast, context)) {
+          if (caption_number_visible(ast, context)) {
             if (!(macro_name in macro_counts_visible)) {
               macro_counts_visible[macro_name] = 0;
             }
@@ -2619,6 +2613,15 @@ function parse_error(state, message, line, column) {
     message, line, column));
 }
 
+function protocol_is_known(src) {
+  for (const known_url_protocol of KNOWN_URL_PROTOCOLS) {
+    if (src.startsWith(known_url_protocol)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function render_error(context, message, line, column) {
   context.errors.push(new ErrorMessage(message, line, column));
 }
@@ -2630,6 +2633,73 @@ function title_to_id(title) {
     .replace(new RegExp(ID_SEPARATOR + '+$'), '')
   ;
 }
+
+// Do some error checking. If no errors are found, convert normally. Save output on out.
+function validate_ast(ast, context) {
+  const macro_name = ast.macro_name;
+  const macro = context.macros[macro_name];
+
+  const name_to_arg = macro.name_to_arg;
+  // First pass sets defaults on missing arguments.
+  for (const argname in name_to_arg) {
+    ast.validation_output[argname] = {};
+    const macro_arg = name_to_arg[argname];
+    if (argname in ast.args) {
+      ast.validation_output[argname].given = true;
+    } else {
+      ast.validation_output[argname].given = false;
+      if (macro_arg.mandatory) {
+        ast.validation_error = [
+          `missing mandatory argument ${argname} of ${ast.macro_name}`,
+          ast.line, ast.column];
+        break;
+      }
+      if (macro_arg.default !== undefined) {
+        ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.line, ast.column, macro_arg.default)]);
+      } else if (macro_arg.boolean) {
+        ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.line, ast.column, '0')]);
+      }
+    }
+  }
+  // Second pass processes the values including defaults.
+  for (const argname in name_to_arg) {
+    const macro_arg = name_to_arg[argname];
+    if (argname in ast.args) {
+      const arg = ast.args[argname];
+      if (macro_arg.boolean) {
+        let arg_string;
+        if (arg.length > 0) {
+          arg_string = convert_arg_noescape(arg, context);
+        } else {
+          arg_string = '1';
+        }
+        if (arg_string === '0') {
+          ast.validation_output[argname]['boolean'] = false;
+        } else if (arg_string === '1') {
+          ast.validation_output[argname]['boolean'] = true;
+        } else {
+          ast.validation_output[argname]['boolean'] = false;
+          ast.validation_error = [
+            `boolean argument "${argname}" of "${ast.macro_name}" has invalid value: "${arg_string}", only "0" and "1" are allowed`,
+            arg.line, arg.column];
+          break;
+        }
+      }
+      if (macro_arg.positive_nonzero_integer) {
+        const arg_string = convert_arg_noescape(arg, context);
+        const int_value = parseInt(arg_string);
+        ast.validation_output[argname]['positive_nonzero_integer'] = int_value;
+        if (!Number.isInteger(int_value) || !(int_value > 0)) {
+          ast.validation_error = [
+            `argument "${argname}" of macro "${ast.macro_name}" must be a positive non-zero integer, got: "${arg_string}"`,
+            arg.line, arg.column];
+          break;
+        }
+      }
+    }
+  }
+}
+exports.validate_ast = validate_ast;
 
 /**
   * @param {AstNode} target_id_ast
@@ -2677,6 +2747,9 @@ function x_text(ast, context, options={}) {
   if (!('href_prefix' in options)) {
     options.href_prefix = undefined;
   }
+  if (!('force_separator' in options)) {
+    options.force_separator = false;
+  }
   if (!('show_caption_prefix' in options)) {
     options.show_caption_prefix = true;
   }
@@ -2710,15 +2783,21 @@ function x_text(ast, context, options={}) {
       ret += `</a>`
     }
   }
-  if (Macro.TITLE_ARGUMENT_NAME in ast.args) {
-    if (style_full) {
-      if (number !== undefined) {
-        ret += html_escape_context(context, `. `);
-      }
-      if (options.quote)
-        ret += html_escape_context(context, `"`);
+  let title_arg = macro.options.get_title_arg(ast, context);
+  if (
+    (
+      (title_arg !== undefined && style_full) ||
+      options.force_separator
+    ) &&
+    number !== undefined
+  ) {
+    ret += html_escape_context(context, `. `);
+  }
+  if (title_arg !== undefined) {
+    if (style_full && options.quote) {
+      ret += html_escape_context(context, `"`);
     }
-    ret += convert_arg(ast.args[Macro.TITLE_ARGUMENT_NAME], context);
+    ret += convert_arg(title_arg, context);
     if (style_full && options.quote) {
       ret += html_escape_context(context, `"`);
     }
@@ -2796,57 +2875,126 @@ const MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS = [
     elide_link_only: true,
   }),
   new MacroArgument({
+    name: 'title_from_src',
+    boolean: true,
+  }),
+  new MacroArgument({
     name: 'width',
     positive_nonzero_integer: true,
   }),
 ];
-function macro_image_video_source(ast, context) {
-  let src = convert_arg_noescape(ast.args.src, context);
+
+/**
+ * Calculate a bunch of default parameters of the media from smart defaults if not given explicitly
+ *
+ * @return {Object}
+ *         MediaProviderType {MediaProviderType} , e.g. type, src, source.
+ */
+function macro_image_video_resolve_params(ast, context) {
   let error_message;
-  let protocol_is_known = false;
-  for (const known_url_protocol of KNOWN_URL_PROTOCOLS) {
-    if (src.startsWith(known_url_protocol)) {
-      protocol_is_known = true;
-      break;
+  let media_provider_type;
+  let src = convert_arg_noescape(ast.args.src, context);
+  let is_url;
+
+  // Provider explicitly given by user on macro.
+  if (ast.validation_output.provider.given) {
+    const provider_name = convert_arg_noescape(ast.args.provider, context);
+    if (MEDIA_PROVIDER_TYPES.has(provider_name)) {
+      media_provider_type = provider_name;
+    } else {
+      error_message = `unknown media provider: "${html_escape_attr(provider_name)}"`;
+      render_error(context, error_message, ast.args.provider.line, ast.args.provider.column);
+      media_provider_type = 'unknown';
     }
   }
-  if (!protocol_is_known) {
-    let provider;
-    if (ast.validation_output.provider.given) {
-      provider = convert_arg_noescape(ast.args.provider, context);
-    } else {
-      provider = context.media_provider_default[ast.macro_name];
+
+  // Otherwise, detect the media provider.
+  let media_provider_type_detected;
+  if (src.match(media_provider_type_wikimedia_re)) {
+    media_provider_type_detected = 'wikimedia';
+  } else if (src.match(media_provider_type_youtube_re)) {
+    media_provider_type_detected = 'youtube';
+  } else if (protocol_is_known(src)) {
+    // Full URL to a website we know nothing about.
+    media_provider_type_detected = 'unknown';
+  }
+
+  if (media_provider_type_detected === undefined) {
+    if (media_provider_type === undefined) {
+      // Relative URL, use the default provider if any.
+      media_provider_type = context.media_provider_default[ast.macro_name];
     }
-    if (provider === 'local') {
-      const path = context.options.cirodown_json['media-providers'].local.path;
-      if (path !== '') {
-        src = path + URL_SEP + src;
-      }
-    } else if (provider === 'github') {
-      src = `https://raw.githubusercontent.com/${context.options.cirodown_json['media-providers'].github.remote}/master/${src}`;
-    } else {
-      error_message = `unknown media provider: "${html_escape_attr(provider)}"`;
+    is_url = false;
+  } else {
+    if (media_provider_type !== undefined && media_provider_type !== media_provider_type_detected) {
+      error_message = `detected media provider type "${media_provider_type_detected}", but user also explicitly gave "${media_provider_type}"`;
       render_error(context, error_message, ast.args.provider.line, ast.args.provider.column);
     }
+    if (media_provider_type === undefined) {
+      media_provider_type = media_provider_type_detected;
+    }
+    is_url = true;
   }
-  let source_type;
-  if (src.match(macro_image_video_block_convert_function_source_types_wikimedia_re)) {
-    source_type = macro_image_video_block_convert_function_source_types.WIKIMEDIA;
-  } else if (src.match(macro_image_video_block_convert_function_source_types_youtube_re)) {
-    source_type = macro_image_video_block_convert_function_source_types.YOUTUBE;
-  } else {
-    source_type = macro_image_video_block_convert_function_source_types.UNKNOWN;
+
+  // Fixup src depending for certain providers.
+  if (media_provider_type === 'local') {
+    const path = context.options.cirodown_json['media-providers'].local.path;
+    if (path !== '') {
+      src = path + URL_SEP + src;
+    }
+  } else if (media_provider_type === 'github') {
+    src = `https://raw.githubusercontent.com/${context.options.cirodown_json['media-providers'].github.remote}/master/${src}`;
   }
+
   return {
     error_message: error_message,
-    source: context.macros[ast.macro_name].options.source_func(ast, context, src, source_type),
+    media_provider_type: media_provider_type,
+    is_url: is_url,
     src: src,
-    type: source_type,
   }
 }
+
+function macro_image_video_resolve_params_with_source(ast, context) {
+  const ret = macro_image_video_resolve_params(ast, context);
+  ret.source = context.macros[ast.macro_name].options.source_func(
+    ast, context, ret.src, ret.media_provider_type, ret.is_url);
+  return ret;
+}
+
 const MACRO_IMAGE_VIDEO_OPTIONS = {
   caption_number_visible: function (ast, context) {
-    return 'description' in ast.args || macro_image_video_source(ast, context).source !== '';
+    return 'description' in ast.args ||
+      macro_image_video_resolve_params_with_source(ast, context).source !== '';
+  },
+  get_title_arg: function(ast, context) {
+    // Title given explicitly.
+    if (ast.validation_output[Macro.TITLE_ARGUMENT_NAME].given) {
+      return ast.args[Macro.TITLE_ARGUMENT_NAME];
+    }
+
+    // Title from src.
+    const media_provider_type = macro_image_video_resolve_params(ast, context).media_provider_type;
+    if (
+      ast.validation_output.title_from_src.boolean ||
+      (
+        !ast.validation_output.title_from_src.given &&
+        context.options.cirodown_json['media-providers'][media_provider_type]['title-from-src']
+      )
+    ) {
+      let basename_str;
+      let src = convert_arg(ast.args.src, context);
+      if (media_provider_type === 'local') {
+        basename_str = basename(src);
+      } else if (media_provider_type === 'wikimedia') {
+        basename_str = context.macros[ast.macro_name].options.image_video_basename(src);
+      }
+      let title_str = basename_str.replace(/_/g, ' ').replace(/\.[^.]+$/, '') + '.';
+      return new AstArgument([new PlaintextAstNode(
+        ast.line, ast.column, title_str)], ast.line, ast.column);
+    }
+
+    // We can't automatically generate one at all.
+    return undefined;
   }
 }
 const MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS = [
@@ -2862,7 +3010,7 @@ const MACRO_IMAGE_VIDEO_POSITIONAL_ARGUMENTS = [
 // https://cirosantilli.com/cirodown#known-url-protocols
 const KNOWN_URL_PROTOCOLS = new Set(['http://', 'https://']);
 const URL_SEP = '/';
-const MACRO_WITH_MEDIA_PROVIDER = new Set(['Image', 'Video']);
+const MACRO_WITH_MEDIA_PROVIDER = new Set(['image', 'video']);
 const DEFAULT_MACRO_LIST = [
   new Macro(
     Macro.LINK_MACRO_NAME,
@@ -2901,8 +3049,22 @@ const DEFAULT_MACRO_LIST = [
     function(ast, context) {
       let attrs = html_convert_attrs_id(ast, context);
       let content = convert_arg(ast.args.content, context);
-      return `<pre${attrs}><code>${content}</code></pre>`;
+      let ret = `<div class="code-caption-container"${attrs}>\n`;
+      if (ast.validation_output[Macro.TITLE_ARGUMENT_NAME].given) {
+        ret += `\n<div class="caption">${x_text(ast, context, {href_prefix: html_self_link(ast)})}</div>\n`;
+      }
+      ret += `<pre><code>${content}</code></pre>`;
+      ret += `</div>`;
+      return ret;
     },
+    {
+      caption_prefix: 'Code',
+      named_args: [
+        new MacroArgument({
+          name: Macro.TITLE_ARGUMENT_NAME,
+        }),
+      ],
+    }
   ),
   new Macro(
     // Inline code.
@@ -3007,7 +3169,7 @@ const DEFAULT_MACRO_LIST = [
           parent_asts.push(parent_tree_node.value);
         }
       }
-      parent_asts.push(...context.id_provider.get_includes(ast.id));
+      parent_asts.push(...context.id_provider.get_includes(ast.id, context));
       for (const parent_ast of parent_asts) {
         let parent_href = html_attr('href', x_href(parent_ast, context));
         let parent_body = convert_arg(parent_ast.args[Macro.TITLE_ARGUMENT_NAME], context);
@@ -3133,24 +3295,32 @@ const DEFAULT_MACRO_LIST = [
     Object.assign(
       {
         caption_prefix: 'Figure',
-        content_func: function (ast, context, src, rendered_attrs, alt, source_type) {
+        id_prefix: 'image',
+        image_video_content_func: function (ast, context, src, rendered_attrs, alt, media_provider_type, is_url) {
           return `<a${html_attr('href', src)}><img${html_attr('src',
             html_escape_attr(src))}${html_attr('loading', 'lazy')}${rendered_attrs}${alt}></a>\n`;
         },
-        id_prefix: 'fig',
         named_args: MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS,
-        source_func: function (ast, context, src, source_type) {
+        source_func: function (ast, context, src, media_provider_type, is_url) {
           if ('source' in ast.args) {
             return convert_arg(ast.args.source, context);
-          } else if (source_type == macro_image_video_block_convert_function_source_types.WIKIMEDIA) {
+          } else if (media_provider_type == 'wikimedia') {
             return macro_image_video_block_convert_function_wikimedia_source_url +
-              basename(html_escape_attr(src)).replace(macro_image_video_block_convert_function_wikimedia_source_image_re, '');
+              context.macros[ast.macro_name].options.image_video_basename(src);
           } else {
             return '';
           }
         }
       },
-      MACRO_IMAGE_VIDEO_OPTIONS,
+      Object.assign(
+        {
+          image_video_basename: function(src) {
+            return basename(html_escape_attr(src)).replace(
+              macro_image_video_block_convert_function_wikimedia_source_image_re, '');
+          },
+        },
+        MACRO_IMAGE_VIDEO_OPTIONS,
+      ),
     ),
   ),
   new Macro(
@@ -3173,8 +3343,10 @@ const DEFAULT_MACRO_LIST = [
         alt_arg = ast.args.alt;
       }
       let alt = html_attr('alt', html_escape_attr(convert_arg(alt_arg, context)));
-      let img_attrs = html_convert_attrs_id(ast, context, ['src', 'height', 'width']);
-      return `<img${img_attrs}${alt}>`;
+      let img_attrs = html_convert_attrs_id(ast, context, ['height', 'width']);
+      let {error_message, src} = macro_image_video_resolve_params(ast, context);
+      src = html_attr('src', html_escape_attr(src));
+      return `<img${src}${img_attrs}${alt}>`;
     },
     {
       named_args: [
@@ -3182,6 +3354,9 @@ const DEFAULT_MACRO_LIST = [
           name: 'height',
           default: DEFAULT_MEDIA_HEIGHT.toString(),
           positive_nonzero_integer: true,
+        }),
+        new MacroArgument({
+          name: 'provider',
         }),
         new MacroArgument({
           name: 'width',
@@ -3470,15 +3645,31 @@ const DEFAULT_MACRO_LIST = [
     ],
     function(ast, context) {
       const target_id = convert_arg_noescape(ast.args.href, context);
-      const target_id_ast = context.id_provider.get(target_id);
+      const target_id_ast = context.id_provider.get(target_id, context);
+      let href;
       if (target_id_ast === undefined) {
-        let message = `cross reference to unknown id: "${target_id}"`;
-        render_error(context, message, ast.args.href.line, ast.args.href.column);
-        return error_message_in_output(message, context);
+        if (context.in_title_no_id) {
+          href = '';
+        } else {
+          let message = `cross reference to unknown id: "${target_id}"`;
+          render_error(context, message, ast.args.href.line, ast.args.href.column);
+          return error_message_in_output(message, context);
+        }
+      } else {
+        href = html_attr('href', x_href(target_id_ast, context));
       }
       const content_arg = ast.args.content;
       let content;
       if (content_arg === undefined) {
+        // No explicit content given, deduce content from target ID title.
+        if (context.in_title_no_id) {
+          // Inside a title that does not have an ID: not allowed.
+          context.extra_returns.x_no_content_in_title_no_id = true;
+          context.extra_returns.x_no_content_in_title_no_id_line = ast.line;
+          context.extra_returns.x_no_content_in_title_no_id_column = ast.column;
+          context.extra_returns.x_no_content_in_title_no_id_target = target_id;
+          return '';
+        }
         let x_text_options = {
           caption_prefix_span: false,
           quote: true,
@@ -3493,10 +3684,10 @@ const DEFAULT_MACRO_LIST = [
           return error_message_in_output(message, context);
         }
       } else {
+        // Explicit content given, just use it then.
         content = convert_arg(content_arg, context);
       }
       const attrs = html_convert_attrs_id(ast, context);
-      const href = html_attr('href', x_href(target_id_ast, context));
       return `<a${href}${attrs}>${content}</a>`;
     },
     {
@@ -3516,19 +3707,16 @@ const DEFAULT_MACRO_LIST = [
     Object.assign(
       {
         caption_prefix: 'Video',
-        content_func: function (ast, context, src, rendered_attrs, alt, source_type) {
-          if (
-            ast.validation_output.youtube.boolean ||
-            (
-              source_type === macro_image_video_block_convert_function_source_types.YOUTUBE &&
-              !ast.validation_output.youtube.given
-            )
-          ) {
+        id_prefix: 'video',
+        image_video_basename: function(src) {
+          return basename(html_escape_attr(src)).replace(
+            macro_image_video_block_convert_function_wikimedia_source_video_re, '$1');
+        },
+        image_video_content_func: function (ast, context, src, rendered_attrs, alt, media_provider_type, is_url) {
+          if (media_provider_type === 'youtube') {
             let url_start_time;
             let video_id;
-            if (ast.validation_output.youtube.boolean) {
-              video_id = src;
-            } else {
+            if (is_url) {
               const url = new URL(src);
               const url_params = url.searchParams;
               if (url_params.has('t')) {
@@ -3543,8 +3731,11 @@ const DEFAULT_MACRO_LIST = [
                   return error_message_in_output(message, context);
                 }
               } else {
+                // youtu.be/<ID> and path is "/<ID>" so get rid of "/".
                 video_id = url.pathname.substr(1);
               }
+            } else {
+              video_id = src;
             }
             let start_time;
             if ('start' in ast.args) {
@@ -3571,30 +3762,24 @@ const DEFAULT_MACRO_LIST = [
             return `<video${html_attr('src', src + start)}${rendered_attrs} controls>${alt}</video>\n`;
           }
         },
-        id_prefix: 'video',
         named_args: MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS.concat(
           new MacroArgument({
             name: 'start',
             positive_nonzero_integer: true,
           }),
-          new MacroArgument({
-            name: 'youtube',
-            boolean: true,
-          }),
         ),
-        source_func: function (ast, context, src, source_type) {
+        source_func: function (ast, context, src, media_provider_type, is_url) {
           if ('source' in ast.args) {
             return convert_arg(ast.args.source, context);
-          } else if (ast.validation_output.youtube.boolean) {
-            return `https://youtube.com/watch?v=${html_escape_attr(src)}`;
-          } else if (source_type === macro_image_video_block_convert_function_source_types.WIKIMEDIA) {
+          } else if (media_provider_type === 'youtube') {
+            if (is_url) {
+              return html_escape_attr(src);
+            } else {
+              return `https://youtube.com/watch?v=${html_escape_attr(src)}`;
+            }
+          } else if (media_provider_type === 'wikimedia') {
             return macro_image_video_block_convert_function_wikimedia_source_url +
-              basename(html_escape_attr(src)).replace(macro_image_video_block_convert_function_wikimedia_source_video_re, '$1');
-          } else if (
-            source_type == macro_image_video_block_convert_function_source_types.YOUTUBE &&
-            !ast.validation_output.youtube.given
-          ) {
-            return html_escape_attr(src);
+              context.macros[ast.macro_name].options.image_video_basename(src);
           } else {
             return '';
           }
