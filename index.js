@@ -56,10 +56,11 @@ class AstNode {
     // caption_number_visible.
     this.macro_count_visible = undefined;
     this.parent_node = options.parent_node;
-    // {TreeNode}:
-    // * for a header, the tree node points to the header
-    // * for non-header elements, the tree node points to
-    //   the deepest header that contains the element
+    // {TreeNode} that points to the element.
+    // This is used for both headers and non headers:
+    // the only difference is that non-headers are not connected as
+    // children of their parent. But they still know who the parent is.
+    // This was originally required for header scope resolution.
     this.header_tree_node = undefined;
     this.validation_error = undefined;
     this.validation_output = {};
@@ -1894,6 +1895,7 @@ function parse(tokens, options, context, extra_returns={}) {
             cur_header_level,
             href
           );
+          context.include_path_set.add(href);
         } else {
           const target_id_ast = id_provider.get(href, context);
           let header_node_title;
@@ -2389,7 +2391,7 @@ function parse(tokens, options, context, extra_returns={}) {
         }
         ast.index_id = index_id;
         if (ast.id !== undefined && !ast.force_no_index) {
-          const previous_ast = id_provider.get(ast.id, context);
+          const previous_ast = id_provider.get(ast.id, context, ast.header_tree_node);
           let input_path;
           if (previous_ast === undefined) {
             let non_indexed_id = non_indexed_ids[ast.id];
@@ -3790,7 +3792,6 @@ const DEFAULT_MACRO_LIST = [
     ],
     function(ast, context) {
       const target_id = convert_arg_noescape(ast.args.href, context);
-      debugger;
       const target_id_ast = context.id_provider.get(target_id, context, ast.header_tree_node);
       let href;
       if (target_id_ast === undefined) {
