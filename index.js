@@ -1,6 +1,7 @@
 "use strict";
 
 const katex = require('katex');
+const pluralize = require('pluralize');
 
 // consts used by classes.
 const UNICODE_LINK = String.fromCodePoint(0x1F517);
@@ -1671,9 +1672,10 @@ function html_katex_convert(ast, context) {
     return katex.renderToString(
       convert_arg(ast.args.content, clone_and_set(context, 'html_escape', false)),
       {
-        macros: context.katex_macros,
-        throwOnError: true,
         globalGroup: true,
+        macros: context.katex_macros,
+        strict: 'error',
+        throwOnError: true,
       }
     );
   } catch(error) {
@@ -1715,7 +1717,7 @@ const MEDIA_PROVIDER_TYPES = new Set([
   'youtube',
 ]);
 const media_provider_type_wikimedia_re = new RegExp('^https?://upload.wikimedia.org/wikipedia/commons/');
-const media_provider_type_youtube_re = new RegExp('^https?://(youtube.com|youtu.be)/');
+const media_provider_type_youtube_re = new RegExp('^https?://(www\.)?(youtube.com|youtu.be)/');
 const macro_image_video_block_convert_function_wikimedia_source_url = 'https://commons.wikimedia.org/wiki/File:';
 const macro_image_video_block_convert_function_wikimedia_source_image_re = new RegExp('^\\d+px-');
 const macro_image_video_block_convert_function_wikimedia_source_video_re = new RegExp('^([^.]+\.[^.]+).*');
@@ -2865,6 +2867,9 @@ function x_text(ast, context, options={}) {
   if (!('from_x' in options)) {
     options.from_x = false;
   }
+  if (!('pluralize' in options)) {
+    options.pluralize = false;
+  }
   if (!('show_caption_prefix' in options)) {
     options.show_caption_prefix = true;
   }
@@ -2908,29 +2913,42 @@ function x_text(ast, context, options={}) {
   ) {
     ret += html_escape_context(context, `. `);
   }
-  if (title_arg !== undefined) {
+  if (
+    title_arg !== undefined
+  ) {
     if (style_full && options.quote) {
       ret += html_escape_context(context, `"`);
     }
-    let first_ast = title_arg[0];
-    if (
-      ast.macro_name === Macro.HEADER_MACRO_NAME &&
-      !ast.validation_output.c.boolean &&
-      !style_full &&
-      options.from_x &&
-      first_ast.node_type === AstType.PLAINTEXT
-    ) {
-      // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
-      title_arg = new AstArgument(title_arg, title_arg.line, title_arg.column);
-      title_arg[0] = new PlaintextAstNode(first_ast.line, first_ast.column, first_ast.text);
-      let txt = title_arg[0].text;
-      let first_c = txt[0];
-      if (options.capitalize) {
-        first_c = first_c.toUpperCase();
-      } else {
-        first_c = first_c.toLowerCase();
+    if (options.from_x) {
+      let first_ast = title_arg[0];
+      if (
+        ast.macro_name === Macro.HEADER_MACRO_NAME &&
+        !ast.validation_output.c.boolean &&
+        !style_full &&
+        first_ast.node_type === AstType.PLAINTEXT
+      ) {
+        // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
+        title_arg = new AstArgument(title_arg, title_arg.line, title_arg.column);
+        title_arg[0] = new PlaintextAstNode(first_ast.line, first_ast.column, first_ast.text);
+        let txt = title_arg[0].text;
+        let first_c = txt[0];
+        if (options.capitalize) {
+          first_c = first_c.toUpperCase();
+        } else {
+          first_c = first_c.toLowerCase();
+        }
+        title_arg[0].text = first_c + txt.substring(1);
       }
-      title_arg[0].text = first_c + txt.substring(1);
+      let last_ast = title_arg[title_arg.length - 1];
+      if (
+        options.pluralize &&
+        !style_full &&
+        first_ast.node_type === AstType.PLAINTEXT
+      ) {
+        title_arg = new AstArgument(title_arg, title_arg.line, title_arg.column);
+        title_arg[title_arg.length - 1] = new PlaintextAstNode(last_ast.line, last_ast.column, last_ast.text);
+        title_arg[title_arg.length - 1].text = pluralize(last_ast.text);
+      }
     }
     ret += convert_arg(title_arg, context);
     if (style_full && options.quote) {
@@ -3171,6 +3189,23 @@ const DEFAULT_MACRO_LIST = [
       let attrs = html_convert_attrs_id(ast, context);
       return `<a${html_attr('href',  href)}${attrs}>${content}</a>`;
     },
+    {
+      phrasing: true,
+    }
+  ),
+  new Macro(
+    'b',
+    [
+      new MacroArgument({
+        name: 'content',
+      }),
+    ],
+    html_convert_simple_elem(
+      'b',
+      {
+        link_to_self: true
+      }
+    ),
     {
       phrasing: true,
     }
@@ -3432,6 +3467,23 @@ const DEFAULT_MACRO_LIST = [
       // KaTeX already adds a <span> for us.
       return html_katex_convert(ast, context);
     },
+    {
+      phrasing: true,
+    }
+  ),
+  new Macro(
+    'i',
+    [
+      new MacroArgument({
+        name: 'content',
+      }),
+    ],
+    html_convert_simple_elem(
+      'i',
+      {
+        link_to_self: true
+      }
+    ),
     {
       phrasing: true,
     }
@@ -3822,6 +3874,7 @@ const DEFAULT_MACRO_LIST = [
           capitalize: ast.validation_output.c.boolean,
           from_x: true,
           quote: true,
+          pluralize: ast.validation_output.p.boolean,
         };
         if (ast.validation_output.full.given) {
           x_text_options.style_full = ast.validation_output.full.boolean;
@@ -3849,6 +3902,10 @@ const DEFAULT_MACRO_LIST = [
           name: 'full',
           boolean: true,
         }),
+        new MacroArgument({
+          name: 'p',
+          boolean: true,
+        }),
       ],
       phrasing: true,
     }
@@ -3874,7 +3931,7 @@ const DEFAULT_MACRO_LIST = [
               if (url_params.has('t')) {
                 url_start_time = url_params.get('t');
               }
-              if (url.hostname === 'youtube.com') {
+              if (url.hostname === 'youtube.com' || url.hostname === 'www.youtube.com') {
                 if (url_params.has('v')) {
                   video_id = url_params.get('v')
                 } else {
