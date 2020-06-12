@@ -541,6 +541,7 @@ Macro.MATH_MACRO_NAME = 'm';
 Macro.PARAGRAPH_MACRO_NAME = 'p';
 Macro.PLAINTEXT_MACRO_NAME = 'plaintext';
 Macro.TITLE_ARGUMENT_NAME = 'title';
+Macro.TITLE2_ARGUMENT_NAME = 'title2';
 Macro.TOC_MACRO_NAME = 'toc';
 Macro.TOC_PREFIX = 'toc-'
 Macro.TOPLEVEL_MACRO_NAME = 'toplevel';
@@ -2869,7 +2870,10 @@ function x_text(ast, context, options={}) {
     options.from_x = false;
   }
   if (!('pluralize' in options)) {
-    options.pluralize = false;
+    // true: make plural
+    // false: make singular
+    // undefined: don't touch it
+    options.pluralize = undefined;
   }
   if (!('show_caption_prefix' in options)) {
     options.show_caption_prefix = true;
@@ -2920,7 +2924,10 @@ function x_text(ast, context, options={}) {
     if (style_full && options.quote) {
       ret += html_escape_context(context, `"`);
     }
+    // https://cirosantilli.com/cirodown#cross-reference-title-inflection
     if (options.from_x) {
+
+      // {c}
       let first_ast = title_arg[0];
       if (
         ast.macro_name === Macro.HEADER_MACRO_NAME &&
@@ -2940,20 +2947,27 @@ function x_text(ast, context, options={}) {
         }
         title_arg[0].text = first_c + txt.substring(1);
       }
+
+      // {p}
       let last_ast = title_arg[title_arg.length - 1];
       if (
-        options.pluralize &&
+        options.pluralize !== undefined &&
         !style_full &&
         first_ast.node_type === AstType.PLAINTEXT
       ) {
         title_arg = new AstArgument(title_arg, title_arg.line, title_arg.column);
         title_arg[title_arg.length - 1] = new PlaintextAstNode(last_ast.line, last_ast.column, last_ast.text);
-        title_arg[title_arg.length - 1].text = pluralize(last_ast.text);
+        title_arg[title_arg.length - 1].text = pluralize(last_ast.text, options.pluralize ? 2 : 1);
       }
     }
     ret += convert_arg(title_arg, context);
-    if (style_full && options.quote) {
-      ret += html_escape_context(context, `"`);
+    if (style_full) {
+      if (Macro.TITLE2_ARGUMENT_NAME in ast.args) {
+        ret += ' ' + convert_arg(ast.args[Macro.TITLE2_ARGUMENT_NAME], context);
+      }
+      if (options.quote) {
+        ret += html_escape_context(context, `"`);
+      }
     }
   }
   return ret;
@@ -3373,6 +3387,9 @@ const DEFAULT_MACRO_LIST = [
         new MacroArgument({
           name: 'scope',
           boolean: true,
+        }),
+        new MacroArgument({
+          name: Macro.TITLE2_ARGUMENT_NAME,
         }),
       ],
     }
@@ -3875,7 +3892,7 @@ const DEFAULT_MACRO_LIST = [
           capitalize: ast.validation_output.c.boolean,
           from_x: true,
           quote: true,
-          pluralize: ast.validation_output.p.boolean,
+          pluralize: ast.validation_output.p.given ? ast.validation_output.p.boolean : undefined,
         };
         if (ast.validation_output.full.given) {
           x_text_options.style_full = ast.validation_output.full.boolean;
