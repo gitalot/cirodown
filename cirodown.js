@@ -204,6 +204,12 @@ class AstArgument extends Array {
     super(...nodes)
     this.line = line;
     this.column = column;
+    let i = 0;
+    nodes.forEach(function(node) {
+      node.parent_argument = this;
+      node.parent_argument_index = i;
+      i++;
+    });
   }
 
   // https://stackoverflow.com/questions/3261587/subclassing-javascript-arrays-typeerror-array-prototype-tostring-is-not-generi/61269027#61269027
@@ -211,6 +217,18 @@ class AstArgument extends Array {
     return Object.assign(function (...items) {
       return new AstArgument(new Array(...items))
     }, AstArgument);
+  }
+
+  push(...new_nodes) {
+    const old_length = this.length;
+    const ret = super.push(...new_nodes);
+    let i = 0;
+    new_nodes.forEach(node => {
+      node.parent_argument = this;
+      node.parent_argument_index = old_length + i;
+      i++;
+    });
+    return ret;
   }
 }
 
@@ -938,7 +956,7 @@ class Tokenizer {
           }
         }
 
-        // Insane lists.
+        // Insane lists and tables.
         if (!done && (
           this.i === 0 ||
           this.cur_c === '\n' ||
@@ -953,8 +971,9 @@ class Tokenizer {
             i += INSANE_LIST_INDENT.length;
             new_list_level += 1;
           }
-          let insane_start = this.tokenize_insane_start(i);
-          if (insane_start !== undefined) {
+          let insane_start_return = this.tokenize_insane_start(i);
+          if (insane_start_return !== undefined) {
+            const [insane_start, insane_start_length] = insane_start_return;
             if (new_list_level <= this.list_level + 1) {
               if (this.cur_c === '\n') {
                 this.consume();
@@ -964,7 +983,7 @@ class Tokenizer {
               this.push_token(TokenType.POSITIONAL_ARGUMENT_START);
               this.list_level += 1;
               done = true;
-              for (const c in insane_start) {
+              for (let i = 0; i < insane_start_length; i++) {
                 this.consume();
               }
             }
@@ -1041,13 +1060,29 @@ class Tokenizer {
    * Determine if we are at the start of an insane indented sequence
    * like an insane list '* ' or table '| '
    *
-   * @return {Union[String,undefined]} - which insane start if any
-   *         undefined if none found.
+   * @return {Union[[String,Number],undefined]} -
+   *         - [insane_start, length] if any is found. For an empty table or list without space,
+   *           length is insane_start.length - 1. Otherwise it equals insane_start.length.
+   *         - undefined if none found.
    */
   tokenize_insane_start(i) {
     for (const insane_start in INSANE_STARTS_TO_MACRO_NAME) {
-      if (array_contains_array_at(this.chars, i, insane_start)) {
-        return insane_start;
+      if (
+        array_contains_array_at(this.chars, i, insane_start)
+      ) {
+        // Full insane start match.
+        return [insane_start, insane_start.length];
+      }
+      // Empty table or list without space.
+      let insane_start_nospace = insane_start.substring(0, insane_start.length - 1);
+      if (
+        array_contains_array_at(this.chars, i, insane_start_nospace) &&
+        (
+          i === this.chars.length - 1 ||
+          this.chars[i + insane_start.length - 1] === '\n'
+        )
+      ) {
+        return [insane_start, insane_start.length - 1];
       }
     }
     return undefined;
@@ -1338,6 +1373,8 @@ function convert(
   if (!('show_tokens' in options)) { options.show_tokens = false; }
   if (!('template' in options)) { options.template = undefined; }
   if (!('template_vars' in options)) { options.template_vars = {}; }
+    if (!('head' in options.template_vars)) { options.template_vars.head = ''; }
+    if (!('post_body' in options.template_vars)) { options.template_vars.post_body = ''; }
     if (!('style' in options.template_vars)) { options.template_vars.style = ''; }
   // https://cirosantilli.com/cirodown#the-id-of-the-first-header-is-derived-from-the-filename
   if (!('toplevel_id' in options)) { options.toplevel_id = undefined; }
@@ -3536,7 +3573,7 @@ const DEFAULT_MACRO_LIST = [
         name: 'content',
       }),
     ],
-    html_convert_simple_elem('li'),
+    html_convert_simple_elem('li', {newline_after_close: true}),
     {
       auto_parent: 'ul',
       auto_parent_skip: new Set(['ol']),
@@ -3807,7 +3844,10 @@ const DEFAULT_MACRO_LIST = [
         name: 'content',
       }),
     ],
-    html_convert_simple_elem('td'),
+    html_convert_simple_elem('td', {newline_after_close: true}),
+    {
+      newline_after_close: true,
+    }
   ),
   new Macro(
     Macro.TOC_MACRO_NAME,
@@ -3903,8 +3943,10 @@ const DEFAULT_MACRO_LIST = [
 <meta charset=utf-8>
 <title>{{ title }}</title>
 <style>{{ style }}</style>
+{{ head }}
 <body class="cirodown">
 {{ body }}
+{{ post_body }}
 </body>
 </html>
 `;
@@ -3941,7 +3983,7 @@ const DEFAULT_MACRO_LIST = [
         name: 'content',
       }),
     ],
-    html_convert_simple_elem('th'),
+    html_convert_simple_elem('th', {newline_after_close: true}),
   ),
   new Macro(
     Macro.TR_MACRO_NAME,
@@ -3951,7 +3993,45 @@ const DEFAULT_MACRO_LIST = [
         remove_whitespace_children: true,
       }),
     ],
-    html_convert_simple_elem('tr', {newline_after_open: true}),
+    function(ast, context) {
+      let content_ast = ast.args.content;
+      let content = convert_arg(content_ast, context);
+      let res = '';
+      if (ast.args.content[0].macro_name === Macro.TH_MACRO_NAME) {
+        if (
+          ast.parent_argument_index === 0 ||
+          ast.parent_argument[ast.parent_argument_index - 1].args.content[0].macro_name !== Macro.TH_MACRO_NAME
+        ) {
+          res += `<thead>\n`;
+        }
+      }
+      if (ast.args.content[0].macro_name === Macro.TD_MACRO_NAME) {
+        if (
+          ast.parent_argument_index === 0 ||
+          ast.parent_argument[ast.parent_argument_index - 1].args.content[0].macro_name !== Macro.TD_MACRO_NAME
+        ) {
+          res += `<tbody>\n`;
+        }
+      }
+      res += `<tr>\n${content}</tr>\n`;
+      if (ast.args.content[0].macro_name === Macro.TH_MACRO_NAME) {
+        if (
+          ast.parent_argument_index === ast.parent_argument.length - 1 ||
+          ast.parent_argument[ast.parent_argument_index + 1].args.content[0].macro_name !== Macro.TH_MACRO_NAME
+        ) {
+          res += `</thead>\n`;
+        }
+      }
+      if (ast.args.content[0].macro_name === Macro.TD_MACRO_NAME) {
+        if (
+          ast.parent_argument_index === ast.parent_argument.length - 1 ||
+          ast.parent_argument[ast.parent_argument_index + 1].args.content[0].macro_name !== Macro.TD_MACRO_NAME
+        ) {
+          res += `</tbody>\n`;
+        }
+      }
+      return res;
+    },
     {
       auto_parent: Macro.TATBLE_MACRO_NAME,
     }
@@ -4096,7 +4176,7 @@ const DEFAULT_MACRO_LIST = [
             } else {
               start = '';
             }
-            return `<iframe width="560" height="${DEFAULT_MEDIA_HEIGHT}" src="https://www.youtube.com/embed/${html_escape_attr(video_id)}${start}" ` +
+            return `<iframe width="560" height="${DEFAULT_MEDIA_HEIGHT}" loading="lazy" src="https://www.youtube.com/embed/${html_escape_attr(video_id)}${start}" ` +
                   `allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
           } else {
             let start;
