@@ -18,11 +18,11 @@ if (cli_args.length > 1) {
   depth = 5;
 }
 
-console.log('= 1\n');
+console.log('= 0\n');
 console.log('\\Toc\n');
-const levels = [1, 1];
+const levels = [1];
 while (levels.length > 0) {
-  console.log('='.repeat(levels.length) + ' ' + levels.join(' ') + '\n');
+  console.log('='.repeat(levels.length + 1) + ' ' + levels.join(' ') + '\n');
   if (levels.length < depth) {
     levels.push(1);
   } else {
