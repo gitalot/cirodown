@@ -3556,7 +3556,7 @@ const DEFAULT_MACRO_LIST = [
       if (level_int !== context.header_graph_top_level) {
         if (context.has_toc) {
           let toc_href = html_attr('href', '#' + toc_id(ast, context));
-          ret += ` | <a${toc_href}>\u21d1 toc</a>`;
+          ret += ` | <a ${toc_href} class="cirodown-h-to-toc">\u21d1 toc</a>`;
         }
       }
       let parent_asts = [];
@@ -3965,7 +3965,14 @@ const DEFAULT_MACRO_LIST = [
         let href = x_href_attr(target_id_ast, context);
         const my_toc_id = toc_id(target_id_ast, context);
         let id_to_toc = html_attr(Macro.ID_ARGUMENT_NAME, my_toc_id);
-        ret += `<li><div${id_to_toc}><a${href}>${content}</a><span>`;
+        ret += '<li';
+        if (tree_node.children.length > 0) {
+          ret += ' class="has-child"';
+        }
+        // The inner <div></div> inside arrow is so that:
+        // - outter div: takes up space to make clicking easy
+        // - inner div: minimal size to make the CSS arrow work, but too small for confortable clicking
+        ret += `><div${id_to_toc}><div class="arrow"><div></div></div><a${href}>${content}</a><span>`;
 
         let toc_href = html_attr('href', '#' + my_toc_id);
         ret += ` | <a${toc_href}>${UNICODE_LINK} link</a>`;
