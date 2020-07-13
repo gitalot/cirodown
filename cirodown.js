@@ -1,7 +1,17 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.cirodown = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 
+const globals = {};
+
 const katex = require('katex');
+if (typeof performance === 'undefined') {
+  // Fuck, I can't find how to make this browser/node portable more nicely.
+  // https://github.com/nodejs/node/issues/28635
+  // https://github.com/browserify/perf-hooks-browserify
+  globals.performance = require('perf_hooks').performance;
+} else {
+  globals.performance = performance;
+}
 const pluralize = require('pluralize');
 
 // consts used by classes.
@@ -1325,6 +1335,8 @@ function convert(
   options,
   extra_returns={},
 ) {
+  extra_returns.debug_perf = {};
+  extra_returns.debug_perf.start = globals.performance.now();
   if (options === undefined) {
     options = {};
   }
@@ -1393,8 +1405,10 @@ function convert(
   extra_returns.errors = [];
   let sub_extra_returns;
   sub_extra_returns = {};
+  extra_returns.debug_perf.tokenize_pre = globals.performance.now();
   let tokens = (new Tokenizer(input_string, sub_extra_returns,
     options.show_tokenize, options.start_line)).tokenize();
+  extra_returns.debug_perf.tokenize_post = globals.performance.now();
   if (options.show_tokens) {
     console.error('tokens:');
     for (let i = 0; i < tokens.length; i++) {
@@ -1462,11 +1476,15 @@ function convert(
   extra_returns.ast = ast;
   extra_returns.context = context;
   extra_returns.ids = sub_extra_returns.ids;
+  Object.assign(extra_returns.debug_perf, sub_extra_returns.debug_perf);
   extra_returns.errors.push(...sub_extra_returns.errors);
   let output;
   if (options.render) {
     context.extra_returns = extra_returns;
+    // Convert the toplevel.
+    extra_returns.debug_perf.render_pre = globals.performance.now();
     output = ast.convert(context);
+    extra_returns.debug_perf.render_post = globals.performance.now();
     extra_returns.errors.push(...context.errors);
   }
   extra_returns.errors = extra_returns.errors.sort((a, b)=>{
@@ -1485,6 +1503,7 @@ function convert(
       output += '\n';
     }
   }
+  extra_returns.debug_perf.end = globals.performance.now();
   return output;
 }
 exports.convert = convert;
@@ -1890,6 +1909,8 @@ function object_subset(source_object, keys) {
  * @return {AstNode}
  */
 function parse(tokens, options, context, extra_returns={}) {
+  extra_returns.debug_perf = {};
+  extra_returns.debug_perf.parse_start = globals.performance.now();
   extra_returns.errors = [];
   let state = {
     extra_returns: extra_returns,
@@ -1934,6 +1955,7 @@ function parse(tokens, options, context, extra_returns={}) {
   //
   // Another possibility would be to do it in the middle of the initial parse,
   // but let's not complicate that further either, shall we?
+  extra_returns.debug_perf.post_process_start = globals.performance.now();
   let cur_header;
   let cur_header_level;
   let toplevel_parent_arg = new AstArgument([], 1, 1);
@@ -2641,6 +2663,7 @@ function parse(tokens, options, context, extra_returns={}) {
     }
   }
 
+  extra_returns.debug_perf.post_process_end = globals.performance.now();
   return ast_toplevel;
 }
 
@@ -4323,7 +4346,9 @@ const DEFAULT_MACRO_LIST = [
   ),
 ];
 
-},{"katex":2,"liquidjs":3,"pluralize":4}],2:[function(require,module,exports){
+},{"katex":3,"liquidjs":4,"perf_hooks":2,"pluralize":5}],2:[function(require,module,exports){
+
+},{}],3:[function(require,module,exports){
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -21757,7 +21782,7 @@ var katex_renderToHTMLTree = function renderToHTMLTree(expression, options) {
 /***/ })
 /******/ ])["default"];
 });
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /*
  * liquidjs@9.11.6, https://github.com/harttle/liquidjs
  * (c) 2016-2020 harttle
@@ -25395,7 +25420,7 @@ var katex_renderToHTMLTree = function renderToHTMLTree(expression, options) {
 }));
 
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /* global define */
 
 (function (root, pluralize) {
