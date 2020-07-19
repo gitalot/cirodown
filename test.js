@@ -1642,7 +1642,7 @@ assert_convert_ast('id autogeneration nested',
     a('P', [t('bb')], {}, {id: 'p-2'}),
   ],
 );
-assert_convert_ast('id autogeneration simple',
+assert_convert_ast('id autogeneration unicode',
   `= 0A.你好z
 
 \\x[0a-你好z]
@@ -1656,7 +1656,7 @@ assert_convert_ast('id autogeneration simple',
 );
 
 // title_to_id
-assert_equal('title_to_id with hyphen', cirodown.title_to_id('0A - z'), '0a-z');
+assert_equal('title_to_id with hyphen', cirodown.title_to_id('.0A. - z.a Z..'), '0a-z-a-z');
 assert_equal('title_to_id with unicode chars', cirodown.title_to_id('0A.你好z'), '0a-你好z');
 
 // Toplevel.

@@ -3058,7 +3058,7 @@ function title_to_id(title) {
     }
   }
   return new_chars.join('')
-    .replace(new RegExp(ID_SEPARATOR + '+'), ID_SEPARATOR)
+    .replace(new RegExp(ID_SEPARATOR + '+', 'g'), ID_SEPARATOR)
     .replace(new RegExp('^' + ID_SEPARATOR + '+'), '')
     .replace(new RegExp(ID_SEPARATOR + '+$'), '')
   ;
