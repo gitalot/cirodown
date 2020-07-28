@@ -2133,6 +2133,7 @@ function parse(tokens, options, context, extra_returns={}) {
   context.headers_with_include = [];
   context.header_graph = new TreeNode();
   extra_returns.debug_perf.post_process_start = globals.performance.now();
+  let prev_header;
   let cur_header;
   let cur_header_level;
   let first_header_level;
@@ -2368,6 +2369,7 @@ function parse(tokens, options, context, extra_returns={}) {
         // Required by calculate_id.
         validate_ast(ast, context);
 
+        prev_header = cur_header;
         cur_header = ast;
         cur_header_level = parseInt(
           convert_arg_noescape(ast.args.level, context)
@@ -2379,8 +2381,18 @@ function parse(tokens, options, context, extra_returns={}) {
               new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
             parse_error(state, message, ast.args.level.line, ast.args.level.column);
           }
-          const parent_id = convert_arg_noescape(ast.args.parent, context)
-          const parent_tree_node = header_graph_id_stack.get(parent_id);
+          let parent_tree_node;
+          const parent_id = convert_arg_noescape(ast.args.parent, context);
+          if (
+            // Happens for the first header
+            prev_header !== undefined
+          ) {
+            const parent_ast = context.id_provider.get(
+              parent_id, context, prev_header.header_graph_node);
+            if (parent_ast !== undefined) {
+              parent_tree_node = header_graph_id_stack.get(parent_ast.id);
+            }
+          }
           if (parent_tree_node === undefined) {
             const message = `header parent either is a previous ID of a level, a future ID, or an invalid ID: ${parent_id}`;
             ast.args[Macro.TITLE_ARGUMENT_NAME].push(
@@ -3030,7 +3042,11 @@ function parse_error(state, message, line, column) {
 
 function id_convert_simple_elem() {
   return function(ast, context) {
-    return convert_arg(ast.args.content, context);
+    let ret = convert_arg(ast.args.content, context);
+    if (!context.macros[ast.macro_name].options.phrasing) {
+      ret += '\n';
+    }
+    return ret;
   };
 }
 
@@ -3437,6 +3453,7 @@ const INSANE_TD_START = '| ';
 const INSANE_TH_START = '|| ';
 const INSANE_LIST_INDENT = '  ';
 const INSANE_HEADER_CHAR = '=';
+const OUTPUT_FORMAT_CIRODOWN = 'cirodown';
 const OUTPUT_FORMAT_HTML = 'html';
 const OUTPUT_FORMAT_ID = 'id';
 const TOC_ARROW_HTML = '<div class="arrow"><div></div></div>';
@@ -4534,7 +4551,54 @@ const DEFAULT_MACRO_LIST = [
     ),
   ),
 ];
+
+function cirodown_convert_simple_elem(ast, context) {
+  return ESCAPE_CHAR +
+    ast.macro_name +
+    START_POSITIONAL_ARGUMENT_CHAR +
+    convert_arg(ast.args.content, context) +
+    END_POSITIONAL_ARGUMENT_CHAR;
+}
+
 const MACRO_CONVERT_FUNCIONS = {
+  [OUTPUT_FORMAT_CIRODOWN]: {
+    [Macro.LINK_MACRO_NAME]: function(ast, context) {
+      const [href, content] = link_get_href_content(ast, context);
+      return content;
+    },
+    'b': cirodown_convert_simple_elem,
+    [Macro.CODE_MACRO_NAME.toUpperCase()]: id_convert_simple_elem(),
+    [Macro.CODE_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.CIRODOWN_EXAMPLE_MACRO_NAME]: unconvertible(),
+    'Comment': cirodown_convert_simple_elem,
+    'comment': cirodown_convert_simple_elem,
+    [Macro.HEADER_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.INCLUDE_MACRO_NAME]: cirodown_convert_simple_elem,
+    [Macro.LIST_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.MATH_MACRO_NAME.toUpperCase()]: id_convert_simple_elem(),
+    [Macro.MATH_MACRO_NAME]: id_convert_simple_elem(),
+    'i': cirodown_convert_simple_elem,
+    'Image': function(ast, context) { return ''; },
+    'image': function(ast, context) { return ''; },
+    'JsCanvasDemo': id_convert_simple_elem(),
+    'Ol': cirodown_convert_simple_elem,
+    [Macro.PARAGRAPH_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.PLAINTEXT_MACRO_NAME]: function(ast, context) {return ast.text},
+    'Passthrough': id_convert_simple_elem(),
+    'Q': cirodown_convert_simple_elem,
+    [Macro.TABLE_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.TD_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.TOC_MACRO_NAME]: function(ast, context) { return '' },
+    [Macro.TOPLEVEL_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.TH_MACRO_NAME]: id_convert_simple_elem(),
+    [Macro.TR_MACRO_NAME]: id_convert_simple_elem(),
+    'Ul': id_convert_simple_elem(),
+    'x': function(ast, context) {
+      const [href, content] = x_get_href_content(ast, context);
+      return content;
+    },
+    'Video': macro_image_video_block_convert_function,
+  },
   [OUTPUT_FORMAT_ID]: {
     [Macro.LINK_MACRO_NAME]: function(ast, context) {
       const [href, content] = link_get_href_content(ast, context);
@@ -4575,6 +4639,9 @@ const MACRO_CONVERT_FUNCIONS = {
   },
 };
 const TOPLEVEL_CHILD_MODIFIER = {
+  [OUTPUT_FORMAT_CIRODOWN]: function(ast, context, out) {
+    return out;
+  },
   [OUTPUT_FORMAT_HTML]: function(ast, context, out) {
     return `<div>${html_hide_hover_link(x_href(ast, context))}${out}</div>`;
   },
