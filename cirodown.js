@@ -2053,7 +2053,7 @@ function macro_image_video_block_convert_function(ast, context) {
     ast, context, src, rendered_attrs, alt, media_provider_type, is_url);
   if (has_caption) {
     ret += `<figcaption>${x_text(ast, context, {href_prefix:
-      href_prefix, force_separator: force_separator})}${description}${source}</figcaption>\n`;
+      href_prefix, force_separator: force_separator})}${source}${description}</figcaption>\n`;
   }
   ret += '</figure>\n';
   return ret;
@@ -2374,6 +2374,8 @@ function parse(tokens, options, context, extra_returns={}) {
         cur_header_level = parseInt(
           convert_arg_noescape(ast.args.level, context)
         ) + options.h_level_offset;
+        let parent_tree_node_error = false;
+        let parent_id;
         if (ast.validation_output.parent.given) {
           if (cur_header_level !== 1) {
             const message = `header has both parent and level != 1`;
@@ -2382,7 +2384,7 @@ function parse(tokens, options, context, extra_returns={}) {
             parse_error(state, message, ast.args.level.line, ast.args.level.column);
           }
           let parent_tree_node;
-          const parent_id = convert_arg_noescape(ast.args.parent, context);
+          parent_id = convert_arg_noescape(ast.args.parent, context);
           if (
             // Happens for the first header
             prev_header !== undefined
@@ -2394,10 +2396,7 @@ function parse(tokens, options, context, extra_returns={}) {
             }
           }
           if (parent_tree_node === undefined) {
-            const message = `header parent either is a previous ID of a level, a future ID, or an invalid ID: ${parent_id}`;
-            ast.args[Macro.TITLE_ARGUMENT_NAME].push(
-              new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
-            parse_error(state, message, ast.args.parent.line, ast.args.parent.column);
+            parent_tree_node_error = true;
           } else {
             cur_header_level = parent_tree_node.value.level + 1;
           }
@@ -2427,11 +2426,9 @@ function parse(tokens, options, context, extra_returns={}) {
           is_first_header = false;
         }
         cur_header_graph_node = new TreeNode(ast, header_graph_stack.get(cur_header_level - 1));
+        let header_level_skip_error;
         if (cur_header_level - header_graph_last_level > 1) {
-          const message = `skipped a header level from ${header_graph_last_level} to ${ast.level}`;
-          ast.args[Macro.TITLE_ARGUMENT_NAME].push(
-            new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
-          parse_error(state, message, ast.args.level.line, ast.args.level.column);
+          header_level_skip_error = header_graph_last_level;
         }
         if (cur_header_level < first_header_level) {
           parse_error(
@@ -2468,7 +2465,22 @@ function parse(tokens, options, context, extra_returns={}) {
         // and they also depend on the parent node.
         calculate_id(ast, context, non_indexed_ids, indexed_ids, macro_counts, macro_counts_visible, state, true);
 
-        // Must come after calculate_id.
+        // Now stuff that must come after calculate_id.
+
+        // https://github.com/cirosantilli/cirodown/issues/100
+        if (parent_tree_node_error) {
+          const message = `header parent either is a previous ID of a level, a future ID, or an invalid ID: ${parent_id}`;
+          ast.args[Macro.TITLE_ARGUMENT_NAME].push(
+            new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
+          parse_error(state, message, ast.args.parent.line, ast.args.parent.column);
+        }
+        if (header_level_skip_error !== undefined) {
+          const message = `skipped a header level from ${header_level_skip_error} to ${ast.level}`;
+          ast.args[Macro.TITLE_ARGUMENT_NAME].push(
+            new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
+          parse_error(state, message, ast.args.level.line, ast.args.level.column);
+        }
+
         header_graph_id_stack.set(cur_header_graph_node.value.id, cur_header_graph_node);
       }
       // Push this node into the parent argument list.
@@ -2927,7 +2939,16 @@ function parse_argument_list(state, macro_name, macro_type) {
     if (state.token.type !== closing_token(open_token.type)) {
       parse_error(state, `unclosed argument "${open_token.value}"`, open_token.line, open_token.column);
     }
-    args[arg_name] = arg_children;
+    if (arg_name in args) {
+      // https://github.com/cirosantilli/cirodown/issues/101
+      parse_error(state,
+        `named argument ${arg_name} given multiple times`,
+        open_token.line,
+        open_token.column
+      );
+    } else {
+      args[arg_name] = arg_children;
+    }
     if (state.token.type !== TokenType.INPUT_END) {
       // Consume the *_ARGUMENT_END token out.
       parse_consume(state);

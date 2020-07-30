@@ -753,6 +753,9 @@ assert_convert_ast('p with id before', '\\P{id=ab}[cd]\n',
   [a('P', [t('cd')], {'id': [t('ab')]})]);
 assert_convert_ast('p with id after', '\\P[cd]{id=ab}\n',
   [a('P', [t('cd')], {'id': [t('ab')]})]);
+// https://github.com/cirosantilli/cirodown/issues/101
+assert_error('named argument given multiple times',
+  '\\P[ab]{id=cd}{id=ef}', 1, 14);
 
 // Newline after close.
 assert_convert_ast('text after block element',
@@ -1300,7 +1303,7 @@ assert_convert_ast('scope with parent leading slash conflict resolution',
   a('H', undefined, {level: [t('5')], title: [t('h4')]}, {id: 'h3/h4'}),
   a('H', undefined, {level: [t('3')], title: [t('h4')]}, {id: 'h4'}),
 ]
-)
+);
 assert_convert_ast('scope with parent breakout with no leading slash',
   `= h1
 
@@ -1323,7 +1326,18 @@ assert_convert_ast('scope with parent breakout with no leading slash',
   a('H', undefined, {level: [t('4')], title: [t('h4')]}, {id: 'h3/h4'}),
   a('H', undefined, {level: [t('3')], title: [t('h5')]}, {id: 'h5'}),
 ]
-)
+);
+// https://github.com/cirosantilli/cirodown/issues/100
+assert_error('broken parent still generates a header ID',
+  `= h1
+
+\\x[h2]
+
+= h2
+{parent=reserved-undefined}
+
+`, 6, 1
+);
 
 //// Headers.
 // TODO inner ID property test
