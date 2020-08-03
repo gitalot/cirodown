@@ -501,6 +501,9 @@ class Macro {
       options.image_video_content_func = function() { throw new Error('unimplemented'); };
     }
     if (!('macro_counts_ignore' in options)) {
+      // Applications:
+      // * if an AST node with an ID but no-rendered HTML ID, this breaks editor scroll sync
+      //   Returning true makes it not have an ID at all.
       options.macro_counts_ignore = function(ast) {
         return false;
       }
@@ -1306,9 +1309,39 @@ function basename(str) {
   return str.substr(str.lastIndexOf(URL_SEP) + 1);
 }
 
+/// https://stackoverflow.com/questions/22697936/binary-search-in-javascript/29018745#29018745
+function binary_search(ar, el, compare_fn) {
+  var m = 0;
+  var n = ar.length - 1;
+  while (m <= n) {
+    var k = (n + m) >> 1;
+    var cmp = compare_fn(el, ar[k]);
+    if (cmp > 0) {
+      m = k + 1;
+    } else if (cmp < 0) {
+      n = k - 1;
+    } else {
+      return k;
+    }
+  }
+  return -m - 1;
+}
+
+function binary_search_insert(ar, el, compare_fn) {
+  let index = binary_search(ar, el, compare_fn);
+  if (index < 0) {
+    ar.splice(-(index + 1), 0, el);
+  }
+  return ar;
+}
+
+function binary_search_line_to_id_array_fn(elem0, elem1) {
+  return elem0[0] - elem1[0];
+}
+
 /** Calculate node ID and add it to the ID index. */
-function calculate_id(ast, context, non_indexed_ids,
-  indexed_ids, macro_counts, macro_counts_visible, state, is_header
+function calculate_id(ast, context, non_indexed_ids, indexed_ids,
+  macro_counts, macro_counts_visible, state, is_header, line_to_id_array
 ) {
   const macro_name = ast.macro_name;
   const macro = context.macros[macro_name];
@@ -1418,6 +1451,8 @@ function calculate_id(ast, context, non_indexed_ids,
       macro_counts_visible[macro_name] = macro_count;
       ast.macro_count_visible = macro_count;
     }
+    binary_search_insert(line_to_id_array,
+      [ast.line, ast.id], binary_search_line_to_id_array_fn);
   }
 }
 
@@ -1946,6 +1981,11 @@ function html_katex_convert(ast, context) {
       {
         globalGroup: true,
         macros: context.katex_macros,
+        // The default is to also add MathML output for blind people.
+        // However, it adds it with absolute positioning for some reason.
+        // And as a result, if you add a math formula to the bottom of the editor,
+        // it generates a toplevel scrollbar on Chromium 84 but not Firefox 79.
+        output: 'html',
         strict: 'error',
         throwOnError: true,
       }
@@ -2142,6 +2182,7 @@ function parse(tokens, options, context, extra_returns={}) {
   let todo_visit = [[toplevel_parent_arg, ast_toplevel]];
   // IDs that are indexed: you can link to those.
   let indexed_ids = {};
+  const line_to_id_array = [];
   const macro_counts = {};
   const macro_counts_visible = {};
   // Non-indexed-ids: auto-generated numeric ID's like p-1, p-2, etc.
@@ -2462,7 +2503,8 @@ function parse(tokens, options, context, extra_returns={}) {
 
         // Must come after the header tree step is mostly done, because scopes influence ID,
         // and they also depend on the parent node.
-        calculate_id(ast, context, non_indexed_ids, indexed_ids, macro_counts, macro_counts_visible, state, true);
+        calculate_id(ast, context, non_indexed_ids, indexed_ids, macro_counts,
+          macro_counts_visible, state, true, line_to_id_array);
 
         // Now stuff that must come after calculate_id.
 
@@ -2789,7 +2831,8 @@ function parse(tokens, options, context, extra_returns={}) {
           // Header IDs already previously calculated for parent=.
           macro_name !== Macro.HEADER_MACRO_NAME
         ) {
-          calculate_id(ast, context, non_indexed_ids, indexed_ids, macro_counts, macro_counts_visible, state, false);
+          calculate_id(ast, context, non_indexed_ids, indexed_ids, macro_counts,
+            macro_counts_visible, state, false, line_to_id_array);
         }
 
         // Push children to continue the search. We make the new argument be empty
@@ -2820,6 +2863,22 @@ function parse(tokens, options, context, extra_returns={}) {
       context.toplevel_id = undefined;
     }
   }
+
+  context.line_to_id = function(line) {
+    let index = binary_search(line_to_id_array,
+      [line, undefined], binary_search_line_to_id_array_fn);
+    if (index < 0) {
+      index = -(index + 1)
+    }
+    if (index == line_to_id_array.length) {
+      if (line_to_id_array.length > 0) {
+        index = line_to_id_array.length - 1;
+      } else {
+        return undefined;
+      }
+    }
+    return line_to_id_array[index][1];
+  };
 
   return ast_toplevel;
 }
@@ -4371,6 +4430,7 @@ const DEFAULT_MACRO_LIST = [
       return ret;
     },
     {
+      macro_counts_ignore: function(ast) { return true; },
       named_args: [
         new MacroArgument({
           name: Macro.TITLE_ARGUMENT_NAME,
@@ -4415,7 +4475,7 @@ const DEFAULT_MACRO_LIST = [
           res += `<tbody>\n`;
         }
       }
-      res += `<tr>\n${content}</tr>\n`;
+      res += `<tr${html_convert_attrs_id(ast, context)}>\n${content}</tr>\n`;
       if (ast.args.content[0].macro_name === Macro.TH_MACRO_NAME) {
         if (
           ast.parent_argument_index === ast.parent_argument.length - 1 ||
