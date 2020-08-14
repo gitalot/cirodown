@@ -95,7 +95,7 @@ function assert_error_func(input_string, line, column) {
  *
  * This tests just the input parse to AST, but not the output generation from the AST.
  *
- * This function automaticlaly only considers the content argument of the
+ * This function automatically only considers the content argument of the
  * toplevel node for further convenience.
  */
 function assert_convert_ast(description, input_string, expected_ast_output_subset, extra_convert_opts) {
@@ -422,7 +422,7 @@ assert_convert_ast('insane list with element with newline separated arguments',
     a('Ul', [
       a('L', [
         a('P', [t('aa')]),
-        a('C', [t('bb\n')], {'id': [t('cc')]}),
+        a('C', [t('bb\n')], {id: [t('cc')]}),
       ]),
     ]),
   ]
@@ -750,12 +750,17 @@ assert_convert_ast('p with empty content argument', '\\P[]\n', [a('P', [])]);
 
 // Named arguments.
 assert_convert_ast('p with id before', '\\P{id=ab}[cd]\n',
-  [a('P', [t('cd')], {'id': [t('ab')]})]);
+  [a('P', [t('cd')], {id: [t('ab')]})]);
 assert_convert_ast('p with id after', '\\P[cd]{id=ab}\n',
-  [a('P', [t('cd')], {'id': [t('ab')]})]);
+  [a('P', [t('cd')], {id: [t('ab')]})]);
 // https://github.com/cirosantilli/cirodown/issues/101
 assert_error('named argument given multiple times',
   '\\P[ab]{id=cd}{id=ef}', 1, 14);
+assert_error('non-empty named argument without = is an error', '\\P{id ab}[cd]', 1, 6);
+assert_convert_ast('empty named argument without = is allowed',
+  '\\P[cd]{id=}\n',
+  [a('P', [t('cd')], {id: []})]
+);
 
 // Newline after close.
 assert_convert_ast('text after block element',
@@ -1708,6 +1713,20 @@ assert_convert_ast('id autogeneration unicode',
     ])
   ],
 );
+assert_convert_ast('id autogeneration with disambiguate',
+  `= ab
+{disambiguate=cd}
+
+\\x[ab-cd]
+`,
+  [
+    a('H', undefined, {title: [t('ab')], disambiguate: [t('cd')]}, {id: 'ab-cd'}),
+    a('P', [
+      a('x', undefined, {href: [t('ab-cd')]})
+    ])
+  ],
+);
+
 assert_error('id autogeneration with undefined reference in title fails gracefully',
   `= \\x[reserved_undefined]
 `, 1, 5);
@@ -1766,7 +1785,6 @@ assert_error('backslash without macro', '\\ a', 1, 1);
 assert_error('unknown macro', '\\reserved_undefined', 1, 1);
 assert_error('too many positional arguments', '\\P[ab][cd]', 1, 7);
 assert_error('unknown named macro argument', '\\c{reserved_undefined=abc}[]', 1, 4);
-assert_error('named argument without =', '\\P{id ab}[cd]', 1, 6);
 assert_error('missing mandatory positional argument href of a', '\\a', 1, 1);
 assert_error('missing mandatory positional argument level of h', '\\H', 1, 1);
 assert_error('stray open positional argument start', 'a[b\n', 1, 2);

@@ -515,6 +515,9 @@ class Macro {
     if (!('phrasing' in options)) {
       options.phrasing = false;
     }
+    if (!('show_disambiguate' in options)) {
+      options.show_disambiguate = false;
+    }
     if (!('source_func' in options)) {
       options.source_func = function() { throw new Error('unimplemented'); };
     }
@@ -552,11 +555,13 @@ class Macro {
       this.check_name(name);
       this.name_to_arg[name] = this.named_args[name];
     }
-    // Add the ID argument.
-    this.named_args[Macro.ID_ARGUMENT_NAME] = new MacroArgument({
-      name: Macro.ID_ARGUMENT_NAME,
-    })
-    this.name_to_arg[Macro.ID_ARGUMENT_NAME] = this.named_args[Macro.ID_ARGUMENT_NAME];
+    // Add arguments common to all macros.
+    for (const argname of Macro.COMMON_ARGNAMES) {
+      this.named_args[argname] = new MacroArgument({
+        name: argname,
+      })
+      this.name_to_arg[argname] = this.named_args[argname];
+    }
     delete this.options.named_args;
   }
 
@@ -565,8 +570,8 @@ class Macro {
   }
 
   check_name(name) {
-    if (name === Macro.ID_ARGUMENT_NAME) {
-      throw new Error(`name "${Macro.ID_ARGUMENT_NAME}" is reserved and automatically added`);
+    if (Macro.COMMON_ARGNAMES.has(name)) {
+      throw new Error(`name "${name}" is reserved and automatically added`);
     }
     if (name in this.name_to_arg) {
       throw new Error('name already taken: ' + name);
@@ -587,13 +592,20 @@ class Macro {
     }
   }
 }
+
 // Macro names defined here are those that have magic properties, e.g.
 // headers are used by the 'toc'.
 Macro.CIRODOWN_EXAMPLE_MACRO_NAME = 'CirodownExample';
 Macro.CODE_MACRO_NAME = 'c';
+// Add arguments common to all macros.
+Macro.DISAMBIGUATE_ARGUMENT_NAME = 'disambiguate';
+Macro.ID_ARGUMENT_NAME = 'id';
+Macro.COMMON_ARGNAMES = new Set([
+  Macro.DISAMBIGUATE_ARGUMENT_NAME,
+  Macro.ID_ARGUMENT_NAME,
+]);
 Macro.HEADER_MACRO_NAME = 'H';
 Macro.HEADER_SCOPE_SEPARATOR = '/';
-Macro.ID_ARGUMENT_NAME = 'id';
 Macro.INCLUDE_MACRO_NAME = 'Include';
 Macro.LINK_MACRO_NAME = 'a';
 Macro.LIST_MACRO_NAME = 'L';
@@ -1377,6 +1389,10 @@ function calculate_id(ast, context, non_indexed_ids, indexed_ids,
         new_context.extra_returns.id_conversion_header_title_no_id_xref = false;
         new_context.extra_returns.id_conversion_non_header_no_id_xref_non_header = false;
         id_text += title_to_id(convert_arg_noescape(title_arg, new_context));
+        const disambiguate_arg = ast.args[Macro.DISAMBIGUATE_ARGUMENT_NAME];
+        if (disambiguate_arg !== undefined) {
+          id_text += ID_SEPARATOR + title_to_id(convert_arg_noescape(disambiguate_arg, new_context));
+        }
         let message;
         if (new_context.extra_returns.id_conversion_header_title_no_id_xref) {
           message = 'x without content inside title of a header that does not have an ID: https://cirosantilli.com/cirodown#x-within-title-restrictions';
@@ -3517,8 +3533,21 @@ function x_text(ast, context, options={}) {
     }
     ret += convert_arg(title_arg, context);
     if (style_full) {
-      if (Macro.TITLE2_ARGUMENT_NAME in ast.args) {
-        ret += ' (' + convert_arg(ast.args[Macro.TITLE2_ARGUMENT_NAME], context) + ')';
+      const disambiguate_arg = ast.args[Macro.DISAMBIGUATE_ARGUMENT_NAME];
+      const title2_arg = ast.args[Macro.TITLE2_ARGUMENT_NAME];
+      const show_disambiguate = (disambiguate_arg !== undefined) && macro.options.show_disambiguate;
+      if (show_disambiguate || title2_arg !== undefined) {
+        ret += ' (';
+        if (title2_arg !== undefined) {
+          ret += convert_arg(title2_arg, context);
+        }
+        if (show_disambiguate) {
+          if (title2_arg !== undefined) {
+            ret += ', ';
+          }
+          ret += convert_arg(disambiguate_arg, context);
+        }
+        ret += ')';
       }
       if (options.quote) {
         ret += html_escape_context(context, `"`);
@@ -3611,7 +3640,7 @@ const MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS = [
     elide_link_only: true,
   }),
   new MacroArgument({
-    name: 'title_from_src',
+    name: 'titleFromSrc',
     boolean: true,
   }),
   new MacroArgument({
@@ -3711,9 +3740,9 @@ const MACRO_IMAGE_VIDEO_OPTIONS = {
     // Title from src.
     const media_provider_type = macro_image_video_resolve_params(ast, context).media_provider_type;
     if (
-      ast.validation_output.title_from_src.boolean ||
+      ast.validation_output.titleFromSrc.boolean ||
       (
-        !ast.validation_output.title_from_src.given &&
+        !ast.validation_output.titleFromSrc.given &&
         context.options.cirodown_json['media-providers'][media_provider_type]['title-from-src']
       )
     ) {
@@ -3934,11 +3963,20 @@ const DEFAULT_MACRO_LIST = [
       }
       ret += `</span>`;
       ret += `</h${level_int_capped}>\n`;
+      if (ast.validation_output.wiki.given) {
+        let wiki = convert_arg(ast.args.wiki, context);
+        if (wiki === '') {
+          wiki = convert_arg(ast.args[Macro.TITLE_ARGUMENT_NAME], context).replace(/ /g, '_');
+          if (ast.validation_output[Macro.DISAMBIGUATE_ARGUMENT_NAME].given) {
+            wiki += '_(' + convert_arg(ast.args[Macro.DISAMBIGUATE_ARGUMENT_NAME], context).replace(/ /g, '_')  + ')'
+          }
+        }
+        ret += `<div class="h-nav"><span class="nav"></span> <a href="https://en.wikipedia.org/wiki/${html_escape_attr(wiki)}">Wikipedia</a></div>\n`;
+      }
       return ret;
     },
     {
       caption_prefix: 'Section',
-      id_prefix: '',
       default_x_style_full: false,
       get_number: function(ast, context) {
         let header_graph_node = ast.header_graph_node;
@@ -3948,6 +3986,8 @@ const DEFAULT_MACRO_LIST = [
           return header_graph_node.get_nested_number(context.header_graph_top_level);
         }
       },
+      show_disambiguate: true,
+      id_prefix: '',
       named_args: [
         new MacroArgument({
           name: 'c',
@@ -3962,6 +4002,9 @@ const DEFAULT_MACRO_LIST = [
         }),
         new MacroArgument({
           name: Macro.TITLE2_ARGUMENT_NAME,
+        }),
+        new MacroArgument({
+          name: 'wiki',
         }),
       ],
     }
