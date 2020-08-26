@@ -1240,16 +1240,26 @@ class Tokenizer {
 }
 
 class TreeNode {
+  /**
+   * @param {AstNode} value
+   * @param {TreeNode} parent_node
+   */
   constructor(value, parent_node) {
     this.value = value;
     this.parent_node = parent_node;
     this.children = [];
     this.index = undefined;
+    this.descendant_count = 0;
   }
 
   add_child(child) {
     child.index = this.children.length;
     this.children.push(child);
+    let cur_node = this;
+    while (cur_node !== undefined) {
+      cur_node.descendant_count += 1;
+      cur_node = cur_node.parent_node;
+    }
   }
 
   /** E.g. get number 1.4.2.5 of a Section.
@@ -1435,12 +1445,12 @@ function calculate_id(ast, context, non_indexed_ids, indexed_ids,
   }
   ast.index_id = index_id;
   if (ast.id !== undefined && !ast.force_no_index) {
-    const previous_ast = context.id_provider.get(ast.id, context, ast.header_graph_node);
+    let previous_ast = context.id_provider.get(ast.id, context, ast.header_graph_node);
     let input_path;
     if (previous_ast === undefined) {
       let non_indexed_id = non_indexed_ids[ast.id];
       if (non_indexed_id !== undefined) {
-        input_path = options.input_path;
+        input_path = input_path;
         previous_ast = non_indexed_id;
       }
     } else {
@@ -1755,6 +1765,8 @@ function convert_include(input_string, options, cur_header_level, href, start_li
   include_options.input_path = href;
   include_options.render = false;
   include_options.toplevel_id = href;
+  include_options.header_graph_stack = new Map(include_options.header_graph_stack);
+  include_options.header_graph_id_stack = new Map(include_options.header_graph_id_stack);
   if (start_line !== undefined) {
     include_options.start_line = start_line;
   }
@@ -1781,6 +1793,15 @@ function error_message_in_output(msg, context) {
     escaped_msg = html_escape_context(context, msg);
   }
   return `[CIRODOWN_ERROR: ${escaped_msg}]`
+}
+
+function get_descendant_count(tree_node) {
+  let descendant_count;
+  if (tree_node.descendant_count > 0) {
+    return ` <span class="descendant-count" title="Number of descendants.">[${tree_node.descendant_count}]</span>`;
+  } else {
+    return '';
+  }
 }
 
 /** @return {Union[String,undefined]}
@@ -2189,7 +2210,6 @@ function parse(tokens, options, context, extra_returns={}) {
   context.header_graph = new TreeNode();
   extra_returns.debug_perf.post_process_start = globals.performance.now();
   let prev_header;
-  let cur_header;
   let cur_header_level;
   let first_header_level;
   let first_header;
@@ -2197,20 +2217,35 @@ function parse(tokens, options, context, extra_returns={}) {
   let toplevel_parent_arg = new AstArgument([], 1, 1);
   let todo_visit = [[toplevel_parent_arg, ast_toplevel]];
   // IDs that are indexed: you can link to those.
-  let indexed_ids = {};
   const line_to_id_array = [];
   const macro_counts = {};
   const macro_counts_visible = {};
+  let id_provider;
+  let cur_header_graph_node;
+  // Prepare convert options for the child. Copy options so that the
+  // toplevel call won't change the input options, but children calls wlil.
+  const include_options = Object.assign({}, options);
+  include_options.include_path_set = context.include_path_set;
   // Non-indexed-ids: auto-generated numeric ID's like p-1, p-2, etc.
   // It is not possible to link to them from inside the document, since links
   // break across versions.
-  let non_indexed_ids = {};
-  const header_graph_stack = new Map();
-  const header_graph_id_stack = new Map();
-  let id_provider;
-  let local_id_provider = new DictIdProvider(indexed_ids);
-  let cur_header_graph_node;
+  if (include_options.non_indexed_ids === undefined) {
+    include_options.non_indexed_ids = {};
+  }
+  if (include_options.indexed_ids === undefined) {
+    include_options.indexed_ids = {};
+  }
+  if (include_options.header_graph_stack === undefined) {
+    include_options.header_graph_stack = new Map();
+  }
+  if (include_options.header_graph_id_stack === undefined) {
+    include_options.header_graph_id_stack = new Map();
+  }
   let is_first_header = true;
+  if (include_options.is_first_global_header === undefined) {
+    include_options.is_first_global_header = true;
+  }
+  let local_id_provider = new DictIdProvider(include_options.indexed_ids);
   if (options.id_provider !== undefined) {
     // Remove all remote IDs from the current file, to prevent false duplicates
     // when we start setting those IDs again.
@@ -2223,8 +2258,6 @@ function parse(tokens, options, context, extra_returns={}) {
     id_provider = local_id_provider;
   }
   context.id_provider = id_provider;
-  const include_options = Object.assign({}, options);
-  include_options.include_path_set = context.include_path_set;
   context.include_path_set.add(options.input_path);
   while (todo_visit.length > 0) {
     const [parent_arg, ast] = todo_visit.pop();
@@ -2232,8 +2265,12 @@ function parse(tokens, options, context, extra_returns={}) {
     ast.from_include = options.from_include;
     ast.input_path = options.input_path;
     if (macro_name === Macro.INCLUDE_MACRO_NAME) {
+      let peek_ast = todo_visit[todo_visit.length - 1][1];
+      if (peek_ast.node_type === AstType.PLAINTEXT && peek_ast.text == '\n') {
+        todo_visit.pop();
+      }
       const href = convert_arg_noescape(ast.args.href, context);
-      cur_header.includes.push(href);
+      include_options.cur_header.includes.push(href);
       if (context.include_path_set.has(href)) {
         let message = `circular include detected to: "${href}"`;
         parse_error(
@@ -2360,6 +2397,13 @@ function parse(tokens, options, context, extra_returns={}) {
                 input_path: ast.input_path,
               },
             ),
+            new AstNode(
+              AstType.PARAGRAPH,
+              undefined,
+              undefined,
+              ast.line,
+              ast.column
+            ),
           ];
         }
         // Push all included nodes, but don't recurse because:
@@ -2425,8 +2469,8 @@ function parse(tokens, options, context, extra_returns={}) {
         // Required by calculate_id.
         validate_ast(ast, context);
 
-        prev_header = cur_header;
-        cur_header = ast;
+        prev_header = include_options.cur_header;
+        include_options.cur_header = ast;
         cur_header_level = parseInt(
           convert_arg_noescape(ast.args.level, context)
         ) + options.h_level_offset;
@@ -2448,7 +2492,7 @@ function parse(tokens, options, context, extra_returns={}) {
             const parent_ast = context.id_provider.get(
               parent_id, context, prev_header.header_graph_node);
             if (parent_ast !== undefined) {
-              parent_tree_node = header_graph_id_stack.get(parent_ast.id);
+              parent_tree_node = include_options.header_graph_id_stack.get(parent_ast.id);
             }
           }
           if (parent_tree_node === undefined) {
@@ -2466,22 +2510,18 @@ function parse(tokens, options, context, extra_returns={}) {
         }
 
         // Create the header tree.
-        if (ast.level === undefined) {
-          cur_header_level = parseInt(convert_arg_noescape(ast.args.level, context)) + options.h_level_offset;
-          ast.level = cur_header_level;
-        } else {
-          // Possible for included headers.
-          cur_header_level = ast.level;
-        }
         if (is_first_header) {
           ast.id = options.toplevel_id;
+          is_first_header = false;
+        }
+        if (include_options.is_first_global_header) {
           first_header = ast;
           first_header_level = cur_header_level;
           header_graph_last_level = cur_header_level - 1;
-          header_graph_stack.set(header_graph_last_level, context.header_graph);
-          is_first_header = false;
+          include_options.header_graph_stack.set(header_graph_last_level, context.header_graph);
+          include_options.is_first_global_header = false;
         }
-        cur_header_graph_node = new TreeNode(ast, header_graph_stack.get(cur_header_level - 1));
+        cur_header_graph_node = new TreeNode(ast, include_options.header_graph_stack.get(cur_header_level - 1));
         let header_level_skip_error;
         if (cur_header_level - header_graph_last_level > 1) {
           header_level_skip_error = header_graph_last_level;
@@ -2494,12 +2534,12 @@ function parse(tokens, options, context, extra_returns={}) {
             ast.args.level.column
           );
         }
-        const parent_tree_node = header_graph_stack.get(cur_header_level - 1);
+        const parent_tree_node = include_options.header_graph_stack.get(cur_header_level - 1);
         if (parent_tree_node !== undefined) {
           parent_tree_node.add_child(cur_header_graph_node);
         }
-        const old_graph_node = header_graph_stack.get(cur_header_level);
-        header_graph_stack.set(cur_header_level, cur_header_graph_node);
+        const old_graph_node = include_options.header_graph_stack.get(cur_header_level);
+        include_options.header_graph_stack.set(cur_header_level, cur_header_graph_node);
         if (
           // Possible on the first insert of a level.
           old_graph_node !== undefined
@@ -2508,7 +2548,7 @@ function parse(tokens, options, context, extra_returns={}) {
             // Possible if the level is not an integer.
             old_graph_node.value !== undefined
           ) {
-            header_graph_id_stack.delete(old_graph_node.value.id);
+            include_options.header_graph_id_stack.delete(old_graph_node.value.id);
           }
         }
         header_graph_last_level = cur_header_level;
@@ -2519,7 +2559,7 @@ function parse(tokens, options, context, extra_returns={}) {
 
         // Must come after the header tree step is mostly done, because scopes influence ID,
         // and they also depend on the parent node.
-        calculate_id(ast, context, non_indexed_ids, indexed_ids, macro_counts,
+        calculate_id(ast, context, include_options.non_indexed_ids, include_options.indexed_ids, macro_counts,
           macro_counts_visible, state, true, line_to_id_array);
 
         // Now stuff that must come after calculate_id.
@@ -2538,7 +2578,7 @@ function parse(tokens, options, context, extra_returns={}) {
           parse_error(state, message, ast.args.level.line, ast.args.level.column);
         }
 
-        header_graph_id_stack.set(cur_header_graph_node.value.id, cur_header_graph_node);
+        include_options.header_graph_id_stack.set(cur_header_graph_node.value.id, cur_header_graph_node);
       }
       // Push this node into the parent argument list.
       // This allows us to skip nodes, or push multiple nodes if needed.
@@ -2847,7 +2887,7 @@ function parse(tokens, options, context, extra_returns={}) {
           // Header IDs already previously calculated for parent=.
           macro_name !== Macro.HEADER_MACRO_NAME
         ) {
-          calculate_id(ast, context, non_indexed_ids, indexed_ids, macro_counts,
+          calculate_id(ast, context, include_options.non_indexed_ids, include_options.indexed_ids, macro_counts,
             macro_counts_visible, state, false, line_to_id_array);
         }
 
@@ -2861,7 +2901,6 @@ function parse(tokens, options, context, extra_returns={}) {
         }
       }
     }
-    extra_returns.ids = indexed_ids;
 
     // Calculate header_graph_top_level.
     if (context.header_graph.children.length === 1) {
@@ -2879,6 +2918,7 @@ function parse(tokens, options, context, extra_returns={}) {
       context.toplevel_id = undefined;
     }
   }
+  extra_returns.ids = include_options.indexed_ids;
 
   context.line_to_id = function(line) {
     let index = binary_search(line_to_id_array,
@@ -4342,11 +4382,11 @@ const DEFAULT_MACRO_LIST = [
     [],
     function(ast, context) {
       let attrs = html_convert_attrs_id(ast, context);
-      let ret = `<div class="toc-container"${attrs}>\n<ul>\n<li${html_class_attr([TOC_HAS_CHILD_CLASS, 'toplevel'])}><div class="title-div">`;
-      ret += `${TOC_ARROW_HTML}<a${x_href_attr(ast, context)}class="title">Table of contents</a></div>\n`;
       let todo_visit = [];
       let top_level = context.header_graph_top_level - 1;
       let root_node = context.header_graph;
+      let ret = `<div class="toc-container"${attrs}>\n<ul>\n<li${html_class_attr([TOC_HAS_CHILD_CLASS, 'toplevel'])}><div class="title-div">`;
+      ret += `${TOC_ARROW_HTML}<a class="title"${x_href_attr(ast, context)}>Table of contents</a> ${get_descendant_count(root_node)}</div>\n`;
       if (context.header_graph_top_level > 0) {
         root_node = root_node.children[0];
       }
@@ -4374,7 +4414,7 @@ const DEFAULT_MACRO_LIST = [
         // The inner <div></div> inside arrow is so that:
         // - outter div: takes up space to make clicking easy
         // - inner div: minimal size to make the CSS arrow work, but too small for confortable clicking
-        ret += `><div${id_to_toc}>${TOC_ARROW_HTML}<a${href}>${content}</a><span>`;
+        ret += `><div${id_to_toc}>${TOC_ARROW_HTML}<a${href}>${content}</a>${get_descendant_count(tree_node)}<span class="hover-metadata">`;
 
         let toc_href = html_attr('href', '#' + my_toc_id);
         ret += ` | <a${toc_href}>${UNICODE_LINK} link</a>`;
