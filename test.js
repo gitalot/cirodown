@@ -86,8 +86,7 @@ function assert_error_func(input_string, line, column) {
   let output = cirodown.convert(input_string, convert_opts, extra_returns);
   assert.ok(extra_returns.errors.length >= 1);
   let error = extra_returns.errors[0];
-  assert.strictEqual(error.line, line);
-  assert.strictEqual(error.column, column);
+  assert.deepStrictEqual(error.source_location, new cirodown.SourceLocation(line, column));
 }
 
 /** For stuff that is hard to predict the exact output of, which is most of the HTML,
@@ -199,6 +198,9 @@ function a(macro_name, content, extra_args={}, extra_props={}) {
 
 /** Shortcut to create plaintext nodes for ast_arg_has_subset, we have too many of those. */
 function t(text) { return {'macro_name': 'plaintext', 'text': text}; }
+
+// Empty document.
+assert_convert_ast('empty document', '', []);
 
 // Paragraphs.
 assert_convert_ast('one paragraph implicit', 'ab\n',
@@ -1243,6 +1245,7 @@ assert_convert_ast('cross reference from image to following header without x con
         id: 'image-ef-gh'
       }
     ),
+    a('Toc'),
     a('H', undefined, {
       level: [t('2')],
       title: [t('gh')],
@@ -1302,6 +1305,7 @@ assert_convert_ast('scope with parent leading slash conflict resolution',
 {parent=/h2}
 `, [
   a('H', undefined, {level: [t('1')], title: [t('h1')]}, {id: 'h1'}),
+  a('Toc'),
   a('H', undefined, {level: [t('2')], title: [t('h2')]}, {id: 'h2'}),
   a('H', undefined, {level: [t('3')], title: [t('h3')]}, {id: 'h3'}),
   a('H', undefined, {level: [t('4')], title: [t('h2')]}, {id: 'h3/h2'}),
@@ -1326,6 +1330,7 @@ assert_convert_ast('scope with parent breakout with no leading slash',
 {parent=h2}
 `, [
   a('H', undefined, {level: [t('1')], title: [t('h1')]}, {id: 'h1'}),
+  a('Toc'),
   a('H', undefined, {level: [t('2')], title: [t('h2')]}, {id: 'h2'}),
   a('H', undefined, {level: [t('3')], title: [t('h3')]}, {id: 'h3'}),
   a('H', undefined, {level: [t('4')], title: [t('h4')]}, {id: 'h3/h4'}),
@@ -1362,12 +1367,14 @@ My paragraph 2.
   [
     a('H', undefined, {level: [t('1')], title: [t('My header 1')]}),
     a('P', [t('My paragraph 1.')]),
+    a('Toc'),
     a('H', undefined, {level: [t('2')], title: [t('My header 2')]}),
     a('P', [t('My paragraph 2.')]),
   ]
 );
 const header_7_expect = [
   a('H', undefined, {level: [t('1')], title: [t('1')]}),
+  a('Toc'),
   a('H', undefined, {level: [t('2')], title: [t('2')]}),
   a('H', undefined, {level: [t('3')], title: [t('3')]}),
   a('H', undefined, {level: [t('4')], title: [t('4')]}),
@@ -1433,7 +1440,7 @@ assert_convert_ast('header 7 parent',
 `,
   header_7_expect
 );
-assert_error('header parent with level not 1 is an error',
+assert_error('header with parent argument must have level equal 1',
   `= 1
 
 == 2
@@ -1553,6 +1560,59 @@ d
 ]
 );
 
+// Toc
+assert_convert_ast('second explicit toc is removed',
+  `a
+
+\\Toc
+
+b
+
+\\Toc
+`,
+[
+  a('P', [t('a')]),
+  a('Toc'),
+  a('P', [t('b')]),
+]
+);
+assert_convert_ast('implicit toc after explcit toc is removed',
+  `= aa
+
+bb
+
+\\Toc
+
+cc
+
+== dd
+`,
+  [
+    a('H', undefined, {level: [t('1')], title: [t('aa')]}),
+    a('P', [t('bb')]),
+    a('Toc'),
+    a('P', [t('cc')]),
+    a('H', undefined, {level: [t('2')], title: [t('dd')]}),
+]
+);
+assert_convert_ast('explicit toc after implicit toc is removed',
+  `= aa
+
+bb
+
+== cc
+
+\\Toc
+
+`,
+  [
+    a('H', undefined, {level: [t('1')], title: [t('aa')]}),
+    a('P', [t('bb')]),
+    a('Toc'),
+    a('H', undefined, {level: [t('2')], title: [t('cc')]}),
+]
+);
+
 // Math. Minimal testing since this is mostly factored out with code tests.
 assert_convert_ast('math inline sane',
   '\\m[[\\sqrt{1 + 1}]]\n',
@@ -1581,18 +1641,19 @@ const include_opts = {extra_convert_opts: {
   file_provider: new cirodown_nodejs.ZeroFileProvider(),
   html_single_page: true,
   read_include: function(input_path) {
+    let ret;
     if (input_path === 'include-one-level-1') {
-      return `= cc
+      ret = `= cc
 
 dd
 `
     } else if (input_path === 'include-one-level-2') {
-      return `= ee
+      ret = `= ee
 
 ff
 `
     } else if (input_path === 'include-two-levels') {
-      return `= ee
+      ret = `= ee
 
 ff
 
@@ -1603,6 +1664,7 @@ hh
     } else {
       throw new Error(`unknown lnclude path: ${input_path}`);
     }
+    return [input_path + '.ciro', ret];
   },
 }};
 const include_two_levels_ast_args = [
@@ -1623,6 +1685,7 @@ bb
   [
     a('H', undefined, {level: [t('1')], title: [t('aa')]}),
     a('P', [t('bb')]),
+    a('Toc'),
     a('H', undefined, {level: [t('2')], title: [t('cc')]}),
     a('P', [t('dd')]),
     a('H', undefined, {level: [t('2')], title: [t('ee')]}),
@@ -1647,6 +1710,7 @@ assert_convert_ast('x reference to include header',
     a('P', [
       a('x', undefined, {href: [t('gg')]}),
     ]),
+    a('Toc'),
   ].concat(include_two_levels_ast_args),
   include_opts
 );
@@ -1662,6 +1726,7 @@ bb
   [
     a('H', undefined, {level: [t('1')], title: [t('aa')]}),
     a('P', [t('bb')]),
+    a('Toc'),
   ].concat(include_two_levels_ast_args)
   .concat([
     a('H', undefined, {level: [t('2')], title: [t('cc')]}),
@@ -1681,6 +1746,7 @@ bb
   [
     a('H', undefined, {level: [t('1')], title: [t('aa')]}),
     a('P', [t('bb')]),
+    a('Toc'),
     a('H', undefined, {level: [t('2')], title: [t('cc')]}),
     a('P', [t('dd')]),
     a('H', undefined, {level: [t('2')], title: [t('ee')]}),
@@ -1699,6 +1765,7 @@ bb
   [
     a('H', undefined, {level: [t('1')], title: [t('aa')]}),
     a('P', [t('bb')]),
+    a('Toc'),
   ].concat(include_two_levels_ast_args)
   .concat([
     a('H', undefined, {level: [t('2')], title: [t('cc')]}),

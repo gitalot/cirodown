@@ -12,6 +12,7 @@ if (typeof performance === 'undefined') {
   globals.performance = performance;
 }
 const pluralize = require('pluralize');
+const lodash = require('lodash');
 
 // consts used by classes.
 const UNICODE_LINK = String.fromCodePoint(0x1F517);
@@ -25,13 +26,15 @@ class AstNode {
    *                              - else: arbitrary regular macro
    * @param {Object[String, AstArgument]} args - dict of arg names to arguments.
    *        where arguments are arrays of AstNode
-   * @param {Number} line - the best representation of where the macro is starts in the document
+   * @param {SourceLocation} source_location - the best representation of where the macro is starts in the document
    *                        used primarily to present useful debug messages
-   * @param {Number} column
    * @param {Object} options
    *                 {String} text - the text content of an AstType.PLAINTEXT, undefined for other types
    */
-  constructor(node_type, macro_name, args, line, column, options={}) {
+  constructor(node_type, macro_name, args, source_location, options={}) {
+    if (!('first_toplevel_child' in options)) {
+      options.first_toplevel_child = false;
+    }
     if (!('from_include' in options)) {
       options.from_include = false;
     }
@@ -40,9 +43,6 @@ class AstNode {
     }
     if (!(Macro.ID_ARGUMENT_NAME in options)) {
       options.id = undefined;
-    }
-    if (!('input_path' in options)) {
-      options.input_path = undefined;
     }
     if (!('level' in options)) {
       options.level = undefined;
@@ -57,10 +57,17 @@ class AstNode {
     // Generic fields.
     this.node_type = node_type;
     this.macro_name = macro_name;
+
+    // For elements that have an id.
+    // {String} or undefined.
+    this.id = options.id;
+
+    // For elements that are of AstType.PLAINTEXT.
+    this.text = options.text
+    this.source_location = source_location;
+
     this.args = args;
-    this.line = line;
-    this.input_path = options.input_path;
-    this.column = column;
+    this.first_toplevel_child = options.first_toplevel_child;
     // This is the Nth macro of this type that appears in the document.
     this.macro_count = undefined;
     // This is the Nth macro of this type that is visible,
@@ -69,7 +76,11 @@ class AstNode {
     // it is possible to force non-indexed IDs to count as well with
     // caption_number_visible.
     this.macro_count_visible = undefined;
+    // AstNode. TODO get rid of this and always use parent_argument.parent_node instead,
+    // to reduce the duplication of information.
     this.parent_node = options.parent_node;
+    // AstArgument
+    this.parent_argument = undefined;
     // {TreeNode} that points to the element.
     // This is used for both headers and non headers:
     // the only difference is that non-headers are not connected as
@@ -79,15 +90,11 @@ class AstNode {
     this.validation_error = undefined;
     this.validation_output = {};
 
-    // For elements that are of AstType.PLAINTEXT.
-    this.text = options.text
-
-    // For elements that have an id.
-    // {String} or undefined.
-    this.id = options.id;
     // The ID of this element has been indexed.
-    this.index_id = undefined
+    this.index_id = undefined;
     this.force_no_index = options.force_no_index;
+    // The ToC will go before this header.
+    this.toc_header = false;
 
     // This was added to the tree from an include.
     this.from_include = options.from_include;
@@ -101,6 +108,7 @@ class AstNode {
     for (const argname in args) {
       for (const arg of args[argname]) {
         arg.parent_node = this;
+        arg.argument_name = argname;
       }
     }
   }
@@ -165,7 +173,7 @@ class AstNode {
       const convert_function = macro.convert_funcs[output_format];
       if (convert_function === undefined) {
         const message = `output format ${context.options.output_format} not defined for macro ${this.macro_name}`;
-        render_error(context, message, this.line, this.column);
+        render_error(context, message, this.source_location);
         out = error_message_in_output(message, context);
       } else {
         out = convert_function(this, context);
@@ -195,8 +203,16 @@ class AstNode {
   /** Manual implementation. There must be a better way, but I can't find it... */
   static fromJSON(json_string) {
     let json = JSON.parse(json_string);
-    let toplevel_ast = new AstNode(AstType[json.node_type], json.macro_name,
-      json.args, json.line, json.column, json.text);
+    let toplevel_ast = new AstNode(
+      AstType[json.node_type],
+      json.macro_name,
+      json.args,
+      json.source_location,
+      {
+        text: json.text,
+        first_toplevel_child: json.first_toplevel_child,
+      }
+    );
     let nodes = [toplevel_ast];
     while (nodes.length !== 0) {
       let cur_ast = nodes.pop();
@@ -204,8 +220,16 @@ class AstNode {
         let arg = cur_ast.args[arg_name];
         let new_arg = [];
         for (let ast of arg) {
-          let new_ast = new AstNode(AstType[ast.node_type], ast.macro_name,
-            ast.args, ast.line, ast.column, {text: ast.text});
+          let new_ast = new AstNode(
+            AstType[ast.node_type],
+            ast.macro_name,
+            ast.args,
+            ast.source_location,
+            {
+              text: ast.text,
+              first_toplevel_child: ast.first_toplevel_child,
+            }
+          );
           new_arg.push(new_ast);
           nodes.push(new_ast);
         }
@@ -219,20 +243,26 @@ class AstNode {
     return {
       macro_name: this.macro_name,
       node_type:  symbol_to_string(this.node_type),
-      line:       this.line,
-      column:     this.column,
+      source_location: this.source_location,
       text:       this.text,
       args:       this.args,
+      first_toplevel_child: this.first_toplevel_child,
     }
   }
 }
 exports.AstNode = AstNode;
 
 class AstArgument extends Array {
-  constructor(nodes, line, column) {
+  /** @param {List[AstNode]} nodes
+   *  @ param {SourceLocation} source_location
+   */
+  constructor(nodes, source_location) {
     super(...nodes)
-    this.line = line;
-    this.column = column;
+    this.source_location = source_location;
+    // AstNode
+    this.parent_node = undefined;
+    // String
+    this.argument_name = undefined;
     let i = 0;
     nodes.forEach(function(node) {
       node.parent_argument = this;
@@ -262,27 +292,26 @@ class AstArgument extends Array {
 }
 
 class ErrorMessage {
-  constructor(message, line, column) {
+  constructor(message, source_location) {
     this.message = message;
-    this.line = line;
-    this.column = column;
+    this.source_location = source_location;
   }
 
   toString(path) {
     let ret = 'error: ';
-    if (path !== undefined) {
-      ret += `${path}: `;
-    }
     let had_line_or_col = false;
-    if (this.line !== undefined) {
-      ret += `line ${this.line}`;
+    if (this.source_location.path !== undefined) {
+      ret += `${this.source_location.path}:`;
+    }
+    if (this.source_location.line !== undefined) {
+      ret += `${this.source_location.line}`;
       had_line_or_col = true;
     }
-    if (this.column !== undefined) {
-      if (this.line !== undefined) {
-        ret += ` `;
+    if (this.source_location.column !== undefined) {
+      if (this.source_location.line !== undefined) {
+        ret += `:`;
       }
-      ret += `column ${this.column}`;
+      ret += `${this.source_location.column}`;
       had_line_or_col = true;
     }
     if (had_line_or_col)
@@ -293,7 +322,10 @@ class ErrorMessage {
 }
 
 class FileProvider {
+  /* Get entry by path. */
   get(path) { throw new Error('unimplemented'); }
+  /* Get entry by ID. */
+  get_id(id) { throw new Error('unimplemented'); }
 }
 exports.FileProvider = FileProvider;
 
@@ -325,7 +357,7 @@ class IdProvider {
       return this.get_noscope(id.substr(1), context);
     } else {
       if (header_graph_node !== undefined) {
-        let parent_scope_id = get_parent_scope_id(header_graph_node);
+        let parent_scope_id = get_parent_scope_id(header_graph_node, context);
         if (parent_scope_id !== undefined) {
           let resolved_scope_id = this.get_noscope(
             parent_scope_id + Macro.HEADER_SCOPE_SEPARATOR + id, context);
@@ -623,31 +655,44 @@ Macro.TOPLEVEL_MACRO_NAME = 'Toplevel';
 
 /** Helper to create plaintext nodes, since so many of the fields are fixed in that case. */
 class PlaintextAstNode extends AstNode {
-  constructor(line, column, text) {
+  constructor(source_location, text) {
     super(AstType.PLAINTEXT, Macro.PLAINTEXT_MACRO_NAME,
-      {}, line, column, {text: text});
+      {}, source_location, {text: text});
   }
 }
+
+class SourceLocation {
+  constructor(line, column, path) {
+    this.line = line;
+    this.column = column;
+    this.path = path;
+  }
+  clone() {
+    // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
+    return lodash.clone(this);
+  }
+  isEqual(other) {
+    return lodash.isEqual(this, other);
+  }
+}
+exports.SourceLocation = SourceLocation;
 
 class Token {
   /**
    * @param {String} type
+   * @param {SourceLocation} source_location
    * @param {String} value - Default: undefined
-   * @param {number} line
-   * @param {number} column
    */
-  constructor(type, line, column, value) {
+  constructor(type, source_location, value) {
     this.type = type;
-    this.line = line;
-    this.column = column;
+    this.source_location = source_location;
     this.value = value;
   }
 
   toJSON() {
     return {
       type:   this.type.toString(),
-      line:   this.line,
-      column: this.column,
+      source_location: this.source_location,
       value:  this.value
     }
   }
@@ -660,12 +705,11 @@ class Tokenizer {
   constructor(input_string, extra_returns={}, show_tokenize=false, start_line=1) {
     this.chars = Array.from(input_string);
     this.cur_c = this.chars[0];
-    this.column = 1;
+    this.source_location = new SourceLocation(start_line, 1);
     this.extra_returns = extra_returns;
     this.extra_returns.errors = [];
     this.i = 0;
     this.in_insane_header = false;
-    this.line = start_line;
     this.list_level = 0;
     this.tokens = [];
     this.show_tokenize = show_tokenize;
@@ -692,10 +736,10 @@ class Tokenizer {
       this.log_debug('this.cur_c: ' + this.cur_c);
       this.log_debug();
       if (this.chars[this.i] === '\n') {
-        this.line += 1;
-        this.column = 1;
+        this.source_location.line += 1;
+        this.source_location.column = 1;
       } else {
-        this.column += 1;
+        this.source_location.column += 1;
       }
       this.i += 1;
       if (this.i >= this.chars.length) {
@@ -772,13 +816,19 @@ class Tokenizer {
     }
   }
 
-  error(message, line, column) {
-    if (line === undefined)
-      line = this.line
-    if (column === undefined)
-      column = this.column
+  error(message, source_location) {
+    let new_source_location;
+    if (source_location === undefined) {
+      new_source_location = new SourceLocation();
+    } else {
+      new_source_location = source_location.clone();
+    }
+    if (new_source_location.line === undefined)
+      new_source_location.line = this.source_location.line
+    if (new_source_location.column === undefined)
+      new_source_location.column = this.source_location.column
     this.extra_returns.errors.push(
-      new ErrorMessage(message, line, column));
+      new ErrorMessage(message, new_source_location));
   }
 
   is_end() {
@@ -810,16 +860,22 @@ class Tokenizer {
     return this.consume();
   }
 
-  push_token(token, value, token_line, token_column) {
+  push_token(token, value, source_location) {
     this.log_debug('push_token');
     this.log_debug('token: ' + token.toString());
     this.log_debug('value: ' + value);
     this.log_debug();
-    if (token_line === undefined)
-      token_line = this.line;
-    if (token_column === undefined)
-      token_column = this.column;
-    this.tokens.push(new Token(token, token_line, token_column, value));
+    let new_source_location;
+    if (source_location === undefined) {
+      new_source_location = new SourceLocation();
+    } else {
+      new_source_location = source_location.clone();
+    }
+    if (new_source_location.line === undefined)
+      new_source_location.line = this.source_location.line;
+    if (new_source_location.column === undefined)
+      new_source_location.column = this.source_location.column;
+    this.tokens.push(new Token(token, new_source_location, value));
   }
 
   /**
@@ -834,13 +890,11 @@ class Tokenizer {
       this.chars.pop();
     }
     let unterminated_literal = false;
-    let start_line;
-    let start_column;
+    let start_source_location;
     while (!this.is_end()) {
       this.log_debug('tokenize loop');
       this.log_debug('this.i: ' + this.i);
-      this.log_debug('this.line: ' + this.line);
-      this.log_debug('this.column: ' + this.column);
+      this.log_debug('this.source_location: ' + this.source_location);
       this.log_debug('this.cur_c: ' + this.cur_c);
       if (this.in_insane_header && this.cur_c === '\n') {
         this.in_insane_header = false;
@@ -848,8 +902,7 @@ class Tokenizer {
         this.consume_optional_newline_after_argument()
       }
       this.consume_list_indent();
-      start_line = this.line;
-      start_column = this.column;
+      start_source_location = this.source_location.clone();
       if (this.cur_c === ESCAPE_CHAR) {
         this.consume();
         if (this.is_end()) {
@@ -862,23 +915,20 @@ class Tokenizer {
           this.push_token(
             TokenType.MACRO_NAME,
             macro_name,
-            start_line,
-            start_column
+            start_source_location,
           );
         }
       } else if (this.cur_c === START_NAMED_ARGUMENT_CHAR) {
-        let line = this.line;
-        let column = this.column;
+        let source_location = this.source_location.clone();
         // Tokenize past the last open char.
         let open_length = this.tokenize_func(
           (c)=>{return c === START_NAMED_ARGUMENT_CHAR}
         ).length;
         this.push_token(TokenType.NAMED_ARGUMENT_START,
-          START_NAMED_ARGUMENT_CHAR.repeat(open_length), line, column);
-        line = this.line;
-        column = this.column;
+          START_NAMED_ARGUMENT_CHAR.repeat(open_length), source_location);
+        source_location = this.source_location.clone();
         let arg_name = this.tokenize_func(char_is_identifier);
-        this.push_token(TokenType.NAMED_ARGUMENT_NAME, arg_name, line, column);
+        this.push_token(TokenType.NAMED_ARGUMENT_NAME, arg_name, source_location);
         if (this.cur_c === NAMED_ARGUMENT_EQUAL_CHAR) {
           // Consume the = sign.
           this.consume();
@@ -904,14 +954,13 @@ class Tokenizer {
         this.consume();
         this.consume_optional_newline_after_argument()
       } else if (this.cur_c === START_POSITIONAL_ARGUMENT_CHAR) {
-        let line = this.line;
-        let column = this.column;
+        let source_location = this.source_location.clone();
         // Tokenize past the last open char.
         let open_length = this.tokenize_func(
           (c)=>{return c === START_POSITIONAL_ARGUMENT_CHAR}
         ).length;
         this.push_token(TokenType.POSITIONAL_ARGUMENT_START,
-          START_POSITIONAL_ARGUMENT_CHAR.repeat(open_length), line, column);
+          START_POSITIONAL_ARGUMENT_CHAR.repeat(open_length), source_location);
         if (open_length === 1) {
           this.consume_optional_newline();
         } else {
@@ -930,8 +979,6 @@ class Tokenizer {
         this.consume_optional_newline_after_argument();
       } else if (this.cur_c in MAGIC_CHAR_ARGS) {
         // Insane shortcuts e.g. $$ math and `` code.
-        let line = this.line;
-        let column = this.column;
         let open_char = this.cur_c;
         let open_length = this.tokenize_func(
           (c)=>{return c === open_char}
@@ -1074,7 +1121,7 @@ class Tokenizer {
       }
     }
     if (unterminated_literal) {
-      this.error(`unterminated literal argument`, start_line, start_column);
+      this.error(`unterminated literal argument`, start_source_location);
     }
 
     // Close any open headers at the end of the document.
@@ -1175,8 +1222,7 @@ class Tokenizer {
 
     // Now consume the following unescaped part.
     let start_i = this.i;
-    let start_line = this.line;
-    let start_column = this.column;
+    let start_source_location = this.source_location.clone();
     while (
       this.chars.slice(this.i, this.i + close_string.length).join('')
       !== close_string
@@ -1212,7 +1258,7 @@ class Tokenizer {
           } else if (array_contains_array_at(this.chars, i, INSANE_LIST_INDENT.repeat(this.list_level))) {
             i += INSANE_LIST_INDENT.length * this.list_level;
           } else {
-            this.error(`literal argument with indent smaller than current insane list`, start_line, start_column);
+            this.error(`literal argument with indent smaller than current insane list`, start_source_location);
           }
         }
         if (i < end_i) {
@@ -1228,8 +1274,7 @@ class Tokenizer {
     this.push_token(
       TokenType.PLAINTEXT,
       plaintext + append,
-      start_line,
-      start_column
+      start_source_location,
     );
 
     // Skip over the closing string.
@@ -1327,8 +1372,8 @@ function array_equals(arr1, arr2) {
   return true;
 }
 
-function basename(str) {
-  return str.substr(str.lastIndexOf(URL_SEP) + 1);
+function basename(str, sep) {
+  return path_split(str, sep)[1];
 }
 
 /// https://stackoverflow.com/questions/22697936/binary-search-in-javascript/29018745#29018745
@@ -1412,14 +1457,12 @@ function calculate_id(ast, context, non_indexed_ids, indexed_ids,
         if (message !== undefined) {
           title_arg.push(
             new PlaintextAstNode(
-              new_context.extra_returns.id_conversion_xref_error_line,
-              new_context.extra_returns.id_conversion_xref_error_column,
+              new_context.extra_returns.id_conversion_xref_error_source_location,
               ' ' + error_message_in_output(message, new_context)
             )
           );
           parse_error(state, message,
-            new_context.extra_returns.id_conversion_xref_error_line,
-            new_context.extra_returns.id_conversion_xref_error_column)
+            new_context.extra_returns.id_conversion_xref_error_source_location)
         } else {
           ast.id = id_text;
         }
@@ -1437,7 +1480,7 @@ function calculate_id(ast, context, non_indexed_ids, indexed_ids,
       ast.id = convert_arg_noescape(macro_id_arg, context);
     }
     if (ast.id !== undefined && ast.header_graph_node) {
-      const parent_scope_id = get_parent_scope_id(ast.header_graph_node);
+      const parent_scope_id = get_parent_scope_id(ast.header_graph_node, context);
       if (parent_scope_id !== undefined) {
         ast.id = parent_scope_id + Macro.HEADER_SCOPE_SEPARATOR + ast.id
       }
@@ -1454,7 +1497,7 @@ function calculate_id(ast, context, non_indexed_ids, indexed_ids,
         previous_ast = non_indexed_id;
       }
     } else {
-      input_path = previous_ast.input_path;
+      input_path = previous_ast.source_location.path;
     }
     if (previous_ast === undefined) {
       non_indexed_ids[ast.id] = ast;
@@ -1466,8 +1509,8 @@ function calculate_id(ast, context, non_indexed_ids, indexed_ids,
       if (input_path !== undefined) {
         message += `file ${input_path} `;
       }
-      message += `line ${previous_ast.line} column ${previous_ast.column}`;
-      parse_error(state, message, ast.line, ast.column);
+      message += `line ${previous_ast.source_location.line} column ${previous_ast.source_location.column}`;
+      parse_error(state, message, ast.source_location);
     }
     if (caption_number_visible(ast, context)) {
       if (!(macro_name in macro_counts_visible)) {
@@ -1478,7 +1521,7 @@ function calculate_id(ast, context, non_indexed_ids, indexed_ids,
       ast.macro_count_visible = macro_count;
     }
     binary_search_insert(line_to_id_array,
-      [ast.line, ast.id], binary_search_line_to_id_array_fn);
+      [ast.source_location.line, ast.id], binary_search_line_to_id_array_fn);
   }
 }
 
@@ -1539,7 +1582,7 @@ function closing_token(token) {
  *
  * @options {Object}
  *          {IdProvider} external_ids
- *          {Function[String] -> string} read_include(input_path) -> content
+ *          {Function[String] -> [string,string]} read_include(id) -> [file_name, content]
  *          {Number} h_level_offset - add this offset to the levels of every header
  *          {boolean} render - if false, parse the input, but don't render it,
  *              and return undefined.
@@ -1593,14 +1636,18 @@ function convert(
   if (!('from_include' in options)) { options.from_include = false; }
   if (!('html_embed' in options)) { options.html_embed = false; }
   if (!('html_single_page' in options)) { options.html_single_page = false; }
+  if (!('html_split_header' in options)) { options.html_split_header = false; }
   if (!('html_x_extension' in options)) { options.html_x_extension = true; }
   if (!('h_level_offset' in options)) { options.h_level_offset = 0; }
   if (!('id_provider' in options)) { options.id_provider = undefined; }
   if (!('include_path_set' in options)) { options.include_path_set = new Set(); }
   if (!('input_path' in options)) { options.input_path = undefined; }
   if (!('output_format' in options)) { options.output_format = OUTPUT_FORMAT_HTML; }
+  if (!('path_sep' in options)) { options.path_sep = undefined; }
   if (!('render' in options)) { options.render = true; }
   if (!('start_line' in options)) { options.start_line = 1; }
+  // A toplevel scope, to implement conversion of files in subdirectories.
+  if (!('scope' in options)) { options.scope = undefined; }
   if (!('show_ast' in options)) { options.show_ast = false; }
   if (!('show_parse' in options)) { options.show_parse = false; }
   if (!('show_tokenize' in options)) { options.show_tokenize = false; }
@@ -1655,7 +1702,7 @@ function convert(
       if ('default-for' in media_provider) {
         for (const default_for of media_provider['default-for']) {
           if (default_for[0] == default_for[0].toUpperCase()) {
-            context.errors.push(new ErrorMessage(`default-for names must start with a lower case letter`, 1, 1));
+            context.errors.push(new ErrorMessage(`default-for names must start with a lower case letter`, new SourceLocation(1, 1)));
           } else {
             if (default_for === 'all') {
               for (const macro_name of MACRO_WITH_MEDIA_PROVIDER) {
@@ -1668,10 +1715,10 @@ function convert(
                   context.media_provider_default[default_for] = media_provider_name;
                   context.media_provider_default[capitalize_first_letter(default_for)] = media_provider_name;
                 } else {
-                  context.errors.push(new ErrorMessage(`multiple media providers set for macro "${default_for}"`, 1, 1));
+                  context.errors.push(new ErrorMessage(`multiple media providers set for macro "${default_for}"`, new SourceLocation(1, 1)));
                 }
               } else {
-                context.errors.push(new ErrorMessage(`macro "${default_for}" does not accept media providers`, 1, 1));
+                context.errors.push(new ErrorMessage(`macro "${default_for}" does not accept media providers`, new SourceLocation(1, 1)));
               }
             }
           }
@@ -1699,21 +1746,62 @@ function convert(
   extra_returns.errors.push(...sub_extra_returns.errors);
   let output;
   if (options.render) {
-    context.extra_returns = extra_returns;
-    // Convert the toplevel.
     extra_returns.debug_perf.render_pre = globals.performance.now();
+    // Split header conversion.
+    if (options.html_split_header) {
+      function convert_header(cur_arg_list, context) {
+        if (cur_arg_list.length > 0) {
+          const context_copy = Object.assign({}, context);
+          const header_graph_node = cur_arg_list[0].header_graph_node;
+          const header_graph_node_real_parent = header_graph_node.parent_node;
+          header_graph_node.parent_node = undefined;
+          const ast_toplevel = new AstNode(
+            AstType.MACRO,
+            Macro.TOPLEVEL_MACRO_NAME,
+            {'content': new AstArgument(cur_arg_list,
+              cur_arg_list[0].source_location)},
+            cur_arg_list[0].source_location,
+          );
+          context.extra_returns.html_split_header[cur_arg_list[0].id] =
+            ast_toplevel.convert(context);
+          header_graph_node.parent_node = header_graph_node_real_parent;
+        }
+      }
+      context.extra_returns.html_split_header = {};
+      const content = ast.args.content;
+      let cur_arg_list = [];
+      for (const child_ast of content) {
+        const macro_name = child_ast.macro_name;
+        if (macro_name === Macro.HEADER_MACRO_NAME) {
+          convert_header(cur_arg_list, context);
+          cur_arg_list = [];
+        }
+        cur_arg_list.push(child_ast);
+      }
+      convert_header(cur_arg_list, context);
+      // Because the following conversion would redefine them.
+      context.katex_macros = {};
+    }
+    // Non-split header toplevel conversion.
     output = ast.convert(context);
     extra_returns.debug_perf.render_post = globals.performance.now();
     extra_returns.errors.push(...context.errors);
   }
+  // Sort errors that might have been produced on different conversion
+  // stages by line.
   extra_returns.errors = extra_returns.errors.sort((a, b)=>{
-    if (a.line < b.line)
+    if (a.source_location.path !== undefined && b.source_location.path !== undefined) {
+      let ret = a.source_location.path.localeCompare(b.source_location.path);
+      if (ret !== 0)
+        return ret;
+    }
+    if (a.source_location.line < b.source_location.line)
       return -1;
-    if (a.line > b.line)
+    if (a.source_location.line > b.source_location.line)
       return 1;
-    if (a.column < b.column)
+    if (a.source_location.column < b.source_location.column)
       return -1;
-    if (a.column > b.column)
+    if (a.source_location.column > b.source_location.column)
       return 1;
     return 0;
   });
@@ -1757,26 +1845,42 @@ function convert_arg_noescape(arg, context={}) {
   return convert_arg(arg, clone_and_set(context, 'html_escape', false));
 }
 
-/** @return {AstArgument} */
-function convert_include(input_string, options, cur_header_level, href, start_line) {
-  const include_options = Object.assign({}, options);
-  include_options.from_include = true;
-  include_options.h_level_offset = cur_header_level;
-  include_options.input_path = href;
-  include_options.render = false;
-  include_options.toplevel_id = href;
-  include_options.header_graph_stack = new Map(include_options.header_graph_stack);
-  include_options.header_graph_id_stack = new Map(include_options.header_graph_id_stack);
-  if (start_line !== undefined) {
-    include_options.start_line = start_line;
+/**
+ * @param {Object} options:
+ *        - {Number} start_line
+ *        - {Array} errors
+ * @return {AstArgument}*/
+function convert_include(input_string, convert_options, cur_header_level, input_path, href, options) {
+  convert_options = Object.assign({}, convert_options);
+  convert_options.from_include = true;
+  convert_options.h_level_offset = cur_header_level;
+  convert_options.input_path = input_path;
+  convert_options.render = false;
+  convert_options.toplevel_id = href;
+  convert_options.header_graph_stack = new Map(convert_options.header_graph_stack);
+  convert_options.header_graph_id_stack = new Map(convert_options.header_graph_id_stack);
+  if (options.start_line !== undefined) {
+    convert_options.start_line = options.start_line;
   }
-  const include_extra_returns = {};
+  const convert_extra_returns = {};
   convert(
     input_string,
-    include_options,
-    include_extra_returns,
+    convert_options,
+    convert_extra_returns,
   );
-  return include_extra_returns.ast.args.content;
+  // Forward the include_path_set back. This is needed because convert
+  // clones that input by default to prevent inputs from being modified.
+  for (let include_path of convert_extra_returns.context.include_path_set) {
+    convert_options.include_path_set.add(include_path);
+  }
+  if (options.errors !== undefined) {
+    options.errors.push(...convert_extra_returns.errors);
+  }
+  return convert_extra_returns.ast.args.content;
+}
+
+function dirname(str, sep) {
+  return path_split(str, sep)[0];
 }
 
 /** Error message to be rendered inside the generated output itself.
@@ -1808,7 +1912,7 @@ function get_descendant_count(tree_node) {
  *          If the node has a parent header with a scope, return the ID of that header.
  *          Otherwise, return undefined.
  */
-function get_parent_scope_id(header_graph_node) {
+function get_parent_scope_id(header_graph_node, context) {
   let cur_header_graph_node = header_graph_node.parent_node;
   while (
     // Possible in case of mal-formed document e.g. with
@@ -1823,6 +1927,9 @@ function get_parent_scope_id(header_graph_node) {
     cur_header_graph_node = cur_header_graph_node.parent_node;
   }
   return undefined;
+  // TODO attempt for https://github.com/cirosantilli/cirodown/issues/116
+  // but broke image related stuff.
+  //return context.options.scope;
 }
 
 /** Convert a key value already fully HTML escaped strings
@@ -1898,8 +2005,7 @@ function html_convert_attrs_id(
 ) {
   if (ast.id !== undefined) {
     custom_args[Macro.ID_ARGUMENT_NAME] = [
-        new PlaintextAstNode(ast.line, ast.column,
-          remove_toplevel_scope(ast, context))];
+        new PlaintextAstNode(ast.source_location, remove_toplevel_scope(ast, context))];
   }
   return html_convert_attrs(ast, context, arg_names, custom_args);
 }
@@ -2032,13 +2138,28 @@ function html_katex_convert(ast, context) {
     // It uses Unicode char hacks to add underlines... and there are two trailing
     // chars after the final newline, so the error message is taking up two lines
     let message = error.toString().replace(/\n\xcc\xb2$/, '');
-    render_error(context, message, ast.args.content.line, ast.args.content.column);
+    render_error(context, message, ast.args.content.source_location);
     return error_message_in_output(message, context);
   }
 }
 
 function html_self_link(ast, context) {
   return ` ${x_href_attr(ast, context)}`;
+}
+
+function id_convert_simple_elem() {
+  return function(ast, context) {
+    let ret = convert_arg(ast.args.content, context);
+    if (!context.macros[ast.macro_name].options.phrasing) {
+      ret += '\n';
+    }
+    return ret;
+  };
+}
+
+/** https://stackoverflow.com/questions/14313183/javascript-regex-how-do-i-check-if-the-string-is-ascii-only/14313213#14313213 */
+function is_ascii(str) {
+  return /^[\x00-\x7F]*$/.test(str);
 }
 
 function link_get_href_content(ast, context) {
@@ -2144,12 +2265,31 @@ function make_enum(arr) {
   return Object.freeze(obj);
 }
 
+function noext(str) {
+  return str.substring(0, str.lastIndexOf('.'));
+}
+
 // https://stackoverflow.com/questions/17781472/how-to-get-a-subset-of-a-javascript-objects-properties/17781518#17781518
 function object_subset(source_object, keys) {
   const new_object = {};
   keys.forEach((obj, key) => { new_object[key] = source_object[key]; });
   return new_object;
 }
+
+/** Get the output path from the input path, e.g. my/README.ciro to my/index.html */
+function output_path(input_path, outext, path_sep, html_x_extension=true) {
+  const [dirname, basename] = path_split(input_path, path_sep);
+  let ret = dirname;
+  if (dirname !== '') {
+    ret += path_sep;
+  }
+  ret += rename_basename(noext(basename));
+  if (html_x_extension) {
+    ret += '.' + outext;
+  }
+  return ret;
+}
+exports.output_path = output_path;
 
 /** Parse tokens into the AST tree.
  *
@@ -2172,32 +2312,34 @@ function parse(tokens, options, context, extra_returns={}) {
     tokens: tokens,
   };
   // Get toplevel arguments such as {title=}, see https://cirosantilli.com/cirodown#toplevel
-  const ast_toplevel_args = parse_argument_list(state, Macro.TOPLEVEL_MACRO_NAME, AstType.MACRO);
+  const ast_toplevel_args = parse_argument_list(
+    state, Macro.TOPLEVEL_MACRO_NAME, AstType.MACRO);
   if ('content' in ast_toplevel_args) {
-    parse_error(state, `the toplevel arguments cannot contain an explicit content argument`, 1, 1);
+    parse_error(state, `the toplevel arguments cannot contain an explicit content argument`, new SourceLocation(1, 1));
   }
 
   // Inject a maybe paragraph token after those arguments.
-  const paragraph_token = new Token(TokenType.PARAGRAPH, undefined, state.token.line, state.token.column);
+  const paragraph_token = new Token(TokenType.PARAGRAPH, state.token.source_location);
   tokens.splice(state.i, 0, paragraph_token);
   state.token = paragraph_token;
 
-  // Parse the main part of the document as the content argument toplevel argument.
-  const ast_toplevel_content_arg = parse_argument(state, state.token.line, state.token.column);
+  // Parse the main part of the document as the content
+  // argument toplevel argument.
+  const ast_toplevel_content_arg = parse_argument(
+    state, state.token.source_location);
 
-  // Create the toplevel argument itself.
+  // Create the toplevel macro itself.
   const ast_toplevel = new AstNode(
     AstType.MACRO,
     Macro.TOPLEVEL_MACRO_NAME,
     Object.assign(ast_toplevel_args, {'content': ast_toplevel_content_arg}),
-    1,
-    1,
+    new SourceLocation(1, 1),
   );
   if (state.token.type !== TokenType.INPUT_END) {
     parse_error(state, `unexpected tokens at the end of input`);
   }
 
-  // Post process the AST breadth first minimally to support includes.
+  // Post process the AST depth first minimally to support includes.
   //
   // This could in theory be done in a single pass with the next one,
   // but that is much more hard to implement and maintain, because we
@@ -2214,7 +2356,7 @@ function parse(tokens, options, context, extra_returns={}) {
   let first_header_level;
   let first_header;
   let header_graph_last_level;
-  let toplevel_parent_arg = new AstArgument([], 1, 1);
+  let toplevel_parent_arg = new AstArgument([], new SourceLocation(1, 1));
   let todo_visit = [[toplevel_parent_arg, ast_toplevel]];
   // IDs that are indexed: you can link to those.
   const line_to_id_array = [];
@@ -2263,7 +2405,7 @@ function parse(tokens, options, context, extra_returns={}) {
     const [parent_arg, ast] = todo_visit.pop();
     const macro_name = ast.macro_name;
     ast.from_include = options.from_include;
-    ast.input_path = options.input_path;
+    ast.source_location.path = options.input_path;
     if (macro_name === Macro.INCLUDE_MACRO_NAME) {
       let peek_ast = todo_visit[todo_visit.length - 1][1];
       if (peek_ast.node_type === AstType.PLAINTEXT && peek_ast.text == '\n') {
@@ -2271,149 +2413,167 @@ function parse(tokens, options, context, extra_returns={}) {
       }
       const href = convert_arg_noescape(ast.args.href, context);
       include_options.cur_header.includes.push(href);
-      if (context.include_path_set.has(href)) {
-        let message = `circular include detected to: "${href}"`;
+      const read_include_ret = options.read_include(href);
+      if (read_include_ret === undefined) {
+        let message = `could not find include: "${href}"`;
         parse_error(
           state,
           message,
-          ast.line,
-          ast.column
+          ast.source_location,
         );
-        parent_arg.push(new PlaintextAstNode(ast.line, ast.column, message));
+        parent_arg.push(new PlaintextAstNode(ast.source_location, message));
       } else {
-        let new_child_nodes;
-        if (options.html_single_page) {
-          new_child_nodes = convert_include(
-            options.read_include(href),
-            include_options,
-            cur_header_level,
-            href
+        const [include_path, include_content] = read_include_ret;
+        if (context.include_path_set.has(include_path)) {
+          let message = `circular include detected to: "${include_path}"`;
+          parse_error(
+            state,
+            message,
+            ast.source_location,
           );
-          context.include_path_set.add(href);
+          parent_arg.push(new PlaintextAstNode(ast.source_location, message));
         } else {
-          const target_id_ast = context.id_provider.get(href, context);
-          let header_node_title;
-          if (target_id_ast === undefined) {
-            let message = `ID in include not found on database: "${href}", ` +
-              `needed to calculate the cross reference title. Did you forget to convert all files beforehand?`;
-            header_node_title = error_message_in_output(message);
-            // Don't do an error if we are not going to render, because this is how
-            // we extract IDs on the first pass of ./cirodown .
-            if (options.render) {
-              parse_error(
-                state,
-                message,
-                ast.line,
-                ast.column
-              );
-            }
+          let new_child_nodes;
+          if (options.html_single_page) {
+            new_child_nodes = convert_include(
+              include_content,
+              include_options,
+              cur_header_level,
+              include_path,
+              href,
+              {
+                errors: extra_returns.errors,
+              }
+            );
+            context.include_path_set.add(include_path);
           } else {
-            const x_text_options = {
-              show_caption_prefix: false,
-              style_full: false,
-            };
-            header_node_title = x_text(target_id_ast, context, x_text_options);
-          }
-          // Don't merge into a single file, render as a dummy header and an xref link instead.
-          const header_ast = new AstNode(
-            AstType.MACRO,
-            Macro.HEADER_MACRO_NAME,
-            {
-              'level': new AstArgument([
-                new PlaintextAstNode(
-                  ast.line,
-                  ast.column,
-                  (cur_header_level + 1).toString(),
-                )
-              ], ast.line, ast.column),
-              [Macro.TITLE_ARGUMENT_NAME]: new AstArgument([
-                new PlaintextAstNode(
-                  ast.line,
-                  ast.column,
-                  header_node_title
-                )
-              ], ast.line, ast.column),
-            },
-            ast.line,
-            ast.column,
-            {
-              force_no_index: true,
-              from_include: true,
-              id: href,
-              input_path: ast.input_path,
-              level: cur_header_level + 1,
-            },
-          );
-          // This is a bit nasty and duplicates the below header processing code,
-          // but it is a bit hard to factor them out since this is a magic include header,
-          // and all includes and headers must be parsed concurrently since includes get
-          // injected under the last header.
-          validate_ast(header_ast, context);
-          header_ast.header_graph_node = new TreeNode(header_ast, cur_header_graph_node);
-          cur_header_graph_node.add_child(header_ast.header_graph_node);
-          new_child_nodes = [
-            header_ast,
-            new AstNode(
-              AstType.PARAGRAPH,
-              undefined,
-              undefined,
-              ast.line,
-              ast.column
-            ),
-            new AstNode(
+            const target_id_ast = context.id_provider.get(href, context);
+            let header_node_title;
+            if (target_id_ast === undefined) {
+              let message = `ID in include not found on database: "${href}", ` +
+                `needed to calculate the cross reference title. Did you forget to convert all files beforehand?`;
+              header_node_title = error_message_in_output(message);
+              // Don't do an error if we are not going to render, because this is how
+              // we extract IDs on the first pass of ./cirodown .
+              if (options.render) {
+                parse_error(
+                  state,
+                  message,
+                  ast.source_location,
+                );
+              }
+            } else {
+              const x_text_options = {
+                show_caption_prefix: false,
+                style_full: false,
+              };
+              header_node_title = x_text(target_id_ast, context, x_text_options);
+            }
+            // Don't merge into a single file, render as a dummy header and an xref link instead.
+            const header_ast = new AstNode(
               AstType.MACRO,
-              Macro.PARAGRAPH_MACRO_NAME,
+              Macro.HEADER_MACRO_NAME,
               {
-                'content': new AstArgument([
-                  new AstNode(
-                    AstType.MACRO,
-                    'x',
-                    {
-                      'href': new AstArgument([
-                        new PlaintextAstNode(
-                          ast.line,
-                          ast.column,
-                          href
-                        )
-                      ], ast.line, ast.column),
-                      'content': new AstArgument([
-                        new PlaintextAstNode(
-                          ast.line,
-                          ast.column,
-                          'This section is present in another page, follow this link to view it.'
-                        )
-                      ], ast.line, ast.column),
-                    },
-                    ast.line,
-                    ast.column,
-                    {from_include: true},
-                  ),
-                ], ast.line, ast.column),
+                'level': new AstArgument(
+                  [
+                    new PlaintextAstNode(
+                      ast.source_location,
+                      (cur_header_level + 1).toString(),
+                    )
+                  ],
+                  ast.source_location
+                ),
+                [Macro.TITLE_ARGUMENT_NAME]: new AstArgument(
+                  [
+                    new PlaintextAstNode(
+                      ast.source_location,
+                      header_node_title
+                    )
+                  ],
+                  ast.source_location
+                ),
               },
-              ast.line,
-              ast.column,
+              ast.source_location,
               {
+                force_no_index: true,
                 from_include: true,
-                input_path: ast.input_path,
+                id: href,
+                level: cur_header_level + 1,
               },
-            ),
-            new AstNode(
-              AstType.PARAGRAPH,
-              undefined,
-              undefined,
-              ast.line,
-              ast.column
-            ),
-          ];
+            );
+            // This is a bit nasty and duplicates the below header processing code,
+            // but it is a bit hard to factor them out since this is a magic include header,
+            // and all includes and headers must be parsed concurrently since includes get
+            // injected under the last header.
+            validate_ast(header_ast, context);
+            header_ast.header_graph_node = new TreeNode(header_ast, cur_header_graph_node);
+            cur_header_graph_node.add_child(header_ast.header_graph_node);
+            new_child_nodes = [
+              header_ast,
+              new AstNode(
+                AstType.PARAGRAPH,
+                undefined,
+                undefined,
+                ast.source_location,
+              ),
+              new AstNode(
+                AstType.MACRO,
+                Macro.PARAGRAPH_MACRO_NAME,
+                {
+                  'content': new AstArgument(
+                    [
+                      new AstNode(
+                        AstType.MACRO,
+                        'x',
+                        {
+                          'href': new AstArgument(
+                            [
+                              new PlaintextAstNode(
+                                ast.source_location,
+                                href
+                              )
+                            ],
+                            ast.source_location
+                          ),
+                          'content': new AstArgument(
+                            [
+                              new PlaintextAstNode(
+                                ast.source_location,
+                                'This section is present in another page, follow this link to view it.'
+                              )
+                            ],
+                            ast.source_location
+                          ),
+                        },
+                        ast.source_location,
+                        {from_include: true},
+                      ),
+                    ],
+                    ast.source_location
+                  ),
+                },
+                ast.source_location,
+                {
+                  from_include: true,
+                },
+              ),
+              new AstNode(
+                AstType.PARAGRAPH,
+                undefined,
+                undefined,
+                ast.source_location,
+              ),
+            ];
+          }
+          // Push all included nodes, but don't recurse because:
+          // - all child includes will be resolved on the sub-render call
+          // - the current header level must not move, so that consecutive \Include
+          //   calls won't nest into one another
+          for (const new_child_node of new_child_nodes) {
+            new_child_node.parent_node = ast.parent_node;
+          }
+          parent_arg.push(...new_child_nodes);
         }
-        // Push all included nodes, but don't recurse because:
-        // - all child includes will be resolved on the sub-render call
-        // - the current header level must not move, so that consecutive \Include
-        //   calls won't nest into one another
-        for (const new_child_node of new_child_nodes) {
-          new_child_node.parent_node = ast.parent_node;
-        }
-        parent_arg.push(...new_child_nodes);
       }
     } else if (macro_name === Macro.CIRODOWN_EXAMPLE_MACRO_NAME) {
       parent_arg.push(...[
@@ -2421,29 +2581,23 @@ function parse(tokens, options, context, extra_returns={}) {
           AstType.MACRO,
           Macro.CODE_MACRO_NAME.toUpperCase(),
           {'content': ast.args.content},
-          ast.line,
-          ast.column,
-          {
-            input_path: options.input_path,
-          }
+          ast.source_location,
         ),
         new AstNode(
           AstType.MACRO,
           Macro.PARAGRAPH_MACRO_NAME,
           {
-            'content': new AstArgument([
-              new PlaintextAstNode(
-                ast.line,
-                ast.column,
-                'which renders as:',
-              )
-            ], ast.line, ast.column),
+            'content': new AstArgument(
+              [
+                new PlaintextAstNode(
+                  ast.source_location,
+                  'which renders as:',
+                )
+              ],
+              ast.source_location
+            ),
           },
-          ast.line,
-          ast.column,
-          {
-            input_path: options.input_path,
-          }
+          ast.source_location,
         ),
         new AstNode(
           AstType.MACRO,
@@ -2454,14 +2608,14 @@ function parse(tokens, options, context, extra_returns={}) {
               options,
               0,
               options.input_path,
-              ast.line + 1
+              undefined,
+              {
+                start_line: ast.source_location.line + 1,
+                errors: extra_returns.errors,
+              }
             )
           },
-          ast.line,
-          ast.column,
-          {
-            input_path: options.input_path,
-          }
+          ast.source_location,
         ),
       ]);
     } else {
@@ -2478,10 +2632,10 @@ function parse(tokens, options, context, extra_returns={}) {
         let parent_id;
         if (ast.validation_output.parent.given) {
           if (cur_header_level !== 1) {
-            const message = `header has both parent and level != 1`;
+            const message = `header with parent argument must have level equal 1`;
             ast.args[Macro.TITLE_ARGUMENT_NAME].push(
-              new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
-            parse_error(state, message, ast.args.level.line, ast.args.level.column);
+              new PlaintextAstNode(ast.source_location, ' ' + error_message_in_output(message)));
+            parse_error(state, message, ast.args.level.source_location);
           }
           let parent_tree_node;
           parent_id = convert_arg_noescape(ast.args.parent, context);
@@ -2505,8 +2659,8 @@ function parse(tokens, options, context, extra_returns={}) {
         if ('level' in ast.args) {
           // Hack the level argument of the final AST to match for consistency.
           ast.args.level = new AstArgument([
-            new PlaintextAstNode(ast.args.level.line, ast.args.level.column, ast.level.toString())],
-            ast.args.level.line, ast.args.level.column);
+            new PlaintextAstNode(ast.args.level.source_location, ast.level.toString())],
+            ast.args.level.source_location);
         }
 
         // Create the header tree.
@@ -2530,8 +2684,7 @@ function parse(tokens, options, context, extra_returns={}) {
           parse_error(
             state,
             `header level ${cur_header_level} is smaller than the level of the first header of the document ${first_header_level}`,
-            ast.args.level.line,
-            ast.args.level.column
+            ast.args.level.source_location,
           );
         }
         const parent_tree_node = include_options.header_graph_stack.get(cur_header_level - 1);
@@ -2568,14 +2721,14 @@ function parse(tokens, options, context, extra_returns={}) {
         if (parent_tree_node_error) {
           const message = `header parent either is a previous ID of a level, a future ID, or an invalid ID: ${parent_id}`;
           ast.args[Macro.TITLE_ARGUMENT_NAME].push(
-            new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
-          parse_error(state, message, ast.args.parent.line, ast.args.parent.column);
+            new PlaintextAstNode(ast.source_location, ' ' + error_message_in_output(message)));
+          parse_error(state, message, ast.args.parent.source_location);
         }
         if (header_level_skip_error !== undefined) {
           const message = `skipped a header level from ${header_level_skip_error} to ${ast.level}`;
           ast.args[Macro.TITLE_ARGUMENT_NAME].push(
-            new PlaintextAstNode(ast.line, ast.column, ' ' + error_message_in_output(message)));
-          parse_error(state, message, ast.args.level.line, ast.args.level.column);
+            new PlaintextAstNode(ast.source_location, ' ' + error_message_in_output(message)));
+          parse_error(state, message, ast.args.level.source_location);
         }
 
         include_options.header_graph_id_stack.set(cur_header_graph_node.value.id, cur_header_graph_node);
@@ -2589,7 +2742,7 @@ function parse(tokens, options, context, extra_returns={}) {
         let arg = ast.args[arg_name];
         // We make the new argument be empty so that children can
         // decide if they want to push themselves or not.
-        const new_arg = new AstArgument([], arg.line, arg.column);
+        const new_arg = new AstArgument([], arg.source_location);
         for (let i = arg.length - 1; i >= 0; i--) {
           todo_visit.push([new_arg, arg[i]]);
         }
@@ -2599,7 +2752,7 @@ function parse(tokens, options, context, extra_returns={}) {
     }
   }
 
-  // Post process the AST breadth first after inclusions are resolved to support things like:
+  // Post process the AST breadth-first after inclusions are resolved to support things like:
   //
   // - the insane but necessary paragraphs double newline syntax
   // - automatic ul parent to li and table to tr
@@ -2608,8 +2761,31 @@ function parse(tokens, options, context, extra_returns={}) {
   //
   // Normally only the toplevel includer will enter this code section.
   if (!options.from_include) {
+    // Calculate header_graph_top_level.
+    if (context.header_graph.children.length === 1) {
+      context.header_graph_top_level = first_header_level;
+      const toplevel_header_node = context.header_graph.children[0];
+      const toplevel_header_ast = toplevel_header_node.value;
+      if (toplevel_header_node.children.length > 0) {
+        toplevel_header_node.children[0].value.toc_header = true;
+      }
+      context.toplevel_id = toplevel_header_ast.id;
+      if (toplevel_header_ast.validation_output.scope.boolean) {
+        context.toplevel_scope_cut_length = toplevel_header_ast.id.length + 1;
+      } else {
+        context.toplevel_scope_cut_length = 0;
+      }
+    } else {
+      context.header_graph_top_level = first_header_level - 1;
+      context.toplevel_scope_cut_length = 0;
+      context.toplevel_id = undefined;
+      if (context.header_graph.children.length > 0) {
+        context.header_graph.children[0].value.toc_header = true;
+      }
+    }
+
     context.has_toc = false;
-    let toplevel_parent_arg = new AstArgument([], 1, 1);
+    let toplevel_parent_arg = new AstArgument([], new SourceLocation(1, 1));
 
     // First do a pass that makes any changes to the tree.
     {
@@ -2620,7 +2796,7 @@ function parse(tokens, options, context, extra_returns={}) {
         const macro = context.macros[macro_name];
 
         if (macro_name === Macro.TOC_MACRO_NAME) {
-          if (ast.from_include) {
+          if (ast.from_include || context.has_toc) {
             // Skip.
             continue;
           }
@@ -2630,20 +2806,34 @@ function parse(tokens, options, context, extra_returns={}) {
           // it actually worked and output an `html` inside another `html`.
           // Maybe we could do something with iframe, but who cares about that?
           const message = `the "${Macro.TOPLEVEL_MACRO_NAME}" cannot be used explicitly`;
-          ast = new PlaintextAstNode(ast.line, ast.column, error_message_in_output(message));
-          parse_error(state, message, ast.line, ast.column);
+          ast = new PlaintextAstNode(ast.source_location, error_message_in_output(message));
+          parse_error(state, message, ast.source_location);
+        }
+
+        if (
+          // These had been validated earlier during header processing.
+          macro_name === Macro.HEADER_MACRO_NAME
+          && !context.has_toc
+        ) {
+          if (ast.toc_header) {
+            parent_arg.push(new AstNode(
+              AstType.MACRO,
+              Macro.TOC_MACRO_NAME,
+              {},
+              ast.source_location,
+              {
+                parent_node: ast.parent_node
+              }
+            ));
+            context.has_toc = true;
+          }
+        } else {
+          validate_ast(ast, context);
         }
 
         // Push this node into the parent argument list.
         // This allows us to skip nodes, or push multiple nodes if needed.
         parent_arg.push(ast);
-
-        if (
-          // These had been validated earlier during header processing.
-          macro_name !== Macro.HEADER_MACRO_NAME
-        ) {
-          validate_ast(ast, context);
-        }
 
         // Loop over the child arguments. We do this rather than recurse into them
         // to be able to easily remove or add nodes to the tree during this AST
@@ -2677,7 +2867,7 @@ function parse(tokens, options, context, extra_returns={}) {
           // It is however very similar to the other loop: the only difference is that we eat up
           // a trailing paragraph if followed by another.
           {
-            const new_arg = new AstArgument([], arg.line, arg.column);
+            const new_arg = new AstArgument([], arg.source_location);
             for (let i = 0; i < arg.length; i++) {
               let child_node = arg[i];
               let new_child_nodes = [];
@@ -2694,7 +2884,7 @@ function parse(tokens, options, context, extra_returns={}) {
                     ast.macro_name !== auto_parent_name
                   ) {
                     const start_auto_child_node = child_node;
-                    const new_arg_auto_parent = new AstArgument([], child_node.line, child_node.column);
+                    const new_arg_auto_parent = new AstArgument([], child_node.source_location);
                     while (i < arg.length) {
                       const arg_i = arg[i];
                       if (arg_i.node_type === AstType.MACRO) {
@@ -2735,13 +2925,11 @@ function parse(tokens, options, context, extra_returns={}) {
                       {
                         'content': new_arg_auto_parent,
                       },
-                      start_auto_child_node.line,
-                      start_auto_child_node.column,
+                      start_auto_child_node.source_location,
                       {
-                        input_path: options.input_path,
                         parent_node: child_node.parent_node
                       }
-                    )], child_node.line, child_node.column);
+                    )], child_node.source_location);
                     // Because the for loop will advance past it.
                     i--;
                   }
@@ -2757,7 +2945,7 @@ function parse(tokens, options, context, extra_returns={}) {
 
           // Child loop that adds ul and table implicit parents.
           {
-            const new_arg = new AstArgument([], arg.line, arg.column);
+            const new_arg = new AstArgument([], arg.source_location);
             for (let i = 0; i < arg.length; i++) {
               let child_node = arg[i];
               let new_child_nodes = [];
@@ -2780,7 +2968,7 @@ function parse(tokens, options, context, extra_returns={}) {
                     !child_macro.auto_parent_skip.has(ast.macro_name)
                   ) {
                     const start_auto_child_node = child_node;
-                    const new_arg_auto_parent = new AstArgument([], child_node.line, child_node.column);
+                    const new_arg_auto_parent = new AstArgument([], child_node.source_location);
                     while (i < arg.length) {
                       const arg_i = arg[i];
                       if (arg_i.node_type === AstType.MACRO) {
@@ -2806,13 +2994,11 @@ function parse(tokens, options, context, extra_returns={}) {
                       {
                         'content': new_arg_auto_parent,
                       },
-                      start_auto_child_node.line,
-                      start_auto_child_node.column,
+                      start_auto_child_node.source_location,
                       {
-                        input_path: options.input_path,
                         parent_node: child_node.parent_node
                       }
-                    )], child_node.line, child_node.column);
+                    )], child_node.source_location);
                     // Because the for loop will advance past it.
                     i--;
                   }
@@ -2836,7 +3022,7 @@ function parse(tokens, options, context, extra_returns={}) {
               }
             }
             if (paragraph_indexes.length > 0) {
-              const new_arg = new AstArgument([], arg.line, arg.column);
+              const new_arg = new AstArgument([], arg.source_location);
               if (paragraph_indexes[0] > 0) {
                 parse_add_paragraph(state, ast, new_arg, arg, 0, paragraph_indexes[0], options);
               }
@@ -2856,7 +3042,7 @@ function parse(tokens, options, context, extra_returns={}) {
           // Push children to continue the search. We make the new argument be empty
           // so that children can decide if they want to push themselves or not.
           {
-            const new_arg = new AstArgument([], arg.line, arg.column);
+            const new_arg = new AstArgument([], arg.source_location);
             for (let i = arg.length - 1; i >= 0; i--) {
               todo_visit.push([new_arg, arg[i]]);
             }
@@ -2901,24 +3087,12 @@ function parse(tokens, options, context, extra_returns={}) {
         }
       }
     }
-
-    // Calculate header_graph_top_level.
-    if (context.header_graph.children.length === 1) {
-      context.header_graph_top_level = first_header_level;
-      const toplevel_header_ast = context.header_graph.children[0].value;
-      context.toplevel_id = toplevel_header_ast.id;
-      if (toplevel_header_ast.validation_output.scope.boolean) {
-        context.toplevel_scope_cut_length = toplevel_header_ast.id.length + 1;
-      } else {
-        context.toplevel_scope_cut_length = 0;
-      }
-    } else {
-      context.header_graph_top_level = first_header_level - 1;
-      context.toplevel_scope_cut_length = 0;
-      context.toplevel_id = undefined;
-    }
   }
   extra_returns.ids = include_options.indexed_ids;
+  const first_toplevel_child = ast_toplevel.args.content[0];
+  if (first_toplevel_child !== undefined) {
+    first_toplevel_child.first_toplevel_child = true;
+  }
 
   context.line_to_id = function(line) {
     let index = binary_search(line_to_id_array,
@@ -2961,10 +3135,8 @@ function parse_add_paragraph(
           {
             'content': slice
           },
-          arg[paragraph_start].line,
-          arg[paragraph_start].column,
+          arg[paragraph_start].source_location,
           {
-            input_path: options.input_path,
             parent_node: ast,
           }
         )
@@ -3025,8 +3197,7 @@ function parse_argument_list(state, macro_name, macro_type) {
         if (positional_arg_count >= macro.positional_args.length) {
           parse_error(state,
             `unknown named macro argument "${arg_name}" of macro "${macro_name}"`,
-            open_token.line,
-            open_token.column,
+            open_token.source_location,
           );
           arg_name = positional_arg_count.toString();
         } else {
@@ -3036,29 +3207,25 @@ function parse_argument_list(state, macro_name, macro_type) {
       }
     } else {
       // Named argument.
-      let name_line = state.token.line;
-      let name_column = state.token.column;
       arg_name = state.token.value;
       if (macro_type !== AstType.ERROR && !(arg_name in macro.named_args)) {
         parse_error(state,
           `unknown named macro argument "${arg_name}" of macro "${macro_name}"`,
-          name_line,
-          name_column
+          state.token.source_location
         );
       }
       // Parse the argument name out.
       parse_consume(state);
     }
-    const arg_children = parse_argument(state, open_token.line, open_token.column);
+    const arg_children = parse_argument(state, open_token.source_location);
     if (state.token.type !== closing_token(open_token.type)) {
-      parse_error(state, `unclosed argument "${open_token.value}"`, open_token.line, open_token.column);
+      parse_error(state, `unclosed argument "${open_token.value}"`, open_token.source_location);
     }
     if (arg_name in args) {
       // https://github.com/cirosantilli/cirodown/issues/101
       parse_error(state,
-        `named argument ${arg_name} given multiple times`,
-        open_token.line,
-        open_token.column
+        `named argument "${arg_name}" given multiple times`,
+        open_token.source_location,
       );
     } else {
       args[arg_name] = arg_children;
@@ -3075,8 +3242,8 @@ function parse_argument_list(state, macro_name, macro_type) {
  * Input: e.g. in `\Image[img.jpg]{height=123}` this parses the `img.jpg` and the `123`.
  * @return AstArgument
  */
-function parse_argument(state, open_argument_line, open_argument_column) {
-  const arg_children = new AstArgument([], open_argument_line, open_argument_column);
+function parse_argument(state, open_argument_source_location) {
+  const arg_children = new AstArgument([], open_argument_source_location);
   while (
     state.token.type !== TokenType.INPUT_END &&
     state.token.type !== TokenType.POSITIONAL_ARGUMENT_END &&
@@ -3096,8 +3263,7 @@ function parse_macro(state) {
   parse_log_debug(state);
   if (state.token.type === TokenType.MACRO_NAME) {
     const macro_name = state.token.value;
-    const macro_line = state.token.line;
-    const macro_column = state.token.column;
+    const macro_source_location = state.token.source_location;
     let macro_type;
     const unknown_macro_message = `unknown macro name: "${macro_name}"`;
     if (macro_name in state.macros) {
@@ -3114,18 +3280,16 @@ function parse_macro(state) {
         macro_type,
         Macro.PLAINTEXT_MACRO_NAME,
         {},
-        state.token.line,
-        state.token.column,
+        state.token.source_location,
         {text: error_message_in_output(unknown_macro_message)},
       );
     } else {
-      return new AstNode(macro_type, macro_name, args, macro_line, macro_column);
+      return new AstNode(macro_type, macro_name, args, macro_source_location);
     }
   } else if (state.token.type === TokenType.PLAINTEXT) {
     // Non-recursive case.
     let node = new PlaintextAstNode(
-      state.token.line,
-      state.token.column,
+      state.token.source_location,
       state.token.value,
     );
     // Consume the PLAINTEXT node out.
@@ -3136,8 +3300,7 @@ function parse_macro(state) {
       AstType.PARAGRAPH,
       undefined,
       undefined,
-      state.token.line,
-      state.token.column
+      state.token.source_location,
     );
     // Consume the PLAINTEXT node out.
     parse_consume(state);
@@ -3155,8 +3318,7 @@ function parse_macro(state) {
     }
     parse_error(state, error_message);
     let node = new PlaintextAstNode(
-      state.token.line,
-      state.token.column,
+      state.token.source_location,
       error_message_in_output(error_message),
     );
     // Consume past whatever happened to avoid an infinite loop.
@@ -3166,23 +3328,25 @@ function parse_macro(state) {
   state.i += 1;
 }
 
-function parse_error(state, message, line, column) {
-  if (line === undefined)
-    line = state.token.line;
-  if (column === undefined)
-    column = state.token.column;
+function parse_error(state, message, source_location) {
+  let new_source_location;
+  if (source_location === undefined) {
+    new_source_location = new SourceLocation();
+  } else {
+    new_source_location = source_location.clone();
+  }
+  new_source_location.path = state.options.input_path;
+  if (new_source_location.line === undefined)
+    new_source_location.line = state.token.source_location.line;
+  if (new_source_location.column === undefined)
+    new_source_location.column = state.token.source_location.column;
   state.extra_returns.errors.push(new ErrorMessage(
-    message, line, column));
+    message, new_source_location));
 }
 
-function id_convert_simple_elem() {
-  return function(ast, context) {
-    let ret = convert_arg(ast.args.content, context);
-    if (!context.macros[ast.macro_name].options.phrasing) {
-      ret += '\n';
-    }
-    return ret;
-  };
+function path_split(str, sep) {
+  const dir_sep_index = str.lastIndexOf(sep)
+  return [str.substring(0, dir_sep_index), str.substr(dir_sep_index + 1)];
 }
 
 function protocol_is_known(src) {
@@ -3209,19 +3373,35 @@ function remove_toplevel_scope(ast, context) {
   return id;
 }
 
-function render_error(context, message, line, column) {
-  context.errors.push(new ErrorMessage(message, line, column));
+// https://cirosantilli.com/cirodown#index-files
+const INDEX_BASENAME_NOEXT = 'index';
+exports.INDEX_BASENAME_NOEXT = INDEX_BASENAME_NOEXT;
+const INDEX_FILE_BASENAMES_NOEXT = new Set([
+  'README',
+  INDEX_BASENAME_NOEXT,
+]);
+exports.INDEX_FILE_BASENAMES_NOEXT = INDEX_FILE_BASENAMES_NOEXT;
+const IO_RENAME_MAP = {};
+for (let i of INDEX_FILE_BASENAMES_NOEXT) {
+  IO_RENAME_MAP[i] = INDEX_BASENAME_NOEXT;
+}
+exports.IO_RENAME_MAP = IO_RENAME_MAP;
+function rename_basename(original) {
+  if (original in IO_RENAME_MAP) {
+    return IO_RENAME_MAP[original];
+  } else {
+    return original;
+  }
+}
+
+function render_error(context, message, source_location) {
+  context.errors.push(new ErrorMessage(message, source_location));
 }
 
 // Fuck JavaScript? Can't find a built-in way to get the symbol string without the "Symbol(" part.
 // https://stackoverflow.com/questions/30301728/get-the-description-of-a-es6-symbol
 function symbol_to_string(symbol) {
   return symbol.toString().slice(7, -1);
-}
-
-/** https://stackoverflow.com/questions/14313183/javascript-regex-how-do-i-check-if-the-string-is-ascii-only/14313213#14313213 */
-function is_ascii(str) {
-  return /^[\x00-\x7F]*$/.test(str);
 }
 
 /** TODO correct unicode aware algorithm. */
@@ -3258,6 +3438,10 @@ function unconvertible() {
   };
 }
 
+function url_basename(str) {
+  return basename(str, URL_SEP);
+}
+
 // Do some error checking. If no errors are found, convert normally. Save output on out.
 function validate_ast(ast, context) {
   const macro_name = ast.macro_name;
@@ -3275,13 +3459,13 @@ function validate_ast(ast, context) {
       if (macro_arg.mandatory) {
         ast.validation_error = [
           `missing mandatory argument ${argname} of ${ast.macro_name}`,
-          ast.line, ast.column
+          ast.source_location,
         ];
       }
       if (macro_arg.default !== undefined) {
-        ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.line, ast.column, macro_arg.default)]);
+        ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.source_location, macro_arg.default)]);
       } else if (macro_arg.boolean) {
-        ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.line, ast.column, '0')]);
+        ast.args[argname] = new AstArgument([new PlaintextAstNode(ast.source_location, '0')]);
       }
     }
   }
@@ -3305,7 +3489,8 @@ function validate_ast(ast, context) {
           ast.validation_output[argname].boolean = false;
           ast.validation_error = [
             `boolean argument "${argname}" of "${ast.macro_name}" has invalid value: "${arg_string}", only "0" and "1" are allowed`,
-            arg.line, arg.column];
+            arg.source_location
+          ];
           break;
         }
       }
@@ -3316,7 +3501,8 @@ function validate_ast(ast, context) {
         if (!Number.isInteger(int_value) || !(int_value > 0)) {
           ast.validation_error = [
             `argument "${argname}" of macro "${ast.macro_name}" must be a positive non-zero integer, got: "${arg_string}"`,
-            arg.line, arg.column];
+            arg.source_location
+          ];
           break;
         }
       }
@@ -3325,7 +3511,8 @@ function validate_ast(ast, context) {
   if (!macro.options.xss_safe && !context.options.xss_unsafe) {
     ast.validation_error = [
       `XSS unsafe macro "${macro_name}" used in safe mode: https://cirosantilli.com/cirodown#xss-unsafe`,
-      ast.line, ast.column];
+      ast.source_location
+    ];
   }
 }
 exports.validate_ast = validate_ast;
@@ -3339,7 +3526,7 @@ function x_get_href_content(ast, context) {
   let href;
   if (target_id_ast === undefined) {
     let message = `cross reference to unknown id: "${target_id}"`;
-    render_error(context, message, ast.args.href.line, ast.args.href.column);
+    render_error(context, message, ast.args.href.source_location);
     return [href, error_message_in_output(message, context)];
   } else {
     href = x_href_attr(target_id_ast, context);
@@ -3352,22 +3539,20 @@ function x_get_href_content(ast, context) {
       if (context.id_conversion_for_header) {
         // Inside a header title that does not have an ID.
         context.extra_returns.id_conversion_header_title_no_id_xref = true;
-        context.extra_returns.id_conversion_xref_error_line = ast.line;
-        context.extra_returns.id_conversion_xref_error_column = ast.column;
+        context.extra_returns.id_conversion_xref_error_source_location = ast.source_location;
         return '';
       }
       if (target_id_ast.macro_name !== Macro.HEADER_MACRO_NAME) {
         // Inside a non-header title that does not have an ID and links to a non-header.
         context.extra_returns.id_conversion_non_header_no_id_xref_non_header = true;
-        context.extra_returns.id_conversion_xref_error_line = ast.line;
-        context.extra_returns.id_conversion_xref_error_column = ast.column;
+        context.extra_returns.id_conversion_xref_error_source_location = ast.source_location;
         return '';
       }
     }
     if (context.x_parents.has(ast)) {
       // Prevent render infinite loops.
       let message = `x with infinite recursion`;
-      render_error(context, message, ast.line, ast.column);
+      render_error(context, message, ast.source_location);
       return [href, error_message_in_output(message, context)];
     }
     let x_text_options = {
@@ -3385,7 +3570,7 @@ function x_get_href_content(ast, context) {
     content = x_text(target_id_ast, clone_and_set(context, 'x_parents', x_parents_new), x_text_options);
     if (content === ``) {
       let message = `empty cross reference body: "${target_id}"`;
-      render_error(context, message, ast.line, ast.column);
+      render_error(context, message, ast.source_location);
       return error_message_in_output(message, context);
     }
   } else {
@@ -3395,19 +3580,26 @@ function x_get_href_content(ast, context) {
   return [href, content];
 }
 
-/**
-  * @param {AstNode} target_id_ast
-  * @return {String} the value of href (no quotes) that an \x cross reference to the given target_id_ast
-  */
+/** Calculate the href value to a given target AstNode.
+ *
+ * This takes into account e.g. if the target node is in a different source file:
+ * https://cirosantilli.com/cirodown#internal-cross-file-references
+ *
+ * @param {AstNode} target_id_ast
+ * @return {String} the value of href (no quotes) that an \x cross reference to the given target_id_ast
+ */
 function x_href(target_id_ast, context) {
   const [href_path, fragment] = x_href_parts(target_id_ast, context);
-  return href_path + '#' + fragment;
+  let ret = href_path;
+  if (fragment !== '')
+    ret += '#' + fragment;
+  return ret;
 }
 exports.x_href = x_href;
 
 function x_href_parts(target_id_ast, context) {
   let href_path;
-  const target_input_path = target_id_ast.input_path;
+  const target_input_path = target_id_ast.source_location.path;
   let fragment;
   if (
     // The header was included inline into the current file.
@@ -3418,20 +3610,21 @@ function x_href_parts(target_id_ast, context) {
     href_path = '';
     fragment = remove_toplevel_scope(target_id_ast, context);
   } else {
-    href_path = target_input_path;
-    if (context.options.html_x_extension) {
-      href_path += '.html';
-    }
+    href_path = output_path(target_input_path, HTML_EXT, context.options.path_sep, context.options.html_x_extension);
     const file_provider_ret = context.options.file_provider.get(target_input_path);
     if (file_provider_ret === undefined) {
-      let message = `file not found on database: "${target_input_path}", needed for topelvel scope removal`;
-      render_error(context, message, target_id_ast.line, target_id_ast.column);
+      let message = `file not found on database: "${target_input_path}", needed for toplevel scope removal`;
+      render_error(context, message, target_id_ast.source_location);
       return error_message_in_output(message, context);
     } else {
-      if (file_provider_ret.toplevel_id === target_id_ast.id) {
-        fragment = target_id_ast.id;
+      if (target_id_ast.first_toplevel_child) {
+        fragment = '';
       } else {
-        fragment = target_id_ast.id.substr(file_provider_ret.toplevel_scope_cut_length);
+        if (file_provider_ret.toplevel_id === target_id_ast.id) {
+          fragment = target_id_ast.id;
+        } else {
+          fragment = target_id_ast.id.substr(file_provider_ret.toplevel_scope_cut_length);
+        }
       }
     }
   }
@@ -3546,8 +3739,8 @@ function x_text(ast, context, options={}) {
         first_ast.node_type === AstType.PLAINTEXT
       ) {
         // https://stackoverflow.com/questions/41474986/how-to-clone-a-javascript-es6-class-instance
-        title_arg = new AstArgument(title_arg, title_arg.line, title_arg.column);
-        title_arg[0] = new PlaintextAstNode(first_ast.line, first_ast.column, first_ast.text);
+        title_arg = new AstArgument(title_arg, title_arg.source_location);
+        title_arg[0] = new PlaintextAstNode(first_ast.source_location, first_ast.text);
         let txt = title_arg[0].text;
         let first_c = txt[0];
         if (options.capitalize) {
@@ -3565,8 +3758,8 @@ function x_text(ast, context, options={}) {
         !style_full &&
         first_ast.node_type === AstType.PLAINTEXT
       ) {
-        title_arg = new AstArgument(title_arg, title_arg.line, title_arg.column);
-        title_arg[title_arg.length - 1] = new PlaintextAstNode(last_ast.line, last_ast.column, last_ast.text);
+        title_arg = new AstArgument(title_arg, title_arg.source_location);
+        title_arg[title_arg.length - 1] = new PlaintextAstNode(last_ast.source_location, last_ast.text);
         title_arg[title_arg.length - 1].text = pluralize(last_ast.text, options.pluralize ? 2 : 1);
       }
     }
@@ -3600,6 +3793,8 @@ const END_NAMED_ARGUMENT_CHAR = '}';
 const END_POSITIONAL_ARGUMENT_CHAR = ']';
 const ESCAPE_CHAR = '\\';
 const HTML_ASCII_WHITESPACE = new Set([' ', '\r', '\n', '\f', '\t']);
+const HTML_EXT = 'html';
+exports.HTML_EXT = HTML_EXT;
 const ID_SEPARATOR = '-';
 const INSANE_LIST_START = '* ';
 const INSANE_TD_START = '| ';
@@ -3707,7 +3902,7 @@ function macro_image_video_resolve_params(ast, context) {
       media_provider_type = provider_name;
     } else {
       error_message = `unknown media provider: "${html_escape_attr(provider_name)}"`;
-      render_error(context, error_message, ast.args.provider.line, ast.args.provider.column);
+      render_error(context, error_message, ast.args.provider.source_location);
       media_provider_type = 'unknown';
     }
   }
@@ -3732,7 +3927,7 @@ function macro_image_video_resolve_params(ast, context) {
   } else {
     if (media_provider_type !== undefined && media_provider_type !== media_provider_type_detected) {
       error_message = `detected media provider type "${media_provider_type_detected}", but user also explicitly gave "${media_provider_type}"`;
-      render_error(context, error_message, ast.args.provider.line, ast.args.provider.column);
+      render_error(context, error_message, ast.args.provider.source_location);
     }
     if (media_provider_type === undefined) {
       media_provider_type = media_provider_type_detected;
@@ -3788,7 +3983,7 @@ const MACRO_IMAGE_VIDEO_OPTIONS = {
       let basename_str;
       let src = convert_arg(ast.args.src, context);
       if (media_provider_type === 'local') {
-        basename_str = basename(src);
+        basename_str = url_basename(src);
       } else if (media_provider_type === 'wikimedia') {
         basename_str = context.macros[ast.macro_name].options.image_video_basename(src);
       } else {
@@ -3796,7 +3991,7 @@ const MACRO_IMAGE_VIDEO_OPTIONS = {
       }
       let title_str = basename_str.replace(/_/g, ' ').replace(/\.[^.]+$/, '') + '.';
       return new AstArgument([new PlaintextAstNode(
-        ast.line, ast.column, title_str)], ast.line, ast.column);
+        ast.source_location, title_str)], ast.source_location);
     }
 
     // We can't automatically generate one at all.
@@ -3963,7 +4158,7 @@ const DEFAULT_MACRO_LIST = [
       let level_int_capped;
       if (level_int > 6) {
         custom_args = {'data-level': new AstArgument([new PlaintextAstNode(
-          ast.line, ast.column, level_int.toString())], ast.line, ast.column)};
+          ast.source_location, level_int.toString())], ast.source_location)};
         level_int_capped = 6;
       } else {
         custom_args = {};
@@ -4104,7 +4299,7 @@ const DEFAULT_MACRO_LIST = [
     },
     {
       caption_prefix: 'Equation',
-      id_prefix: 'eq',
+      id_prefix: 'equation',
       get_number: function(ast, context) {
         // Override because unlike other elements such as images, equations
         // always get numbers even if not indexed.
@@ -4184,7 +4379,7 @@ const DEFAULT_MACRO_LIST = [
       Object.assign(
         {
           image_video_basename: function(src) {
-            return basename(html_escape_attr(src)).replace(
+            return url_basename(html_escape_attr(src)).replace(
               macro_image_video_block_convert_function_wikimedia_source_image_re, '');
           },
         },
@@ -4469,7 +4664,7 @@ const DEFAULT_MACRO_LIST = [
         } else {
           text_title = 'dummy title because title is mandatory in HTML';
         }
-        title = new AstArgument([new PlaintextAstNode(ast.line, ast.column, text_title)], ast.column, text_title);
+        title = new AstArgument([new PlaintextAstNode(ast.source_location, text_title)], ast.source_location, text_title);
       }
       let ret;
       const body = convert_arg(ast.args.content, context);
@@ -4650,7 +4845,7 @@ const DEFAULT_MACRO_LIST = [
       {
         caption_prefix: 'Video',
         image_video_basename: function(src) {
-          return basename(html_escape_attr(src)).replace(
+          return url_basename(html_escape_attr(src)).replace(
             macro_image_video_block_convert_function_wikimedia_source_video_re, '$1');
         },
         image_video_content_func: function (ast, context, src, rendered_attrs, alt, media_provider_type, is_url) {
@@ -4668,7 +4863,7 @@ const DEFAULT_MACRO_LIST = [
                   video_id = url_params.get('v')
                 } else {
                   let message = `youtube URL without video ID "${src}"`;
-                  render_error(context, message, ast.line, ast.column);
+                  render_error(context, message, ast.source_location);
                   return error_message_in_output(message, context);
                 }
               } else {
