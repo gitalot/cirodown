@@ -1342,6 +1342,66 @@ assert_convert_ast('scope with parent breakout with no leading slash',
   a('H', undefined, {level: [t('3')], title: [t('h5')]}, {id: 'h5'}),
 ]
 );
+// https://github.com/cirosantilli/cirodown/issues/120
+assert_convert_ast('nested scope with parent',
+  `= h1
+{scope}
+
+= h1 1
+{parent=h1}
+{scope}
+
+= h1 1 1
+{parent=h1-1}
+
+= h1 1 2
+{parent=h1-1}
+
+= h1 1 3
+{parent=h1/h1-1}
+
+= h1 2
+{parent=h1}
+{scope}
+
+= h1 2 1
+{parent=h1-2}
+{scope}
+
+= h1 2 1 1
+{parent=h1-2/h1-2-1}
+`, [
+  a('H', undefined, {level: [t('1')], title: [t('h1')]}, {id: 'h1'}),
+  a('Toc'),
+  a('H', undefined, {level: [t('2')], title: [t('h1 1')]}, {id: 'h1/h1-1'}),
+  a('H', undefined, {level: [t('3')], title: [t('h1 1 1')]}, {id: 'h1/h1-1/h1-1-1'}),
+  a('H', undefined, {level: [t('3')], title: [t('h1 1 2')]}, {id: 'h1/h1-1/h1-1-2'}),
+  a('H', undefined, {level: [t('3')], title: [t('h1 1 3')]}, {id: 'h1/h1-1/h1-1-3'}),
+  a('H', undefined, {level: [t('2')], title: [t('h1 2')]}, {id: 'h1/h1-2'}),
+  a('H', undefined, {level: [t('3')], title: [t('h1 2 1')]}, {id: 'h1/h1-2/h1-2-1'}),
+  a('H', undefined, {level: [t('4')], title: [t('h1 2 1 1')]}, {id: 'h1/h1-2/h1-2-1/h1-2-1-1'}),
+]
+);
+assert_convert_ast('nested scope internal cross references resolves progressively',
+  `= h1
+{scope}
+
+= h1 1
+{parent=h1}
+{scope}
+
+= h1 1 1
+{parent=h1-1}
+
+\\x[h1-1]
+`, [
+  a('H', undefined, {level: [t('1')], title: [t('h1')]}, {id: 'h1'}),
+  a('Toc'),
+  a('H', undefined, {level: [t('2')], title: [t('h1 1')]}, {id: 'h1/h1-1'}),
+  a('H', undefined, {level: [t('3')], title: [t('h1 1 1')]}, {id: 'h1/h1-1/h1-1-1'}),
+  a('P', [a('x', undefined, {href: [t('h1-1')]})]),
+]
+);
 // https://github.com/cirosantilli/cirodown/issues/100
 assert_error('broken parent still generates a header ID',
   `= h1
@@ -1671,6 +1731,16 @@ hh
 
 \\reserved_undefined
 `
+    } else if (input_path === 'include-circular-1') {
+      ret = `= bb
+
+\\Include[include-circular-2]
+`
+    } else if (input_path === 'include-circular-2') {
+      ret = `= cc
+
+\\Include[include-circular-1]
+`
     } else {
       throw new Error(`unknown lnclude path: ${input_path}`);
     }
@@ -1792,6 +1862,14 @@ bb
 \\Include[include-with-error]
 `,
   3, 1, 'include-with-error.ciro',
+  include_opts
+);
+assert_error('include circular dependency',
+  `= aa
+
+\\Include[include-circular-1]
+`,
+  3, 1, 'include-circular-2.ciro',
   include_opts
 );
 // TODO https://github.com/cirosantilli/cirodown/issues/73
