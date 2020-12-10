@@ -2039,9 +2039,6 @@ function html_convert_simple_elem(elem_name, options={}) {
   if (!('attrs' in options)) {
     options.attrs = {};
   }
-  if (!('link_to_self' in options)) {
-    options.link_to_self = false;
-  }
   if (!('newline_after_open' in options)) {
     options.newline_after_open = false;
   }
@@ -2064,7 +2061,6 @@ function html_convert_simple_elem(elem_name, options={}) {
     newline_after_close_str = '';
   }
   return function(ast, context) {
-    let link_to_self = '';
     let attrs = html_convert_attrs_id(ast, context);
     let extra_attrs_string = '';
     for (const key in options.attrs) {
@@ -4102,9 +4098,6 @@ const DEFAULT_MACRO_LIST = [
     ],
     html_convert_simple_elem(
       'b',
-      {
-        link_to_self: true
-      }
     ),
     {
       phrasing: true,
@@ -4400,9 +4393,6 @@ const DEFAULT_MACRO_LIST = [
     ],
     html_convert_simple_elem(
       'i',
-      {
-        link_to_self: true
-      }
     ),
     {
       phrasing: true,
@@ -4524,7 +4514,6 @@ const DEFAULT_MACRO_LIST = [
       'div',
       {
         attrs: {'class': 'p'},
-        link_to_self: true,
       }
     ),
   ),
@@ -4566,10 +4555,35 @@ const DEFAULT_MACRO_LIST = [
     ],
     html_convert_simple_elem(
       'blockquote',
-      {
-        link_to_self: true
-      }
     ),
+  ),
+  new Macro(
+    'sub',
+    [
+      new MacroArgument({
+        name: 'content',
+      }),
+    ],
+    html_convert_simple_elem(
+      'sub',
+    ),
+    {
+      phrasing: true,
+    }
+  ),
+  new Macro(
+    'sup',
+    [
+      new MacroArgument({
+        name: 'content',
+      }),
+    ],
+    html_convert_simple_elem(
+      'sup',
+    ),
+    {
+      phrasing: true,
+    }
   ),
   new Macro(
     Macro.TABLE_MACRO_NAME,
@@ -4950,7 +4964,7 @@ const DEFAULT_MACRO_LIST = [
             } else {
               start = '';
             }
-            return `<video${html_attr('src', src + start)}${rendered_attrs} controls>${alt}</video>\n`;
+            return `<video${html_attr('src', src + start)}${rendered_attrs} preload="none" controls>${alt}</video>\n`;
           }
         },
         named_args: MACRO_IMAGE_VIDEO_NAMED_ARGUMENTS.concat(
